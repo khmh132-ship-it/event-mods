@@ -1,0 +1,197 @@
+[
+  {
+    "name": "architectury-9.2.14-forge-1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/architectury-9.2.14-forge-1.20.1.jar"
+  },
+  {
+    "name": "ashvehicle-4.1-8.7-SNAPSHOT.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/ashvehicle-4.1-8.7-SNAPSHOT.jar"
+  },
+  {
+    "name": "chickenchunks-1.20.1-2.10.0.100-universal.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/chickenchunks-1.20.1-2.10.0.100-universal.jar"
+  },
+  {
+    "name": "cloth-config-11.1.136-forge-1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/cloth-config-11.1.136-forge-1.20.1.jar"
+  },
+  {
+    "name": "codechickenlib-1.20.1-4.4.0.516-universal.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/codechickenlib-1.20.1-4.4.0.516-universal.jar"
+  },
+  {
+    "name": "CreativeCore_FORGE_v2.12.32_mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/CreativeCore_FORGE_v2.12.32_mc1.20.1.jar"
+  },
+  {
+    "name": "curios-forge-5.14.1+1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/curios-forge-5.14.1+1.20.1.jar"
+  },
+  {
+    "name": "CustomNPCs-GBPort-Unofficial-1.20.1.20250628.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/CustomNPCs-GBPort-Unofficial-1.20.1.20250628.jar"
+  },
+  {
+    "name": "dynamic-fps-3.9.5+minecraft-1.20.0-forge.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/dynamic-fps-3.9.5+minecraft-1.20.0-forge.jar"
+  },
+  {
+    "name": "earthgen-1.0.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/earthgen-1.0.0.jar"
+  },
+  {
+    "name": "embeddium-0.3.31+mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/embeddium-0.3.31+mc1.20.1.jar"
+  },
+  {
+    "name": "endlessammo-1.2.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/endlessammo-1.2.0.jar"
+  },
+  {
+    "name": "endlessammo-2.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/endlessammo-2.0.jar"
+  },
+  {
+    "name": "entityculling-forge-1.9.0-mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/entityculling-forge-1.9.0-mc1.20.1.jar"
+  },
+  {
+    "name": "ferritecore-6.0.1-forge.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/ferritecore-6.0.1-forge.jar"
+  },
+  {
+    "name": "geckolib-forge-1.20.1-4.8.2.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/geckolib-forge-1.20.1-4.8.2.jar"
+  },
+  {
+    "name": "guccivuitton-1.20.1-0.2.2.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/guccivuitton-1.20.1-0.2.2.jar"
+  },
+  {
+    "name": "ItemPhysic_FORGE_v1.8.4_mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/ItemPhysic_FORGE_v1.8.4_mc1.20.1.jar"
+  },
+  {
+    "name": "lradd-1.20.1-03.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/lradd-1.20.1-03.0.jar"
+  },
+  {
+    "name": "lrtactical-1.20.1-03.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/lrtactical-1.20.1-03.0.jar"
+  },
+  {
+    "name": "maxstuff-1.8.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/maxstuff-1.8.1.jar"
+  },
+  {
+    "name": "memoryleakfix-forge-1.17+-1.1.5.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/memoryleakfix-forge-1.17+-1.1.5.jar"
+  },
+  {
+    "name": "modernfix-forge-5.24.4+mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/modernfix-forge-5.24.4+mc1.20.1.jar"
+  },
+  {
+    "name": "oculus-mc1.20.1-1.8.0 (2).jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/oculus-mc1.20.1-1.8.0%20(2).jar"
+  },
+  {
+    "name": "player-animation-lib-forge-1.0.2-rc1+1.20.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/player-animation-lib-forge-1.0.2-rc1+1.20.jar"
+  },
+  {
+    "name": "PlayerRevive_FORGE_zumers_mc1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/PlayerRevive_FORGE_zumers_mc1.20.1.jar"
+  },
+  {
+    "name": "QuickEC-2.1.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/QuickEC-2.1.1.jar"
+  },
+  {
+    "name": "sound-physics-remastered-forge-1.20.1-1.5.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/sound-physics-remastered-forge-1.20.1-1.5.1.jar"
+  },
+  {
+    "name": "superbwarfare-1.20.1-0.8.7-final-d6ea9a72b.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/superbwarfare-1.20.1-0.8.7-final-d6ea9a72b.jar"
+  },
+  {
+    "name": "survival_instinct-1.0.1-forge-1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/survival_instinct-1.0.1-forge-1.20.1.jar"
+  },
+  {
+    "name": "swl-0.2.1g-mixin-forge-1.20.1.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/swl-0.2.1g-mixin-forge-1.20.1.jar"
+  },
+  {
+    "name": "tacz-1.20.1-1.1.8-hotfix (1).jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/tacz-1.20.1-1.1.8-hotfix%20(1).jar"
+  },
+  {
+    "name": "taczaddon-1.20.1-1.1.6.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/taczaddon-1.20.1-1.1.6.jar"
+  },
+  {
+    "name": "teamwar-1.0.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/teamwar-1.0.0.jar"
+  },
+  {
+    "name": "tl_skin_cape_forge_1.20_1.20.1-1.32.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/tl_skin_cape_forge_1.20_1.20.1-1.32.jar"
+  },
+  {
+    "name": "voicechat-forge-1.20.1-2.6.5.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/voicechat-forge-1.20.1-2.6.5.jar"
+  },
+  {
+    "name": "vvp-0.1.7.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/vvp-0.1.7.jar"
+  },
+  {
+    "name": "walkietalkie-forge-1.20.1-1.3.0.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/walkietalkie-forge-1.20.1-1.3.0.jar"
+  },
+  {
+    "name": "XaerosWorldMap_1.39.12_Forge_1.20.jar",
+    "version": "1.0",
+    "url": "https://github.com/khmh132-ship-it/event-mods/raw/main/mods/XaerosWorldMap_1.39.12_Forge_1.20.jar"
+  }
+]
