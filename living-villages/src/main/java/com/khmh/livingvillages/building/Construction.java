@@ -44,7 +44,6 @@ public final class Construction {
 
     /** Called once per second for every village. */
     public static void tick(ServerLevel level, Village village, long now) {
-        boolean builder = village.hasBuilder(now);
         for (Building b : village.buildings()) {
             if (b.isComplete()) {
                 continue;
@@ -59,7 +58,7 @@ public final class Construction {
             boolean catchingUp = !LOADED_LAST_TICK.contains(b.id()) && due > 2;
             // While the village has a builder around, he does all the work himself; blocks only appear on their
             // own for time that passed while the site was unloaded, or in a village with nobody to build.
-            if (builder && !catchingUp) {
+            if (!catchingUp) { // nobody builds by magic: without a builder the site simply waits
                 LOADED_LAST_TICK.add(b.id());
                 b.setLastStep(now);
                 continue;

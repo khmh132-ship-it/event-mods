@@ -65,11 +65,33 @@ public final class Workers {
         // Likewise stone: a miner digs his own quarry until there is a mine.
         boolean stoneShort = CostKey.Stone.INSTANCE.available(v.stock(level)) < 128
                 || v.buildings().stream().anyMatch(b -> "mine".equals(b.typeId()) && b.isComplete());
-        if (!villageWide(level, v, villagers, workers, WorkerJob.BUILDER, building)
-                || !villageWide(level, v, villagers, workers, WorkerJob.APPRENTICE, orders)
-                || !villageWide(level, v, villagers, workers, WorkerJob.LUMBERJACK, woodShort)
-                || !villageWide(level, v, villagers, workers, WorkerJob.MINER, stoneShort)) {
-            return;
+        // Labour exchange: the most pressing jobs first; with too few people a worker is moved over from a job
+        // that matters less right now (a camp of two: one builds, the other fetches wood or makes what is asked).
+        List<WorkerJob> priority = new java.util.ArrayList<>();
+        java.util.Map<WorkerJob, Boolean> needed = new java.util.EnumMap<>(WorkerJob.class);
+        needed.put(WorkerJob.BUILDER, building);
+        needed.put(WorkerJob.APPRENTICE, orders);
+        needed.put(WorkerJob.LUMBERJACK, woodShort);
+        needed.put(WorkerJob.MINER, stoneShort);
+        boolean woodInHand = CostKey.Wood.INSTANCE.available(v.stock(level)) >= 32;
+        priority.add(WorkerJob.BUILDER);
+        if (woodInHand) {
+            priority.add(WorkerJob.APPRENTICE);
+            priority.add(WorkerJob.LUMBERJACK);
+        } else {
+            priority.add(WorkerJob.LUMBERJACK);
+            priority.add(WorkerJob.APPRENTICE);
+        }
+        priority.add(WorkerJob.MINER);
+        for (int i = 0; i < priority.size(); i++) {
+            WorkerJob job = priority.get(i);
+            if (!villageWide(level, v, villagers, workers, job, needed.get(job))) {
+                return;
+            }
+            if (needed.get(job) && !hasJob(level, v, workers, job)
+                    && reassign(level, v, workers, job, priority.subList(i + 1, priority.size()), priority, needed)) {
+                return;
+            }
         }
 
         // Workplaces (storekeeper at the warehouse, carpenter at the sawmill...) before guards and carriers.
@@ -104,6 +126,53 @@ public final class Workers {
             return;
         }
 
+    }
+
+    private static boolean hasJob(ServerLevel level, Village v, List<VillageWorker> workers, WorkerJob job) {
+        return workers.stream().anyMatch(w -> w.job() == job) || v.data().hasUUID("worker_" + job.name().toLowerCase());
+    }
+
+    /**
+     * Moves a worker from a less pressing village-wide job (one not needed at all first) over to {@code job}.
+     * At most once every two minutes per village, so people do not flap between jobs.
+     */
+    private static boolean reassign(ServerLevel level, Village v, List<VillageWorker> workers, WorkerJob job,
+                                    List<WorkerJob> lower, List<WorkerJob> all,
+                                    java.util.Map<WorkerJob, Boolean> needed) {
+        long now = level.getGameTime();
+        if (now - v.data().getLong("lastReassign") < 2400) {
+            return false;
+        }
+        VillageWorker donor = null;
+        // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
+        for (WorkerJob from : all) {
+            if (from != job && donor == null && !needed.getOrDefault(from, false)) {
+                donor = workers.stream().filter(w -> w.job() == from).findFirst().orElse(null);
+            }
+        }
+        for (int i = lower.size() - 1; i >= 0 && donor == null; i--) {
+            WorkerJob from = lower.get(i);
+            donor = workers.stream().filter(w -> w.job() == from).findFirst().orElse(null);
+        }
+        if (donor == null) {
+            return false;
+        }
+        WorkerJob from = donor.job();
+        v.data().remove("worker_" + from.name().toLowerCase());
+        donor.workplace().ifPresent(b -> b.setWorkerId(null));
+        Building home = v.buildings().stream()
+                .filter(b -> b.isComplete() && b.workerId() == null && job.workplace().equals(b.typeId()))
+                .findFirst().orElse(null);
+        donor.assign(job, v, home);
+        if (home != null) {
+            home.setWorkerId(donor.getUUID());
+        }
+        v.data().putUUID("worker_" + job.name().toLowerCase(), donor.getUUID());
+        v.data().putLong("lastReassign", now);
+        v.markDirty();
+        LivingVillages.LOGGER.info("Village {}: a {} turns {}", v.id().toString().substring(0, 8),
+                from.name().toLowerCase(), job.name().toLowerCase());
+        return true;
     }
 
     /** Hires (if needed) and houses a village-wide worker; false if someone was just hired this scan. */

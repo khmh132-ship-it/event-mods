@@ -56,6 +56,14 @@ public final class VillageCommand {
                 .then(Commands.literal("list").executes(VillageCommand::list))
                 .then(Commands.literal("info").executes(VillageCommand::info))
                 .then(Commands.literal("create").executes(VillageCommand::create))
+                .then(Commands.literal("found").executes(ctx -> {
+                    ServerLevel level = ctx.getSource().getLevel();
+                    BlockPos at = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                            BlockPos.containing(ctx.getSource().getPosition()));
+                    Village v = com.khmh.livingvillages.village.Founding.found(level, VillageManager.get(level), at);
+                    say(ctx, "Camp founded: " + shortId(v));
+                    return 1;
+                }))
                 .then(Commands.literal("discover").executes(VillageCommand::discover))
                 .then(Commands.literal("types").executes(VillageCommand::types))
                 .then(Commands.literal("buildings").executes(VillageCommand::buildings))

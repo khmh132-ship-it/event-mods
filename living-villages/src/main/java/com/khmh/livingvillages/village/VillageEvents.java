@@ -50,6 +50,9 @@ public final class VillageEvents {
             discover(level, manager);
             refresh(level, manager);
         }
+        if (now % 400 == 0) {
+            Founding.tick(level, manager);
+        }
         for (Village v : List.copyOf(manager.all())) {
             boolean loaded = level.hasChunkAt(v.center());
             if (loaded) {

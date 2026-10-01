@@ -54,12 +54,7 @@ public class VillageManager extends SavedData {
 
     public Village create(BlockPos bell) {
         Village v = new Village(UUID.randomUUID(), bell);
-        // Starter stock so a fresh village can put up its first building.
-        v.storage().add(Items.OAK_LOG, 64);
-        v.storage().add(Items.COBBLESTONE, 32);
-        v.storage().add(Items.WHEAT, 16);
-        v.storage().add(Items.SAND, 8);
-        v.storage().add(Items.IRON_INGOT, 8); // enough to fit out the first mine
+        // No starter stock: whatever the village has, it gathers itself.
         add(v);
         setDirty();
         LivingVillages.LOGGER.info("Village {} founded at {}", v.id(), bell);
@@ -73,7 +68,7 @@ public class VillageManager extends SavedData {
         }
     }
 
-    private void add(Village v) {
+    public void add(Village v) {
         v.setOnChange(this::setDirty);
         villages.put(v.id(), v);
     }

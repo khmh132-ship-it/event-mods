@@ -73,7 +73,16 @@ class Tooling {
         }
         long now = level.getGameTime();
         if (now - lastRequest > 600) {
-            village.request(worker.job().basicTool(), 1, "tool:" + worker.getUUID(), now);
+            Item want = worker.job().basicTool();
+            if (village.stock(level).count(net.minecraft.world.item.Items.COBBLESTONE) < 3) {
+                // No stone yet: a wooden one will do for now.
+                Item wooden = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(
+                        net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(want).getPath().replace("stone_", "wooden_")));
+                if (wooden != null && wooden != net.minecraft.world.item.Items.AIR) {
+                    want = wooden;
+                }
+            }
+            village.request(want, 1, "tool:" + worker.getUUID(), now);
             lastRequest = now;
         }
         return Status.BARE;
