@@ -56,6 +56,24 @@ public final class VillageCommand {
                 .then(Commands.literal("list").executes(VillageCommand::list))
                 .then(Commands.literal("info").executes(VillageCommand::info))
                 .then(Commands.literal("create").executes(VillageCommand::create))
+                .then(Commands.literal("count").then(Commands.argument("radius", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 96))
+                        .executes(ctx -> {
+                            // Debug: what lies within a radius (all heights below the surface), block -> count.
+                            ServerLevel level = ctx.getSource().getLevel();
+                            int r = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "radius");
+                            BlockPos c = BlockPos.containing(ctx.getSource().getPosition());
+                            java.util.Map<String, Integer> n = new java.util.TreeMap<>();
+                            for (BlockPos p : BlockPos.betweenClosed(c.offset(-r, -r, -r), c.offset(r, r, r))) {
+                                var st = level.getBlockState(p);
+                                if (st.is(Blocks.OAK_FENCE) || st.is(Blocks.OAK_PLANKS) || st.is(Blocks.WALL_TORCH)
+                                        || st.is(Blocks.TORCH) || st.is(Blocks.COBBLESTONE) || st.is(Blocks.IRON_ORE)
+                                        || st.is(Blocks.COAL_ORE) || st.isAir()) {
+                                    n.merge(net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(st.getBlock()).getPath(), 1, Integer::sum);
+                                }
+                            }
+                            say(ctx, n.toString());
+                            return 1;
+                        })))
                 .then(Commands.literal("found").executes(ctx -> {
                     ServerLevel level = ctx.getSource().getLevel();
                     BlockPos at = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,

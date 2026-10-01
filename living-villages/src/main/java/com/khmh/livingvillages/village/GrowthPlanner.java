@@ -27,10 +27,12 @@ public final class GrowthPlanner {
     }
 
     private static final List<Rule> RULES = List.of(
-            new Rule("lumberjack", 1, 1),
-            new Rule("mine", 1, 1),
-            new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 2),
+            // A camp's first worries: food, somewhere to keep things, wood, beds; then stone.
+            new Rule("farm", 1, 1),
             new Rule("warehouse", 1, l -> 99, v -> v.countGroup("warehouse") == 0 || v.stockFill() >= 0.8),
+            new Rule("lumberjack", 1, 1),
+            new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 2),
+            new Rule("mine", 1, 1),
             new Rule("farm", 1, l -> l, v -> true),
             new Rule("builder", 1, 1),
             new Rule("apprentice", 1, 1),

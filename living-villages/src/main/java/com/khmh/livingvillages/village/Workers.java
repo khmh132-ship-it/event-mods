@@ -16,6 +16,7 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /** Hiring: a finished workplace without a worker takes on an unemployed adult villager. */
 public final class Workers {
@@ -74,7 +75,26 @@ public final class Workers {
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
         boolean woodInHand = CostKey.Wood.INSTANCE.available(v.stock(level)) >= 32;
+        // Food: a hunter while the stores are thin and there is game about, a farmer once there are fields.
+        int food = v.stock(level).totals().entrySet().stream()
+                .filter(e -> e.getKey().isEdible()).mapToInt(Map.Entry::getValue).sum();
+        boolean foodLow = food < Math.max(2, v.population()) * 6;
+        boolean game = !level.getEntitiesOfClass(net.minecraft.world.entity.animal.Animal.class,
+                new net.minecraft.world.phys.AABB(v.center()).inflate(v.radius()), a -> a.isAlive() && !a.isBaby()
+                        && !(a instanceof net.minecraft.world.entity.animal.horse.AbstractHorse)).isEmpty();
+        boolean fields = v.buildings().stream().anyMatch(b -> b.isComplete()
+                && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
+                && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));
+        needed.put(WorkerJob.BUTCHER, foodLow && game);
+        needed.put(WorkerJob.FARMER, fields);
+        if (foodLow) {
+            priority.add(WorkerJob.FARMER);
+            priority.add(WorkerJob.BUTCHER);
+        }
         priority.add(WorkerJob.BUILDER);
+        if (!foodLow) {
+            priority.add(WorkerJob.FARMER);
+        }
         if (woodInHand) {
             priority.add(WorkerJob.APPRENTICE);
             priority.add(WorkerJob.LUMBERJACK);
@@ -83,6 +103,9 @@ public final class Workers {
             priority.add(WorkerJob.APPRENTICE);
         }
         priority.add(WorkerJob.MINER);
+        if (!foodLow) {
+            priority.add(WorkerJob.BUTCHER);
+        }
         for (int i = 0; i < priority.size(); i++) {
             WorkerJob job = priority.get(i);
             if (!villageWide(level, v, villagers, workers, job, needed.get(job))) {
@@ -140,7 +163,7 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 2400) {
+        if (now - v.data().getLong("lastReassign") < 3600) {
             return false;
         }
         VillageWorker donor = null;
