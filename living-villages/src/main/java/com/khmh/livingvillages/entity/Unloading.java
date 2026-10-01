@@ -82,6 +82,14 @@ class Unloading {
         }
         worker.getNavigation().stop();
         worker.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
+        if (target.equals(pendingChest)) {
+            pendingChest = null;
+            if (!placeChest(level, village, target)) {
+                skip.add(target);
+                target = null;
+            }
+            return false;
+        }
         if (target.equals(village.center())) {
             putInBuffer(village);
             reset();
@@ -118,7 +126,81 @@ class Unloading {
                 best = p;
             }
         }
+        if (best == null && village.countGroup("warehouse") == 0 && woodForChest(village) != null) {
+            // Nowhere to put things yet: knock a chest together and stand it in a house, like a player would.
+            pendingChest = chestSpot(level, village);
+            if (pendingChest != null) {
+                return pendingChest;
+            }
+        }
         return best != null ? best : village.center();
+    }
+
+    private BlockPos pendingChest;
+
+    /** Two logs (carried, or lying at the bell) or eight planks make a chest; null if there is no wood. */
+    private net.minecraft.world.item.Item woodForChest(Village village) {
+        SimpleContainer inv = worker.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(net.minecraft.tags.ItemTags.LOGS) && s.getCount() >= 2
+                    || s.is(net.minecraft.tags.ItemTags.PLANKS) && s.getCount() >= 8) {
+                return s.getItem();
+            }
+        }
+        return village.storage().count(net.minecraft.world.item.Items.OAK_LOG) >= 2
+                ? net.minecraft.world.item.Items.OAK_LOG : null;
+    }
+
+    /** A free corner on the floor of a finished house (or any building), out of the doorway. */
+    private BlockPos chestSpot(ServerLevel level, Village village) {
+        BlockPos best = null;
+        for (com.khmh.livingvillages.building.Building b : village.buildings()) {
+            if (!b.isComplete()) {
+                continue;
+            }
+            var box = b.box();
+            for (BlockPos p : BlockPos.betweenClosed(box.minX() + 1, box.minY(), box.minZ() + 1, box.maxX() - 1,
+                    box.maxY() - 1, box.maxZ() - 1)) {
+                if (!level.getBlockState(p).isAir() || !level.getBlockState(p.above()).isAir()
+                        || !level.getBlockState(p.below()).isSolidRender(level, p.below())
+                        || level.canSeeSky(p) || p.closerThan(b.entrance(), 2.5)) {
+                    continue;
+                }
+                int walls = 0;
+                for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+                    BlockPos n = p.relative(d);
+                    if (level.getBlockState(n).isSolidRender(level, n)) {
+                        walls++;
+                    } else if (!level.getBlockState(n).isAir()) {
+                        walls = -9; // next to a bed, a door, a table: leave the room usable
+                    }
+                }
+                if (walls >= 2 && (best == null || p.distSqr(worker.blockPosition()) < best.distSqr(worker.blockPosition()))) {
+                    best = p.immutable();
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Puts the chest down (paying for it with wood); false if the spot is taken or the wood is gone. */
+    private boolean placeChest(ServerLevel level, Village village, BlockPos at) {
+        net.minecraft.world.item.Item wood = woodForChest(village);
+        if (wood == null || !level.getBlockState(at).isAir()) {
+            return false;
+        }
+        int need = new ItemStack(wood).is(net.minecraft.tags.ItemTags.PLANKS) ? 8 : 2;
+        if (worker.getInventory().countItem(wood) >= need) {
+            worker.getInventory().removeItemType(wood, need);
+        } else {
+            village.storage().take(wood, need);
+        }
+        level.setBlock(at, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
+        worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        com.khmh.livingvillages.LivingVillages.LOGGER.info("Village {}: a chest was put in at {}",
+                village.id().toString().substring(0, 8), at);
+        return true;
     }
 
     private static boolean hasRoom(ServerLevel level, BlockPos pos) {

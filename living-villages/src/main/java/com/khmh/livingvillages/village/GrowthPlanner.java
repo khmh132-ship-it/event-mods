@@ -1,5 +1,8 @@
 package com.khmh.livingvillages.village;
 
+import com.khmh.livingvillages.building.CostKey;
+import java.util.Map;
+
 import com.khmh.livingvillages.LivingVillages;
 import com.khmh.livingvillages.building.Building;
 import com.khmh.livingvillages.building.BuildingType;
@@ -93,11 +96,15 @@ public final class GrowthPlanner {
             }
             Stockpile stock = v.stock(level);
             // Materials are gathered and made while it goes up; a good start is enough to begin.
-            if (!MaterialCost.canAfford(stock, data.cost(), START_SHARE)) {
+            // Only the bulk (wood, stone) is saved up for; glass, iron and the like are asked for while it goes
+            // up, and a builder makes do without them if nobody can get any.
+            Map<CostKey, Integer> bulk = new java.util.HashMap<>(data.cost());
+            bulk.keySet().removeIf(k -> k instanceof CostKey.Of);
+            if (!MaterialCost.canAfford(stock, bulk, START_SHARE)) {
                 if (waiting == null) {
                     waiting = type.id();
                 }
-                report.add(type.id() + ": needs " + MaterialCost.describeMissing(stock, data.cost()));
+                report.add(type.id() + ": needs " + MaterialCost.describeMissing(stock, bulk));
                 continue; // build something cheaper meanwhile
             }
             Optional<SiteFinder.Site> site = SiteFinder.find(level, v, type, data);

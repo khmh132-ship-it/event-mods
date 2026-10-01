@@ -169,6 +169,24 @@ public class FarmerWorkGoal extends Goal {
         return Items.WHEAT_SEEDS;
     }
 
+    /** Whether any farm of the village has ripe crops or bare farmland right now (cheap: farm sites only). */
+    public static boolean hasWork(ServerLevel level, Village village) {
+        for (com.khmh.livingvillages.building.Building b : village.buildings()) {
+            var type = com.khmh.livingvillages.building.BuildingTypes.get(b.typeId());
+            if (type == null || !"farm".equals(type.group()) || !b.isComplete()) {
+                continue;
+            }
+            var box = b.box();
+            if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                continue;
+            }
+            if (BlockPos.betweenClosedStream(box).anyMatch(p -> needsWork(level, p))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Ripe crops and empty farmland within the village. */
     private static List<BlockPos> findWork(ServerLevel level, Village village) {
         BlockPos c = village.center();

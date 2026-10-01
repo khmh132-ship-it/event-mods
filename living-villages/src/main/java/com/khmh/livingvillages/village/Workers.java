@@ -86,7 +86,7 @@ public final class Workers {
                 && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
                 && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));
         needed.put(WorkerJob.BUTCHER, foodLow && game);
-        needed.put(WorkerJob.FARMER, fields);
+        needed.put(WorkerJob.FARMER, fields && com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v));
         if (foodLow) {
             priority.add(WorkerJob.FARMER);
             priority.add(WorkerJob.BUTCHER);
@@ -103,6 +103,13 @@ public final class Workers {
             priority.add(WorkerJob.APPRENTICE);
         }
         priority.add(WorkerJob.MINER);
+        // A building the village is saving up for and short of stone: the quarry comes before the rest.
+        if (v.waitingFor() != null && v.lastPlanReport().stream().findFirst()
+                .map(l -> l.contains("more stone")).orElse(false)) {
+            priority.remove(WorkerJob.MINER);
+            priority.add(priority.indexOf(WorkerJob.BUILDER) + 1, WorkerJob.MINER);
+            needed.put(WorkerJob.MINER, true);
+        }
         if (!foodLow) {
             priority.add(WorkerJob.BUTCHER);
         }
