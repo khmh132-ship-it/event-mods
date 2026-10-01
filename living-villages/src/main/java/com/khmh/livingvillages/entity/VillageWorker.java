@@ -51,6 +51,10 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
     private UUID workplaceId;
     private final SimpleContainer inventory = new SimpleContainer(18);
     private final Unloading unloading = new Unloading(this);
+    /** 0..20 like a player's hunger bar. */
+    private int food = 20;
+    @Nullable
+    private BlockPos bed;
     private int orphanTicks;
 
     public VillageWorker(EntityType<? extends VillageWorker> type, Level level) {
@@ -71,6 +75,8 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new SleepGoal(this));
+        goalSelector.addGoal(1, new EatGoal(this));
         goalSelector.addGoal(1, new OpenDoorGoal(this, true));
         goalSelector.addGoal(1, new CollectItemsGoal(this));
         goalSelector.addGoal(2, new BuilderWorkGoal(this));
@@ -121,6 +127,36 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
 
     public Optional<Building> workplace() {
         return village().flatMap(v -> v.buildings().stream().filter(b -> b.id().equals(workplaceId)).findFirst());
+    }
+
+    public int food() {
+        return food;
+    }
+
+    public boolean isHungry() {
+        return food <= 10;
+    }
+
+    public boolean isStarving() {
+        return food <= 2;
+    }
+
+    void feed(int nutrition) {
+        food = Math.min(20, food + nutrition);
+    }
+
+    /** Work goes slower on an empty stomach. */
+    public double workSpeed() {
+        return food <= 4 ? 0.5 : 1.0;
+    }
+
+    @Nullable
+    public BlockPos bed() {
+        return bed;
+    }
+
+    void setBed(@Nullable BlockPos bed) {
+        this.bed = bed;
     }
 
     @Override
@@ -202,6 +238,9 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         if (level().isClientSide) {
             return;
         }
+        if (tickCount % 1200 == 0 && food > 0 && !isSleeping()) {
+            food--; // about a meal every ten minutes of work
+        }
         if (job() == WorkerJob.BUILDER && tickCount % 20 == 0) {
             village().ifPresent(v -> v.noteBuilder(level().getGameTime()));
         }
@@ -256,6 +295,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
             }
         });
         village().ifPresent(v -> {
+            Beds.release(v, this);
             String key = "worker_" + job().name().toLowerCase();
             if (v.data().hasUUID(key) && v.data().getUUID(key).equals(getUUID())) {
                 v.data().remove(key);
@@ -306,6 +346,10 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
             tag.putUUID("Workplace", workplaceId);
         }
         writeInventoryToTag(tag);
+        tag.putInt("Food", food);
+        if (bed != null) {
+            tag.putLong("Bed", bed.asLong());
+        }
     }
 
     @Override
@@ -315,6 +359,8 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         villageId = tag.hasUUID("Village") ? tag.getUUID("Village") : null;
         workplaceId = tag.hasUUID("Workplace") ? tag.getUUID("Workplace") : null;
         readInventoryFromTag(tag);
+        food = tag.contains("Food") ? tag.getInt("Food") : 20;
+        bed = tag.contains("Bed") ? BlockPos.of(tag.getLong("Bed")) : null;
     }
 
     /** Standing spot at the surface next to a position. */

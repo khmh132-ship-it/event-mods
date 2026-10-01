@@ -85,7 +85,7 @@ class Tooling {
         float hardness = state.getDestroySpeed(level, pos);
         float speed = Math.max(1.0F, hand.getDestroySpeed(state));
         boolean proper = !state.requiresCorrectToolForDrops() || hand.isCorrectToolForDrops(state);
-        return Math.max(4, Math.round(hardness * (proper ? 30 : 100) / speed));
+        return Math.max(4, (int) Math.round(hardness * (proper ? 30 : 100) / speed / worker.workSpeed()));
     }
 
     boolean canHarvest(BlockState state) {

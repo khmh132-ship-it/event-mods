@@ -194,7 +194,7 @@ public class BuilderWorkGoal extends Goal {
         if (--cooldown > 0) {
             return;
         }
-        cooldown = Math.max(2, LVConfig.BUILD_INTERVAL.get() / 2);
+        cooldown = (int) Math.max(2, LVConfig.BUILD_INTERVAL.get() / 2 / worker.workSpeed());
         if (!skip && worker.getBoundingBox().intersects(new AABB(pos))) {
             if (++blockedBySelf < 40) {
                 stepOff();

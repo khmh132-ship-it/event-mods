@@ -134,6 +134,7 @@ public final class VillageEvents {
         stock.flushBuffer();
         v.dropFinishedRequests(level.getGameTime());
         v.setStockFill(stock.fill());
+        Births.tick(level, v, stock);
         Workers.hire(level, v, villagers, workers);
     }
 

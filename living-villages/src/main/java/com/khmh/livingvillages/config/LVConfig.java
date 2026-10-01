@@ -15,6 +15,7 @@ public final class LVConfig {
     public static final ForgeConfigSpec.IntValue PLAN_INTERVAL;
     public static final ForgeConfigSpec.BooleanValue AUTO_GROWTH;
     public static final ForgeConfigSpec.IntValue MAX_SLOPE;
+    public static final ForgeConfigSpec.IntValue BIRTH_INTERVAL;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -25,6 +26,8 @@ public final class LVConfig {
                 .defineInRange("productionMultiplier", 1.0, 0.0, 100.0);
         MAX_CATCHUP_CYCLES = b.comment("How many missed production cycles are made up for when time passed unobserved")
                 .defineInRange("maxCatchupCycles", 120, 0, 100000);
+        BIRTH_INTERVAL = b.comment("Ticks between births in a village with free beds and food (6000 = 5 minutes)")
+                .defineInRange("birthInterval", 6000, 20, 1000000);
         STORAGE_CAP = b.comment("Max amount of one item a village keeps per warehouse level (base village counts as one)")
                 .defineInRange("storageCap", 512, 16, 1000000);
         b.pop();
