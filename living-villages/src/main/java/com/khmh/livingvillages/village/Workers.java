@@ -29,42 +29,7 @@ public final class Workers {
     }
 
     static void hire(ServerLevel level, Village v, List<Villager> villagers, List<VillageWorker> workers) {
-        // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
-        boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
-        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0
-                && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
-        // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
-        boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
-                || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
-        // Likewise stone: a miner digs his own quarry until there is a mine.
-        boolean stoneShort = CostKey.Stone.INSTANCE.available(v.stock(level)) < 128
-                || v.buildings().stream().anyMatch(b -> "mine".equals(b.typeId()) && b.isComplete());
-        if (!villageWide(level, v, villagers, workers, WorkerJob.BUILDER, building)
-                || !villageWide(level, v, villagers, workers, WorkerJob.APPRENTICE, orders)
-                || !villageWide(level, v, villagers, workers, WorkerJob.LUMBERJACK, woodShort)
-                || !villageWide(level, v, villagers, workers, WorkerJob.MINER, stoneShort)) {
-            return;
-        }
-
-        // Guards: one for every six villagers (at least one from four on), two more while the alarm is up.
-        int wanted = v.population() < 4 ? 0 : Math.max(1, v.population() / 6) + (v.alarm() ? 2 : 0);
-        long guards = workers.stream().filter(w -> w.job() == WorkerJob.GUARD).count();
-        if (guards < wanted) {
-            Building barracks = v.buildings().stream()
-                    .filter(b -> b.isComplete() && "barracks".equals(b.typeId())).findFirst().orElse(null);
-            if (convert(level, v, villagers, WorkerJob.GUARD, barracks, v.center()) != null) {
-                return;
-            }
-        }
-
-        // Carriers: one for every ten villagers once there is a warehouse and something to haul.
-        long carriers = workers.stream().filter(w -> w.job() == WorkerJob.CARRIER).count();
-        if (carriers < 1 + v.population() / 10 && !Stockpile.outlying(level, v).isEmpty()
-                && convert(level, v, villagers, WorkerJob.CARRIER, null, v.center()) != null) {
-            return;
-        }
-
-        // Vanilla farmers come under the village: they keep their looks and work the fields for real.
+        // Vanilla professionals come under the village first: they keep their looks and do their job for real.
         for (Villager farmer : List.copyOf(villagers)) {
             if (!farmer.isAlive() || farmer.isBaby()) {
                 continue;
@@ -89,6 +54,25 @@ public final class Workers {
             }
         }
 
+
+        // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
+        boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
+        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0
+                && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
+        // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
+        boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
+                || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
+        // Likewise stone: a miner digs his own quarry until there is a mine.
+        boolean stoneShort = CostKey.Stone.INSTANCE.available(v.stock(level)) < 128
+                || v.buildings().stream().anyMatch(b -> "mine".equals(b.typeId()) && b.isComplete());
+        if (!villageWide(level, v, villagers, workers, WorkerJob.BUILDER, building)
+                || !villageWide(level, v, villagers, workers, WorkerJob.APPRENTICE, orders)
+                || !villageWide(level, v, villagers, workers, WorkerJob.LUMBERJACK, woodShort)
+                || !villageWide(level, v, villagers, workers, WorkerJob.MINER, stoneShort)) {
+            return;
+        }
+
+        // Workplaces (storekeeper at the warehouse, carpenter at the sawmill...) before guards and carriers.
         for (Building b : v.buildings()) {
             WorkerJob job = WorkerJob.forWorkplace(b.typeId());
             if (job == null || !b.isComplete() || b.workerId() != null) {
@@ -96,10 +80,30 @@ public final class Workers {
             }
             VillageWorker worker = convert(level, v, villagers, job, b, b.entrance());
             if (worker == null) {
-                return; // nobody free; try again on the next scan
+                break; // nobody free; try again on the next scan
             }
             b.setWorkerId(worker.getUUID());
+            return;
         }
+
+        // Guards: one for every six villagers (at least one from four on), two more while the alarm is up.
+        int wanted = v.population() < 4 ? 0 : Math.max(1, v.population() / 6) + (v.alarm() ? 2 : 0);
+        long guards = workers.stream().filter(w -> w.job() == WorkerJob.GUARD).count();
+        if (guards < wanted) {
+            Building barracks = v.buildings().stream()
+                    .filter(b -> b.isComplete() && "barracks".equals(b.typeId())).findFirst().orElse(null);
+            if (convert(level, v, villagers, WorkerJob.GUARD, barracks, v.center()) != null) {
+                return;
+            }
+        }
+
+        // Carriers: one for every ten villagers once there is a warehouse and something to haul.
+        long carriers = workers.stream().filter(w -> w.job() == WorkerJob.CARRIER).count();
+        if (carriers < 1 + v.population() / 10 && !Stockpile.outlying(level, v).isEmpty()
+                && convert(level, v, villagers, WorkerJob.CARRIER, null, v.center()) != null) {
+            return;
+        }
+
     }
 
     /** Hires (if needed) and houses a village-wide worker; false if someone was just hired this scan. */

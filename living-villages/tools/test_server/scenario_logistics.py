@@ -28,7 +28,7 @@ with TestServer(CFG, log_name='test_logistics.log') as s:
     s.cmd('gamerule doDaylightCycle false')
     s.cmd('time set noon')
     s.cmd('setblock 0 64 0 bell[attachment=floor]')
-    for prof in ['nitwit', 'none', 'none', 'none']:
+    for prof in ['nitwit', 'none', 'none', 'none', 'none', 'none']:
         s.cmd(f'summon villager 2 64 3 {{NoAI:1b,PersistenceRequired:1b,VillagerData:{{profession:"minecraft:{prof}",'
               f'level:1,type:"minecraft:plains"}}}}')
     at(s, 'create')
