@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/chopping_block"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/chopping_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/chopping_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/chopping_block",
+      "y": 270
+    }
+  }
+}

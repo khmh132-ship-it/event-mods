@@ -2,5 +2,11 @@
   "entity.livingvillages.worker": "Village Worker",
   "entity.livingvillages.worker.job.builder": "Builder",
   "entity.livingvillages.worker.job.lumberjack": "Lumberjack",
-  "entity.livingvillages.worker.job.miner": "Miner"
+  "entity.livingvillages.worker.job.miner": "Miner",
+  "block.livingvillages.builders_table": "Builder's Table",
+  "block.livingvillages.chopping_block": "Chopping Block",
+  "block.livingvillages.miners_bench": "Miner's Bench",
+  "block.livingvillages.weapon_rack": "Weapon Rack",
+  "block.livingvillages.stockpile_crate": "Stockpile Crate",
+  "itemGroup.livingvillages": "Living Villages"
 }

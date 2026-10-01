@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/stockpile_crate"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/stockpile_crate",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/stockpile_crate",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/stockpile_crate",
+      "y": 270
+    }
+  }
+}

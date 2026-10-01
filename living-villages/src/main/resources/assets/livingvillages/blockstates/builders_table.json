@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/builders_table"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/builders_table",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/builders_table",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/builders_table",
+      "y": 270
+    }
+  }
+}

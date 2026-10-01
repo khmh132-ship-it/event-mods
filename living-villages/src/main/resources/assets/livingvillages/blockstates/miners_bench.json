@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/miners_bench"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/miners_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/miners_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/miners_bench",
+      "y": 270
+    }
+  }
+}
