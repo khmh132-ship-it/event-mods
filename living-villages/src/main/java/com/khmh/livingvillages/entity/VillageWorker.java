@@ -83,7 +83,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new BuilderWorkGoal(this));
         goalSelector.addGoal(2, new LumberjackWorkGoal(this));
         goalSelector.addGoal(2, new MinerWorkGoal(this));
-        goalSelector.addGoal(2, new ApprenticeWorkGoal(this));
+        goalSelector.addGoal(2, new CrafterWorkGoal(this));
         goalSelector.addGoal(2, new FarmerWorkGoal(this));
         goalSelector.addGoal(2, new AnimalWorkGoal(this));
         goalSelector.addGoal(1, new GuardGoals.Melee(this));

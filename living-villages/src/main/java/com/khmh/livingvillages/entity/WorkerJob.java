@@ -12,12 +12,25 @@ public enum WorkerJob {
     BUILDER("builder_workshop", "mason"),
     LUMBERJACK("lumberjack_hut", "leatherworker"),
     MINER("mine", "toolsmith"),
-    APPRENTICE("apprentice_workshop", "fletcher"),
+    APPRENTICE("apprentice_workshop", "nitwit"),
     /** A vanilla farmer taken over by the village: works every field around it. */
     FARMER("", "farmer"),
     SHEPHERD("", "shepherd"),
     BUTCHER("", "butcher"),
-    GUARD("barracks", "weaponsmith");
+    GUARD("barracks", "weaponsmith"),
+    MASON("", "mason"),
+    TOOLSMITH("", "toolsmith"),
+    WEAPONSMITH("", "weaponsmith"),
+    ARMORER("", "armorer"),
+    FLETCHER("", "fletcher"),
+    LEATHERWORKER("", "leatherworker"),
+    CARPENTER("sawmill", "fletcher");
+
+    /** Jobs that make things to order (see {@link com.khmh.livingvillages.economy.Trades}). */
+    public boolean crafts() {
+        return this == APPRENTICE || this == MASON || this == TOOLSMITH || this == WEAPONSMITH || this == ARMORER
+                || this == FLETCHER || this == LEATHERWORKER || this == CARPENTER;
+    }
 
     private final String workplace;
     private final String outfit;

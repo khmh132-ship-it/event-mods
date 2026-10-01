@@ -2,6 +2,7 @@ package com.khmh.livingvillages.entity;
 
 import com.khmh.livingvillages.economy.CraftPlanner;
 import com.khmh.livingvillages.economy.Request;
+import com.khmh.livingvillages.economy.Trades;
 import com.khmh.livingvillages.village.Village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -29,7 +30,7 @@ import java.util.Map;
  * his hands), smelts in a real furnace with real fuel, and takes the result back to the warehouse. A village
  * without a table or furnace gets one set up by the bell first.
  */
-public class ApprenticeWorkGoal extends Goal {
+public class CrafterWorkGoal extends Goal {
     private static final int CRAFT_TICKS = 20;
     private static final int SMELT_TIMEOUT = 260;
 
@@ -47,7 +48,7 @@ public class ApprenticeWorkGoal extends Goal {
     /** A crafting table or furnace to set up before the actual order. */
     private Item setUp;
 
-    public ApprenticeWorkGoal(VillageWorker worker) {
+    public CrafterWorkGoal(VillageWorker worker) {
         this.worker = worker;
         this.fetching = new Fetching(worker);
         setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
@@ -55,7 +56,7 @@ public class ApprenticeWorkGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (worker.job() != WorkerJob.APPRENTICE || --cooldown > 0) {
+        if (!worker.job().crafts() || --cooldown > 0) {
             return false;
         }
         cooldown = 20;
@@ -65,7 +66,7 @@ public class ApprenticeWorkGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return worker.job() == WorkerJob.APPRENTICE && worker.village().isPresent();
+        return worker.job().crafts() && worker.village().isPresent();
     }
 
     @Override
@@ -90,6 +91,10 @@ public class ApprenticeWorkGoal extends Goal {
     }
 
     private boolean workable(Request r) {
+        Village village = worker.village().orElse(null);
+        if (village == null || !Trades.isMine(worker.job(), r.item(), village)) {
+            return false;
+        }
         return r.remaining() > 0 && (r.claimedBy() == null || r.claimedBy().equals(worker.getUUID()))
                 && (r.unobtainableSince() < 0 || worker.level().getGameTime() - r.unobtainableSince() > 1200);
     }
@@ -130,7 +135,8 @@ public class ApprenticeWorkGoal extends Goal {
             }
         }
         // Nothing to work at? Set up a crafting table (and later a furnace) by the bell first.
-        if (Stations.find(level, village, CraftPlanner.Station.TABLE, worker.blockPosition()) == null) {
+        if (worker.job() == WorkerJob.APPRENTICE
+                && Stations.find(level, village, CraftPlanner.Station.TABLE, worker.blockPosition()) == null) {
             if (begin(level, stock, Items.CRAFTING_TABLE, 1, null)) {
                 return;
             }
@@ -191,7 +197,7 @@ public class ApprenticeWorkGoal extends Goal {
         }
         CraftPlanner.Step step = steps.get(stepIndex);
         if (step.station() == CraftPlanner.Station.HAND) {
-            if (timer >= CRAFT_TICKS) {
+            if (timer >= craftTicks()) {
                 craft(step);
             }
             return;
@@ -216,12 +222,21 @@ public class ApprenticeWorkGoal extends Goal {
             if (timer % 10 == 0) {
                 worker.swing(InteractionHand.MAIN_HAND);
             }
-            if (timer >= CRAFT_TICKS + Math.min(80, step.times() * 5)) {
+            if (timer >= craftTicks() + Math.min(80, step.times() * 5) / speedup()) {
                 craft(step);
             }
         } else {
             smelt(level, at, step);
         }
+    }
+
+    /** Specialists work twice as fast as the apprentice. */
+    private int speedup() {
+        return worker.job() == WorkerJob.APPRENTICE ? 1 : 2;
+    }
+
+    private int craftTicks() {
+        return (int) (CRAFT_TICKS / speedup() / worker.workSpeed());
     }
 
     private void craft(CraftPlanner.Step step) {

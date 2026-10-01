@@ -30,7 +30,8 @@ public final class Workers {
     static void hire(ServerLevel level, Village v, List<Villager> villagers, List<VillageWorker> workers) {
         // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
         boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
-        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0);
+        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0
+                && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
         // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
         boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
                 || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
@@ -63,7 +64,13 @@ public final class Workers {
             VillagerProfession p = farmer.getVillagerData().getProfession();
             WorkerJob job = p == VillagerProfession.FARMER ? WorkerJob.FARMER
                     : p == VillagerProfession.SHEPHERD ? WorkerJob.SHEPHERD
-                    : p == VillagerProfession.BUTCHER ? WorkerJob.BUTCHER : null;
+                    : p == VillagerProfession.BUTCHER ? WorkerJob.BUTCHER
+                    : p == VillagerProfession.MASON ? WorkerJob.MASON
+                    : p == VillagerProfession.TOOLSMITH ? WorkerJob.TOOLSMITH
+                    : p == VillagerProfession.WEAPONSMITH ? WorkerJob.WEAPONSMITH
+                    : p == VillagerProfession.ARMORER ? WorkerJob.ARMORER
+                    : p == VillagerProfession.FLETCHER ? WorkerJob.FLETCHER
+                    : p == VillagerProfession.LEATHERWORKER ? WorkerJob.LEATHERWORKER : null;
             if (job != null) {
                 takeOver(level, v, villagers, farmer, job);
             }
