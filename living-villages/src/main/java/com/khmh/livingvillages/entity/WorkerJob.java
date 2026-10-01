@@ -28,7 +28,9 @@ public enum WorkerJob {
     FISHERMAN("", "fisherman"),
     CLERIC("", "cleric"),
     LIBRARIAN("", "librarian"),
-    CARTOGRAPHER("", "cartographer");
+    CARTOGRAPHER("", "cartographer"),
+    STOREKEEPER("warehouse", "librarian"),
+    CARRIER("", "nitwit");
 
     /** Jobs that make things to order (see {@link com.khmh.livingvillages.economy.Trades}). */
     public boolean crafts() {

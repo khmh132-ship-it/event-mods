@@ -3,6 +3,7 @@ package com.khmh.livingvillages.village;
 import com.khmh.livingvillages.LivingVillages;
 import com.khmh.livingvillages.building.Building;
 import com.khmh.livingvillages.building.CostKey;
+import com.khmh.livingvillages.stock.Stockpile;
 import com.khmh.livingvillages.entity.LVEntities;
 import com.khmh.livingvillages.entity.VillageWorker;
 import com.khmh.livingvillages.entity.WorkerJob;
@@ -56,6 +57,13 @@ public final class Workers {
             }
         }
 
+        // Carriers: one for every ten villagers once there is a warehouse and something to haul.
+        long carriers = workers.stream().filter(w -> w.job() == WorkerJob.CARRIER).count();
+        if (carriers < 1 + v.population() / 10 && !Stockpile.outlying(level, v).isEmpty()
+                && convert(level, v, villagers, WorkerJob.CARRIER, null, v.center()) != null) {
+            return;
+        }
+
         // Vanilla farmers come under the village: they keep their looks and work the fields for real.
         for (Villager farmer : List.copyOf(villagers)) {
             if (!farmer.isAlive() || farmer.isBaby()) {
@@ -74,7 +82,8 @@ public final class Workers {
                     : p == VillagerProfession.FISHERMAN ? WorkerJob.FISHERMAN
                     : p == VillagerProfession.CLERIC ? WorkerJob.CLERIC
                     : p == VillagerProfession.LIBRARIAN ? WorkerJob.LIBRARIAN
-                    : p == VillagerProfession.CARTOGRAPHER ? WorkerJob.CARTOGRAPHER : null;
+                    : p == VillagerProfession.CARTOGRAPHER ? WorkerJob.CARTOGRAPHER
+                    : p == VillagerProfession.NITWIT ? WorkerJob.CARRIER : null;
             if (job != null) {
                 takeOver(level, v, villagers, farmer, job);
             }

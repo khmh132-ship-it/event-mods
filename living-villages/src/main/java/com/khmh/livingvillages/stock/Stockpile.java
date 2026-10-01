@@ -71,6 +71,33 @@ public final class Stockpile implements Stock {
         return out;
     }
 
+    /** Chests and barrels of the village's other buildings that hold something: work for the carriers. */
+    public static List<BlockPos> outlying(ServerLevel level, Village village) {
+        List<BlockPos> store = containers(level, village);
+        List<BlockPos> out = new ArrayList<>();
+        boolean hasWarehouse = village.buildings().stream().anyMatch(b -> b.isComplete() && b.type() != null
+                && "warehouse".equals(b.type().group()));
+        if (!hasWarehouse) {
+            return out;
+        }
+        for (Building b : village.buildings()) {
+            if (!b.isComplete() || b.type() != null && "warehouse".equals(b.type().group())) {
+                continue;
+            }
+            BoundingBox box = b.box();
+            if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                continue;
+            }
+            for (BlockPos p : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                if (!store.contains(p) && level.getBlockEntity(p) instanceof Container c && !c.isEmpty()
+                        && (c instanceof ChestBlockEntity || c instanceof BarrelBlockEntity)) {
+                    out.add(p.immutable());
+                }
+            }
+        }
+        return out;
+    }
+
     public List<BlockPos> positions() {
         return containers;
     }
