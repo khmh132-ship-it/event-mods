@@ -25,3 +25,17 @@ Requires JDK 17 (Gradle downloads it automatically through the toolchain if it i
 - `/village list`: all villages in the current dimension
 - `/village info`: the village you are standing in, with its stockpile
 - `/village storage add|take <item> <count>`: change the stockpile
+
+## Fitting room (house editing)
+
+`tools/fitting_room/build_world.py` builds a void world where every vanilla plains village building and every
+Living Villages draft (`tools/fitting_room/drafts.py`) stands on its own platform with a sign and a structure
+block already set to SAVE as `livingvillages:plains/<name>`.
+
+```
+python3 tools/fitting_room/build_world.py   # -> build/fitting_room_plains.zip
+```
+
+Vanilla pieces are converted the way village generation places them: air is skipped and jigsaw blocks become
+their final state. Edited buildings are saved to
+`saves/<world>/generated/livingvillages/structures/plains/`.
