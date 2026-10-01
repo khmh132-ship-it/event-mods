@@ -138,7 +138,7 @@ public final class SiteFinder {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int x = box.minX() - 1; x <= box.maxX() + 1; x++) {
             for (int z = box.minZ() - 1; z <= box.maxZ() + 1; z++) {
-                int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+                int top = groundUnderTrees(level, pos.set(x, 0, z));
                 if (!isNatural(level.getBlockState(pos.set(x, top, z)))) {
                     return null;
                 }
@@ -158,6 +158,21 @@ public final class SiteFinder {
             }
         }
         return best;
+    }
+
+    /** Height of the ground in a column, looking through tree trunks (they get felled while levelling). */
+    public static int groundUnderTrees(ServerLevel level, BlockPos column) {
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(column.getX(), 0, column.getZ());
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column.getX(), column.getZ()) - 1;
+        while (y > level.getMinBuildHeight()) {
+            BlockState s = level.getBlockState(pos.setY(y));
+            if (!s.getFluidState().isEmpty()
+                    || !s.is(BlockTags.LOGS) && !s.is(BlockTags.LEAVES) && !s.is(BlockTags.REPLACEABLE)) {
+                break;
+            }
+            y--;
+        }
+        return y;
     }
 
     /** Untouched ground: no paths, farmland, buildings, water or trees. */

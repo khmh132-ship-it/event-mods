@@ -63,6 +63,7 @@ public final class GrowthPlanner {
             return;
         }
         String waiting = null;
+        List<String> report = new ArrayList<>();
         for (Rule rule : RULES) {
             if (v.level() < rule.minLevel() || !rule.when().test(v)
                     || v.countGroup(rule.group()) >= rule.maxAtLevel().applyAsInt(v.level())) {
@@ -74,23 +75,29 @@ public final class GrowthPlanner {
             }
             TemplateData data = TemplateData.get(level, type).orElse(null);
             if (data == null) {
+                report.add(type.id() + ": template missing");
                 continue;
             }
             if (!MaterialCost.canAfford(v.storage(), data.cost())) {
                 if (waiting == null) {
                     waiting = type.id();
                 }
+                report.add(type.id() + ": needs " + MaterialCost.describeMissing(v.storage(), data.cost()));
                 continue; // build something cheaper meanwhile
             }
             Optional<SiteFinder.Site> site = SiteFinder.find(level, v, type, data);
             if (site.isEmpty()) {
+                report.add(type.id() + ": no free site");
                 continue;
             }
             start(v, type, data, site.get(), now);
+            report.add(type.id() + ": started");
             v.setWaitingFor(null);
+            v.setLastPlanReport(report);
             return;
         }
         v.setWaitingFor(waiting);
+        v.setLastPlanReport(report);
     }
 
     /** Runs the planner right away, ignoring the plan interval and the global switch (debug). */

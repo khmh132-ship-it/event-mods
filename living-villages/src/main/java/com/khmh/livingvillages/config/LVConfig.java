@@ -38,7 +38,7 @@ public final class LVConfig {
         AUTO_GROWTH = b.comment("Villages choose and start new buildings on their own")
                 .define("autoGrowth", true);
         MAX_SLOPE = b.comment("Max height difference of the ground under a new building")
-                .defineInRange("maxSlope", 3, 0, 16);
+                .defineInRange("maxSlope", 5, 0, 16);
         b.pop();
         SPEC = b.build();
     }

@@ -6,6 +6,7 @@ import com.khmh.livingvillages.village.Village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -56,7 +57,7 @@ public final class Construction {
 
     private static void step(ServerLevel level, Village village, Building b) {
         if (b.phase() == Building.Phase.PREPARE) {
-            prepareColumn(level, b);
+            prepareColumn(level, village, b);
             return;
         }
         TemplateData data = TemplateData.get(level, b.type()).orElse(null);
@@ -90,7 +91,7 @@ public final class Construction {
     }
 
     /** Levels one column of the site: fills dips with dirt and clears everything above the ground. */
-    private static void prepareColumn(ServerLevel level, Building b) {
+    private static void prepareColumn(ServerLevel level, Village village, Building b) {
         BoundingBox box = b.box();
         int w = box.getXSpan();
         int columns = w * box.getZSpan();
@@ -106,7 +107,11 @@ public final class Construction {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int y = ground + 1; y <= Math.max(top, box.maxY()); y++) {
             pos.set(x, y, z);
-            if (!level.getBlockState(pos).isAir()) {
+            BlockState old = level.getBlockState(pos);
+            if (!old.isAir()) {
+                if (old.is(BlockTags.LOGS)) {
+                    village.storage().add(old.getBlock().asItem(), 1); // felled timber goes to the stockpile
+                }
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
             }
         }

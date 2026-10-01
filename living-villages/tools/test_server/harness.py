@@ -25,8 +25,10 @@ FLAT = {'layers': [{'block': 'minecraft:bedrock', 'height': 1}, {'block': 'minec
 
 
 class TestServer:
-    def __init__(self, config=None, log_name='test_server.log'):
+    def __init__(self, config=None, log_name='test_server.log', flat=True, seed='livingvillages'):
         self.config = config or {}
+        self.flat = flat
+        self.seed = seed
         self.log_path = os.path.join(ROOT, 'build', log_name)
         self.proc = None
         self.rcon = None
@@ -46,7 +48,9 @@ class TestServer:
         gen = json.dumps(FLAT).replace(':', '\\:')
         with open(os.path.join(RUN, 'server.properties'), 'w') as f:
             f.write('\n'.join([
-                f'level-name={LEVEL}', 'level-type=minecraft\\:flat', 'generator-settings=' + gen,
+                f'level-name={LEVEL}', f'level-seed={self.seed}',
+                'level-type=minecraft\\:flat' if self.flat else 'level-type=minecraft\\:normal',
+                'generator-settings=' + (gen if self.flat else '{}'),
                 'gamemode=creative', 'difficulty=peaceful', 'spawn-monsters=false', 'spawn-animals=true',
                 'spawn-npcs=true', 'generate-structures=false', 'online-mode=false', 'max-tick-time=-1',
                 'enable-rcon=true', f'rcon.port={PORT}', f'rcon.password={PASSWORD}', 'spawn-protection=0',

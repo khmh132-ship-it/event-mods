@@ -66,6 +66,17 @@ public final class MaterialCost {
         return true;
     }
 
+    public static String describeMissing(VillageStorage storage, Map<CostKey, Integer> cost) {
+        StringBuilder sb = new StringBuilder();
+        cost.forEach((k, v) -> {
+            int have = k.available(storage);
+            if (have < v) {
+                sb.append(sb.isEmpty() ? "" : ", ").append(v - have).append(" more ").append(k.describe());
+            }
+        });
+        return sb.toString();
+    }
+
     public static String describe(Map<CostKey, Integer> cost) {
         StringBuilder sb = new StringBuilder();
         cost.forEach((k, v) -> sb.append(sb.isEmpty() ? "" : ", ").append(v).append(' ').append(k.describe()));

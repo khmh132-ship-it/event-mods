@@ -10,6 +10,7 @@ import com.khmh.livingvillages.building.TemplateData;
 import com.khmh.livingvillages.village.GrowthPlanner;
 import com.khmh.livingvillages.village.Production;
 import com.khmh.livingvillages.village.Village;
+import com.khmh.livingvillages.village.VillageEvents;
 import com.khmh.livingvillages.village.VillageManager;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -51,6 +52,7 @@ public final class VillageCommand {
                 .then(Commands.literal("list").executes(VillageCommand::list))
                 .then(Commands.literal("info").executes(VillageCommand::info))
                 .then(Commands.literal("create").executes(VillageCommand::create))
+                .then(Commands.literal("discover").executes(VillageCommand::discover))
                 .then(Commands.literal("types").executes(VillageCommand::types))
                 .then(Commands.literal("buildings").executes(VillageCommand::buildings))
                 .then(Commands.literal("build")
@@ -144,6 +146,14 @@ public final class VillageCommand {
         return 1;
     }
 
+    private static int discover(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        int n = VillageEvents.discoverAround(level, VillageManager.get(level),
+                BlockPos.containing(ctx.getSource().getPosition()), 64);
+        say(ctx, "Discovered " + n + " villages");
+        return n;
+    }
+
     private static int types(CommandContext<CommandSourceStack> ctx) {
         ServerLevel level = ctx.getSource().getLevel();
         for (BuildingType t : BuildingTypes.all()) {
@@ -213,12 +223,11 @@ public final class VillageCommand {
         Village v = here(ctx);
         int before = v.buildings().size();
         GrowthPlanner.planNow(ctx.getSource().getLevel(), v);
-        if (v.buildings().size() > before) {
-            say(ctx, "Started " + v.buildings().get(v.buildings().size() - 1).typeId());
-        } else {
-            say(ctx, "Nothing started" + (v.waitingFor() == null ? "" : ", saving up for " + v.waitingFor()));
+        if (v.buildings().stream().anyMatch(b -> !b.isComplete()) && v.buildings().size() == before) {
+            say(ctx, "Busy: a building is under construction");
         }
-        return 1;
+        v.lastPlanReport().forEach(line -> say(ctx, "  " + line));
+        return v.buildings().size() - before;
     }
 
     private static int produce(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

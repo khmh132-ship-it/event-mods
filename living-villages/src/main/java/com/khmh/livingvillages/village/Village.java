@@ -48,6 +48,7 @@ public class Village {
     private final Map<UUID, Integer> reputation = new HashMap<>();
     private final Map<Item, Double> fractions = new HashMap<>();
     private double foodDebt;
+    private List<String> lastPlanReport = List.of();
     private Runnable onChange = () -> {};
 
     public Village(UUID id, BlockPos center) {
@@ -72,8 +73,9 @@ public class Village {
         return center;
     }
 
+    /** The village claims more land as it grows. */
     public int radius() {
-        return radius;
+        return radius + 16 * (level - 1);
     }
 
     public int level() {
@@ -139,6 +141,14 @@ public class Village {
         onChange.run();
     }
 
+    public List<String> lastPlanReport() {
+        return lastPlanReport;
+    }
+
+    void setLastPlanReport(List<String> report) {
+        lastPlanReport = List.copyOf(report);
+    }
+
     @Nullable
     public String waitingFor() {
         return waitingFor;
@@ -187,7 +197,7 @@ public class Village {
     public void onBuildingComplete(ServerLevel level, Building b) {
         LivingVillages.LOGGER.info("Village {} finished {} at {}", id.toString().substring(0, 8), b.typeId(),
                 b.origin());
-        PathBuilder.connect(level, b.entrance(), center, radius * 2);
+        PathBuilder.connect(level, b.entrance(), center, radius() * 2);
         recalcLevel();
         onChange.run();
     }
@@ -230,7 +240,7 @@ public class Village {
     }
 
     public boolean contains(BlockPos pos) {
-        return center.distSqr(pos) <= (double) radius * radius;
+        return center.distSqr(pos) <= (double) radius() * radius();
     }
 
     public CompoundTag save() {

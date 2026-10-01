@@ -18,7 +18,8 @@ import java.util.Map;
 public final class Production {
     /** What a villager of a given profession gathers per cycle. "none" is an unemployed villager. */
     private static final Map<String, Map<Item, Double>> BY_PROFESSION = Map.ofEntries(
-            Map.entry("none", Map.of(Items.OAK_LOG, 1.0, Items.COBBLESTONE, 0.5)),
+            Map.entry("none", Map.of(Items.OAK_LOG, 1.0, Items.COBBLESTONE, 0.5, Items.SAND, 0.25,
+                    Items.WHITE_WOOL, 0.2, Items.IRON_INGOT, 0.1)),
             Map.entry("nitwit", Map.of(Items.OAK_LOG, 0.25)),
             Map.entry("farmer", Map.of(Items.WHEAT, 2.0, Items.CARROT, 0.5, Items.POTATO, 0.5, Items.BEETROOT, 0.25)),
             Map.entry("fisherman", Map.of(Items.COD, 1.0)),

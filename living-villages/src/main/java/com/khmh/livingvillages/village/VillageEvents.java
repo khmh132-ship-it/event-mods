@@ -71,20 +71,27 @@ public final class VillageEvents {
 
     private static void discover(ServerLevel level, VillageManager manager) {
         for (ServerPlayer player : level.players()) {
-            List<BlockPos> bells = level.getPoiManager()
-                    .findAll(type -> type.is(PoiTypes.MEETING), pos -> true,
-                            player.blockPosition(), DISCOVERY_RADIUS, PoiManager.Occupancy.ANY)
-                    .toList();
-            for (BlockPos bell : bells) {
-                // A bell inside an existing village is just a second bell of that village.
-                if (manager.at(bell).isPresent()) {
-                    continue;
-                }
-                if (!villagers(level, bell, Village.DEFAULT_RADIUS).isEmpty()) {
-                    observe(level, manager.create(bell));
-                }
+            discoverAround(level, manager, player.blockPosition(), DISCOVERY_RADIUS);
+        }
+    }
+
+    /** Turns every bell near {@code pos} that has villagers around it into a village. Returns how many. */
+    public static int discoverAround(ServerLevel level, VillageManager manager, BlockPos pos, int radius) {
+        List<BlockPos> bells = level.getPoiManager()
+                .findAll(type -> type.is(PoiTypes.MEETING), p -> true, pos, radius, PoiManager.Occupancy.ANY)
+                .toList();
+        int found = 0;
+        for (BlockPos bell : bells) {
+            // A bell inside an existing village is just a second bell of that village.
+            if (manager.at(bell).isPresent()) {
+                continue;
+            }
+            if (!villagers(level, bell, Village.DEFAULT_RADIUS).isEmpty()) {
+                observe(level, manager.create(bell));
+                found++;
             }
         }
+        return found;
     }
 
     private static void refresh(ServerLevel level, VillageManager manager) {
