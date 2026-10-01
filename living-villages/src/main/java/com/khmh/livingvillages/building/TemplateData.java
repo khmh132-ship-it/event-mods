@@ -132,9 +132,12 @@ public final class TemplateData {
             if (type.vanilla() && state.isAir()) {
                 continue; // village generation never places air
             }
+            // Keep the natural ground where the building has no foundation. A building dug into the ground (the
+            // mine descent) has its way in at ground level, so its air there is dug out.
+            boolean dugIn = type.groundLayer() > 0;
             if (!type.vanilla() && pos.getY() == type.groundLayer()
-                    && (state.isAir() || state.is(Blocks.GRASS_BLOCK))) {
-                continue; // keep the natural ground where the building has no foundation
+                    && (state.is(Blocks.GRASS_BLOCK) || state.isAir() && !dugIn)) {
+                continue;
             }
             entries.add(new Entry(pos, state, nbt));
         }

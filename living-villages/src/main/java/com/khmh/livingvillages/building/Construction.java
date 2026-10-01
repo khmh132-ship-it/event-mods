@@ -237,6 +237,14 @@ public final class Construction {
         b.advance();
         BlockPos pos = Placement.toWorld(b.origin(), b.rotation(), e.pos());
         BlockState state = e.state().rotate(b.rotation());
+        BlockState old = level.getBlockState(pos);
+        if (state.isAir() && !old.isAir() && old.getFluidState().isEmpty() && SiteFinder.isNatural(old)
+                && !old.is(net.minecraft.tags.BlockTags.DIRT)) {
+            // Digging out: stone, sand, gravel, clay and ore go to the village store (dirt is just left aside).
+            for (net.minecraft.world.item.ItemStack drop : Block.getDrops(old, level, pos, null, null, new net.minecraft.world.item.ItemStack(Items.IRON_PICKAXE))) {
+                village.storage().add(drop.getItem(), drop.getCount());
+            }
+        }
         level.setBlock(pos, state, Block.UPDATE_ALL);
         if (!state.isAir() && level.random.nextInt(3) == 0) {
             level.playSound(null, pos, state.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 0.6F, 0.9F);
