@@ -1,7 +1,6 @@
 package com.khmh.livingvillages.building;
 
-import com.khmh.livingvillages.village.VillageStorage;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import com.khmh.livingvillages.stock.Stock;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
@@ -9,24 +8,25 @@ import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Something a building costs: a specific item, or a material any of several items can pay for. */
 public interface CostKey {
-    int available(VillageStorage storage);
+    int available(Stock storage);
 
     /** Removes {@code amount}; the caller checks {@link #available} first. */
-    void take(VillageStorage storage, int amount);
+    void take(Stock storage, int amount);
 
     String describe();
 
     record Of(Item item) implements CostKey {
         @Override
-        public int available(VillageStorage storage) {
+        public int available(Stock storage) {
             return storage.count(item);
         }
 
         @Override
-        public void take(VillageStorage storage, int amount) {
+        public void take(Stock storage, int amount) {
             storage.take(item, amount);
         }
 
@@ -41,20 +41,20 @@ public interface CostKey {
         INSTANCE;
 
         @Override
-        public int available(VillageStorage storage) {
+        public int available(Stock storage) {
             int total = 0;
-            for (Object2IntMap.Entry<Item> e : storage.view().object2IntEntrySet()) {
+            for (Map.Entry<Item, Integer> e : storage.totals().entrySet()) {
                 if (isPlanks(e.getKey())) {
-                    total += e.getIntValue();
+                    total += e.getValue();
                 } else if (isLog(e.getKey())) {
-                    total += e.getIntValue() * 4;
+                    total += e.getValue() * 4;
                 }
             }
             return total;
         }
 
         @Override
-        public void take(VillageStorage storage, int amount) {
+        public void take(Stock storage, int amount) {
             int left = amount;
             for (Item item : itemsMatching(storage, true)) {
                 int n = Math.min(left, storage.count(item));
@@ -74,9 +74,9 @@ public interface CostKey {
             }
         }
 
-        private static List<Item> itemsMatching(VillageStorage storage, boolean planks) {
+        private static List<Item> itemsMatching(Stock storage, boolean planks) {
             List<Item> out = new ArrayList<>();
-            for (Item item : storage.view().keySet()) {
+            for (Item item : storage.totals().keySet()) {
                 if (planks ? isPlanks(item) : isLog(item)) {
                     out.add(item);
                 }
@@ -108,12 +108,12 @@ public interface CostKey {
                 Items.MOSSY_COBBLESTONE, Items.ANDESITE, Items.DIORITE, Items.GRANITE);
 
         @Override
-        public int available(VillageStorage storage) {
+        public int available(Stock storage) {
             return ITEMS.stream().mapToInt(storage::count).sum();
         }
 
         @Override
-        public void take(VillageStorage storage, int amount) {
+        public void take(Stock storage, int amount) {
             int left = amount;
             for (Item item : ITEMS) {
                 int n = Math.min(left, storage.count(item));

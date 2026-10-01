@@ -66,6 +66,7 @@ public class LumberjackWorkGoal extends Goal {
     @Override
     public void stop() {
         worker.getNavigation().stop();
+        worker.resetUnloading();
     }
 
     @Override
@@ -128,14 +129,9 @@ public class LumberjackWorkGoal extends Goal {
                 }
             }
             case RETURN -> {
-                BlockPos drop = depositPoint(village, hut);
                 village.reportWorking(hut.id(), now);
-                if (horizontalDistSqr(drop) <= 9 || timer > 600) {
-                    worker.deposit(village);
+                if (worker.unloadTick()) {
                     go(State.SEEK);
-                } else if (timer % 40 == 1) {
-                    BlockPos stand = VillageWorker.standAt(level, drop);
-                    worker.getNavigation().moveTo(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5, 0.6);
                 }
             }
         }
@@ -149,14 +145,6 @@ public class LumberjackWorkGoal extends Goal {
     private double horizontalDistSqr(BlockPos p) {
         double dx = worker.getX() - (p.getX() + 0.5), dz = worker.getZ() - (p.getZ() + 0.5);
         return dx * dx + dz * dz;
-    }
-
-    private BlockPos depositPoint(Village village, Building hut) {
-        return village.buildings().stream()
-                .filter(b -> b.isComplete() && b.typeId().equals("warehouse"))
-                .map(Building::entrance)
-                .min(Comparator.comparingDouble(e -> e.distSqr(worker.blockPosition())))
-                .orElse(hut.entrance());
     }
 
     /** Nearest trunk base of a natural tree (logs on dirt with leaves on top) outside all village buildings. */

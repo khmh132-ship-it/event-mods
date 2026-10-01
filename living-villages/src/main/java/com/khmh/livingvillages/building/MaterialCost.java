@@ -1,6 +1,6 @@
 package com.khmh.livingvillages.building;
 
-import com.khmh.livingvillages.village.VillageStorage;
+import com.khmh.livingvillages.stock.Stock;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -54,11 +54,11 @@ public final class MaterialCost {
         return out;
     }
 
-    public static boolean canAfford(VillageStorage storage, Map<CostKey, Integer> cost) {
+    public static boolean canAfford(Stock storage, Map<CostKey, Integer> cost) {
         return cost.entrySet().stream().allMatch(e -> e.getKey().available(storage) >= e.getValue());
     }
 
-    public static boolean pay(VillageStorage storage, Map<CostKey, Integer> cost) {
+    public static boolean pay(Stock storage, Map<CostKey, Integer> cost) {
         if (!canAfford(storage, cost)) {
             return false;
         }
@@ -66,7 +66,7 @@ public final class MaterialCost {
         return true;
     }
 
-    public static String describeMissing(VillageStorage storage, Map<CostKey, Integer> cost) {
+    public static String describeMissing(Stock storage, Map<CostKey, Integer> cost) {
         StringBuilder sb = new StringBuilder();
         cost.forEach((k, v) -> {
             int have = k.available(storage);

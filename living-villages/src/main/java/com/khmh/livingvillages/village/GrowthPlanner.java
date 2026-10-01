@@ -8,6 +8,7 @@ import com.khmh.livingvillages.building.MaterialCost;
 import com.khmh.livingvillages.building.SiteFinder;
 import com.khmh.livingvillages.building.TemplateData;
 import com.khmh.livingvillages.config.LVConfig;
+import com.khmh.livingvillages.stock.Stockpile;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 
@@ -29,7 +30,7 @@ public final class GrowthPlanner {
             new Rule("lumberjack", 1, 1),
             new Rule("mine", 1, 1),
             new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 2),
-            new Rule("warehouse", 1, 1),
+            new Rule("warehouse", 1, l -> 99, v -> v.countGroup("warehouse") == 0 || v.stockFill() >= 0.8),
             new Rule("farm", 1, l -> l, v -> true),
             new Rule("builder", 1, 1),
             new Rule("quest_board", 1, 1),
@@ -78,11 +79,12 @@ public final class GrowthPlanner {
                 report.add(type.id() + ": template missing");
                 continue;
             }
-            if (!MaterialCost.canAfford(v.storage(), data.cost())) {
+            Stockpile stock = v.stock(level);
+            if (!MaterialCost.canAfford(stock, data.cost())) {
                 if (waiting == null) {
                     waiting = type.id();
                 }
-                report.add(type.id() + ": needs " + MaterialCost.describeMissing(v.storage(), data.cost()));
+                report.add(type.id() + ": needs " + MaterialCost.describeMissing(stock, data.cost()));
                 continue; // build something cheaper meanwhile
             }
             Optional<SiteFinder.Site> site = SiteFinder.find(level, v, type, data);
@@ -90,7 +92,7 @@ public final class GrowthPlanner {
                 report.add(type.id() + ": no free site");
                 continue;
             }
-            start(v, type, data, site.get(), now);
+            start(level, v, type, data, site.get(), now);
             report.add(type.id() + ": started");
             v.setWaitingFor(null);
             v.setLastPlanReport(report);
@@ -109,8 +111,9 @@ public final class GrowthPlanner {
         v.setAutoGrowth(auto);
     }
 
-    public static Building start(Village v, BuildingType type, TemplateData data, SiteFinder.Site site, long now) {
-        MaterialCost.pay(v.storage(), data.cost());
+    public static Building start(ServerLevel level, Village v, BuildingType type, TemplateData data,
+                                 SiteFinder.Site site, long now) {
+        MaterialCost.pay(v.stock(level), data.cost());
         Building b = v.addBuilding(type, site, now);
         LivingVillages.LOGGER.info("Village {} starts {} at {}", v.id().toString().substring(0, 8), type.id(),
                 site.origin());

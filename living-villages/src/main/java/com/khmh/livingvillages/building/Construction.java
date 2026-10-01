@@ -167,7 +167,7 @@ public final class Construction {
             BlockState old = level.getBlockState(pos);
             if (!old.isAir()) {
                 if (old.is(BlockTags.LOGS)) {
-                    village.storage().add(old.getBlock().asItem(), 1); // felled timber goes to the stockpile
+                    village.storage().add(old.getBlock().asItem(), 1); // felled timber, moved into the chests later
                 }
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
             }

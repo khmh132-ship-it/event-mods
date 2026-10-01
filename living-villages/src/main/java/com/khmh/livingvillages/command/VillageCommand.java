@@ -7,6 +7,7 @@ import com.khmh.livingvillages.building.Construction;
 import com.khmh.livingvillages.building.MaterialCost;
 import com.khmh.livingvillages.building.SiteFinder;
 import com.khmh.livingvillages.building.TemplateData;
+import com.khmh.livingvillages.stock.Stockpile;
 import com.khmh.livingvillages.village.GrowthPlanner;
 import com.khmh.livingvillages.village.Production;
 import com.khmh.livingvillages.village.Village;
@@ -19,7 +20,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -32,6 +32,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
+import java.util.Map;
 import java.util.Optional;
 
 /** Debug and admin commands, all under {@code /village} (op level 2). */
@@ -116,12 +117,14 @@ public final class VillageCommand {
         if (src.getEntity() != null) {
             say(ctx, "Your reputation: " + v.reputation(src.getEntity().getUUID()));
         }
-        if (v.storage().view().isEmpty()) {
+        Stockpile stock = v.stock(ctx.getSource().getLevel());
+        say(ctx, String.format("Stock: %d chests/barrels, %.0f%% full, %d item kinds waiting outside",
+                stock.positions().size(), stock.fill() * 100, v.storage().totals().size()));
+        Map<Item, Integer> totals = stock.totals();
+        if (totals.isEmpty()) {
             say(ctx, "Storage is empty");
         }
-        for (Object2IntMap.Entry<Item> e : v.storage().view().object2IntEntrySet()) {
-            say(ctx, "  " + BuiltInRegistries.ITEM.getKey(e.getKey()) + " x" + e.getIntValue());
-        }
+        totals.forEach((item, n) -> say(ctx, "  " + BuiltInRegistries.ITEM.getKey(item) + " x" + n));
         return 1;
     }
 
@@ -187,7 +190,7 @@ public final class VillageCommand {
             ctx.getSource().sendFailure(Component.literal("Template missing: " + type.template()));
             return 0;
         }
-        if (!free && !MaterialCost.canAfford(v.storage(), data.cost())) {
+        if (!free && !MaterialCost.canAfford(v.stock(level), data.cost())) {
             ctx.getSource().sendFailure(Component.literal("Not enough materials, needs " + MaterialCost.describe(data.cost())));
             return 0;
         }
@@ -199,7 +202,7 @@ public final class VillageCommand {
         if (free) {
             v.addBuilding(type, site.get(), level.getGameTime());
         } else {
-            GrowthPlanner.start(v, type, data, site.get(), level.getGameTime());
+            GrowthPlanner.start(level, v, type, data, site.get(), level.getGameTime());
         }
         BlockPos o = site.get().origin();
         say(ctx, String.format("Started %s at %d %d %d facing %s", id, o.getX(), o.getY(), o.getZ(), site.get().rotation()));
@@ -247,16 +250,17 @@ public final class VillageCommand {
 
     private static int changeStorage(CommandContext<CommandSourceStack> ctx, boolean add) throws CommandSyntaxException {
         Village v = here(ctx);
+        Stockpile stock = v.stock(ctx.getSource().getLevel());
         Item item = ItemArgument.getItem(ctx, "item").getItem();
         int count = IntegerArgumentType.getInteger(ctx, "count");
         String id = BuiltInRegistries.ITEM.getKey(item).toString();
         if (add) {
-            v.storage().add(item, count);
-        } else if (!v.storage().take(item, count)) {
-            ctx.getSource().sendFailure(Component.literal("Not enough " + id + " (have " + v.storage().count(item) + ")"));
+            stock.add(item, count);
+        } else if (!stock.take(item, count)) {
+            ctx.getSource().sendFailure(Component.literal("Not enough " + id + " (have " + stock.count(item) + ")"));
             return 0;
         }
-        say(ctx, id + " now " + v.storage().count(item));
+        say(ctx, id + " now " + stock.count(item));
         return 1;
     }
 

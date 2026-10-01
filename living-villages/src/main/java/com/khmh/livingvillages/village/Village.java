@@ -6,6 +6,7 @@ import com.khmh.livingvillages.building.BuildingType;
 import com.khmh.livingvillages.building.PathBuilder;
 import com.khmh.livingvillages.building.SiteFinder;
 import com.khmh.livingvillages.config.LVConfig;
+import com.khmh.livingvillages.stock.Stockpile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -51,6 +52,7 @@ public class Village {
     private List<String> lastPlanReport = List.of();
     private final Map<UUID, Long> workSeen = new HashMap<>();
     private long builderSeen = Long.MIN_VALUE / 2;
+    private double stockFill;
     private Runnable onChange = () -> {};
 
     public Village(UUID id, BlockPos center) {
@@ -160,6 +162,20 @@ public class Village {
         waitingFor = typeId;
     }
 
+    /** The village's goods as they really are: warehouse chests plus the buffer. */
+    public Stockpile stock(ServerLevel level) {
+        return Stockpile.of(level, this);
+    }
+
+    public double stockFill() {
+        return stockFill;
+    }
+
+    void setStockFill(double fill) {
+        stockFill = fill;
+    }
+
+    /** Goods not in a chest yet; see {@link VillageStorage}. */
     public VillageStorage storage() {
         return storage;
     }

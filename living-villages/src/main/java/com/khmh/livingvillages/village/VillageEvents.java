@@ -3,6 +3,7 @@ package com.khmh.livingvillages.village;
 import com.khmh.livingvillages.building.Construction;
 import com.khmh.livingvillages.building.TemplateData;
 import com.khmh.livingvillages.entity.VillageWorker;
+import com.khmh.livingvillages.stock.Stockpile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -127,6 +128,9 @@ public final class VillageEvents {
                 v.radius(), PoiManager.Occupancy.ANY);
         v.observe(villagers.size() + workers.size(), beds, professions, level.getGameTime());
         Gathering.collectHarvest(v, villagers);
+        Stockpile stock = v.stock(level);
+        stock.flushBuffer();
+        v.setStockFill(stock.fill());
         Workers.hire(level, v, villagers, workers);
     }
 

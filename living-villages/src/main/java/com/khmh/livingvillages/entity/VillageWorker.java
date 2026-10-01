@@ -4,9 +4,11 @@ import com.khmh.livingvillages.building.Building;
 import com.khmh.livingvillages.village.Village;
 import com.khmh.livingvillages.village.VillageManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -32,8 +34,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ import java.util.UUID;
  * A villager the village hired for a job. Looks like a villager, but runs its own goal-based AI instead of the
  * vanilla villager brain. Belongs to one village and one workplace building.
  */
-public class VillageWorker extends PathfinderMob {
+public class VillageWorker extends PathfinderMob implements InventoryCarrier {
     private static final EntityDataAccessor<Integer> DATA_JOB =
             SynchedEntityData.defineId(VillageWorker.class, EntityDataSerializers.INT);
 
@@ -49,12 +49,14 @@ public class VillageWorker extends PathfinderMob {
     private UUID villageId;
     @Nullable
     private UUID workplaceId;
-    private final Map<String, Integer> carried = new LinkedHashMap<>();
+    private final SimpleContainer inventory = new SimpleContainer(18);
+    private final Unloading unloading = new Unloading(this);
     private int orphanTicks;
 
     public VillageWorker(EntityType<? extends VillageWorker> type, Level level) {
         super(type, level);
         setPersistenceRequired();
+        setCanPickUpLoot(true);
         if (getNavigation() instanceof GroundPathNavigation nav) {
             nav.setCanOpenDoors(true);
         }
@@ -70,6 +72,7 @@ public class VillageWorker extends PathfinderMob {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new OpenDoorGoal(this, true));
+        goalSelector.addGoal(1, new CollectItemsGoal(this));
         goalSelector.addGoal(2, new BuilderWorkGoal(this));
         goalSelector.addGoal(2, new LumberjackWorkGoal(this));
         goalSelector.addGoal(2, new MinerWorkGoal(this));
@@ -119,35 +122,77 @@ public class VillageWorker extends PathfinderMob {
         return village().flatMap(v -> v.buildings().stream().filter(b -> b.id().equals(workplaceId)).findFirst());
     }
 
-    /** Total number of items carried. */
-    public int carried() {
-        return carried.values().stream().mapToInt(Integer::intValue).sum();
+    @Override
+    public SimpleContainer getInventory() {
+        return inventory;
     }
 
+    /** Total number of items in the inventory. */
+    public int carried() {
+        int n = 0;
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            n += inventory.getItem(i).getCount();
+        }
+        return n;
+    }
+
+    public boolean inventoryFull() {
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack s = inventory.getItem(i);
+            if (s.isEmpty() || s.getCount() < s.getMaxStackSize()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Puts gathered items into the inventory; what does not fit falls to the ground. */
     void carry(Item item, int amount) {
-        if (amount > 0) {
-            carried.merge(BuiltInRegistries.ITEM.getKey(item).toString(), amount, Integer::sum);
+        int left = amount;
+        while (left > 0) {
+            ItemStack stack = new ItemStack(item, Math.min(left, item.getMaxStackSize()));
+            left -= stack.getCount();
+            ItemStack rest = inventory.addItem(stack);
+            if (!rest.isEmpty()) {
+                spawnAtLocation(rest);
+            }
         }
     }
 
     void convertCarried(Item from, Item to) {
-        Integer n = carried.remove(BuiltInRegistries.ITEM.getKey(from).toString());
-        if (n != null) {
-            carry(to, n);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack s = inventory.getItem(i);
+            if (s.is(from)) {
+                inventory.setItem(i, new ItemStack(to, s.getCount()));
+            }
         }
     }
 
-    /** Hands everything carried over to the village stockpile (as much as fits). */
-    void deposit(Village village) {
-        carried.forEach((id, n) -> {
-            ResourceLocation key = ResourceLocation.tryParse(id);
-            if (key != null && BuiltInRegistries.ITEM.containsKey(key)) {
-                Item item = BuiltInRegistries.ITEM.get(key);
-                int room = Math.max(0, village.storageCap() - village.storage().count(item));
-                village.storage().add(item, Math.min(room, n));
-            }
-        });
-        carried.clear();
+    /** Walks to the warehouse and puts everything into the chests; true once done. */
+    boolean unloadTick() {
+        return unloading.tick();
+    }
+
+    void resetUnloading() {
+        unloading.reset();
+    }
+
+    @Override
+    public boolean wantsToPickUp(ItemStack stack) {
+        return inventory.canAddItem(stack);
+    }
+
+    @Override
+    protected void pickUpItem(ItemEntity item) {
+        InventoryCarrier.pickUpItem(this, this, item);
+    }
+
+    @Override
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
+        super.dropCustomDeathLoot(source, looting, recentlyHit);
+        for (ItemStack s : inventory.removeAllItems()) {
+            spawnAtLocation(s);
+        }
     }
 
     @Override
@@ -209,8 +254,8 @@ public class VillageWorker extends PathfinderMob {
                     .filter(x -> !x.isComplete()).findFirst()
                     .map(x -> "working on " + x.typeId()).orElse("waiting for work"))
                     .orElse("without a village");
-            if (job() != WorkerJob.BUILDER) {
-                what = carried.isEmpty() ? "working" : "carrying " + carried;
+            if (carried() > 0) {
+                what += ", carrying " + carried() + " items";
             }
             player.displayClientMessage(Component.translatable("entity.livingvillages.worker.job." +
                     job().name().toLowerCase()).append(": " + what), true);
@@ -243,9 +288,7 @@ public class VillageWorker extends PathfinderMob {
         if (workplaceId != null) {
             tag.putUUID("Workplace", workplaceId);
         }
-        CompoundTag load = new CompoundTag();
-        carried.forEach(load::putInt);
-        tag.put("Carried", load);
+        writeInventoryToTag(tag);
     }
 
     @Override
@@ -254,11 +297,7 @@ public class VillageWorker extends PathfinderMob {
         entityData.set(DATA_JOB, tag.getInt("Job"));
         villageId = tag.hasUUID("Village") ? tag.getUUID("Village") : null;
         workplaceId = tag.hasUUID("Workplace") ? tag.getUUID("Workplace") : null;
-        carried.clear();
-        CompoundTag load = tag.getCompound("Carried");
-        for (String k : load.getAllKeys()) {
-            carried.put(k, load.getInt(k));
-        }
+        readInventoryFromTag(tag);
     }
 
     /** Standing spot at the surface next to a position. */

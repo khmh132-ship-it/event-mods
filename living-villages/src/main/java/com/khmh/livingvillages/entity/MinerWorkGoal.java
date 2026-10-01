@@ -73,6 +73,7 @@ public class MinerWorkGoal extends Goal {
     @Override
     public void stop() {
         worker.getNavigation().stop();
+        worker.resetUnloading();
         resetDig();
     }
 
@@ -87,7 +88,7 @@ public class MinerWorkGoal extends Goal {
         switch (state) {
             case TO_MINE -> {
                 BlockPos door = VillageWorker.standAt(level, mine.entrance());
-                if (worker.carried() >= LOAD) {
+                if (worker.carried() >= LOAD || worker.inventoryFull()) {
                     go(State.RETURN);
                 } else if (horizontalDistSqr(door) <= 9 || timer > 400) {
                     Cell c = current(level, mine);
@@ -104,12 +105,8 @@ public class MinerWorkGoal extends Goal {
             case DIG -> dig(level, village, mine);
             case RETURN -> {
                 village.reportWorking(mine.id(), level.getGameTime());
-                BlockPos drop = VillageWorker.standAt(level, depositPoint(village, mine));
-                if (horizontalDistSqr(drop) <= 9 || timer > 600) {
-                    handIn(village);
+                if (worker.unloadTick()) {
                     go(State.TO_MINE);
-                } else if (timer % 40 == 1) {
-                    worker.getNavigation().moveTo(drop.getX() + 0.5, drop.getY(), drop.getZ() + 0.5, 0.6);
                 }
             }
         }
@@ -118,8 +115,9 @@ public class MinerWorkGoal extends Goal {
     private void dig(ServerLevel level, Village village, Building mine) {
         village.reportWorking(mine.id(), level.getGameTime());
         Cell c = current(level, mine);
-        if (c == null || worker.carried() >= LOAD) {
+        if (c == null || worker.carried() >= LOAD || worker.inventoryFull()) {
             leaveMine(level, mine);
+            smelt();
             go(State.RETURN);
             return;
         }
@@ -310,26 +308,20 @@ public class MinerWorkGoal extends Goal {
         resetDig();
     }
 
-    private BlockPos depositPoint(Village village, Building mine) {
-        return village.buildings().stream()
-                .filter(b -> b.isComplete() && b.typeId().equals("warehouse"))
-                .map(Building::entrance)
-                .min(Comparator.comparingDouble(e -> e.distSqr(worker.blockPosition())))
-                .orElse(mine.entrance());
-    }
-
-    /** Smelts the ores at the mine's furnace, hands the load in and grinds a little cobblestone into sand. */
-    private void handIn(Village village) {
+    /**
+     * Stand-in until miners use a real furnace (stage 5): ores come out smelted and some cobblestone is ground
+     * into sand on the way up.
+     */
+    private void smelt() {
         worker.convertCarried(Items.RAW_IRON, Items.IRON_INGOT);
         worker.convertCarried(Items.RAW_COPPER, Items.COPPER_INGOT);
         worker.convertCarried(Items.RAW_GOLD, Items.GOLD_INGOT);
-        worker.deposit(village);
-        if (village.storage().count(Items.SAND) < 32) {
-            int sand = Math.min(4, village.storage().count(Items.COBBLESTONE) / 4);
-            if (sand > 0) {
-                village.storage().take(Items.COBBLESTONE, sand * 4);
-                village.storage().add(Items.SAND, sand);
-            }
+        var inv = worker.getInventory();
+        int cobble = inv.countItem(Items.COBBLESTONE);
+        int sand = Math.min(4, cobble / 8);
+        if (sand > 0) {
+            inv.removeItemType(Items.COBBLESTONE, sand * 4);
+            inv.addItem(new ItemStack(Items.SAND, sand));
         }
     }
 

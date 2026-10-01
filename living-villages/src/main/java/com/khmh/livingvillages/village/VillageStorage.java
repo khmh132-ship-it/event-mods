@@ -1,5 +1,6 @@
 package com.khmh.livingvillages.village;
 
+import com.khmh.livingvillages.stock.Stock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -10,11 +11,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
- * Abstract village stockpile. Workers deposit into it, builders and smiths take from it.
+ * The village's buffer: goods that exist but are not in a chest yet (produced while nobody was around, or with
+ * no room left). Moved into the warehouse chests by {@link com.khmh.livingvillages.stock.Stockpile#flushBuffer}.
  * Items are counted by type only; NBT is intentionally ignored.
  */
-public class VillageStorage {
+public class VillageStorage implements Stock {
     private final Object2IntOpenHashMap<Item> items = new Object2IntOpenHashMap<>();
     private Runnable onChange = () -> {};
 
@@ -22,10 +27,12 @@ public class VillageStorage {
         this.onChange = onChange;
     }
 
+    @Override
     public int count(Item item) {
         return items.getInt(item);
     }
 
+    @Override
     public void add(Item item, int amount) {
         if (amount <= 0 || item == Items.AIR) {
             return;
@@ -35,6 +42,7 @@ public class VillageStorage {
     }
 
     /** Removes exactly {@code amount} if available. Returns false and changes nothing otherwise. */
+    @Override
     public boolean take(Item item, int amount) {
         int have = items.getInt(item);
         if (amount <= 0 || have < amount) {
@@ -47,6 +55,11 @@ public class VillageStorage {
         }
         onChange.run();
         return true;
+    }
+
+    @Override
+    public Map<Item, Integer> totals() {
+        return new LinkedHashMap<>(items);
     }
 
     public Object2IntMap<Item> view() {
