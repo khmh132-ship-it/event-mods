@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "minecraft:planks"
+    },
+    {
+      "tag": "minecraft:planks"
+    },
+    {
+      "item": "minecraft:book"
+    },
+    {
+      "item": "minecraft:feather"
+    }
+  ],
+  "result": {
+    "item": "livingvillages:storekeeper_desk"
+  }
+}

@@ -49,8 +49,18 @@ public final class LVBlocks {
                     Direction.EAST, Block.box(0, 0, 0, 4, 16, 16),
                     Direction.WEST, Block.box(12, 0, 0, 16, 16, 16))));
 
-    public static final List<RegistryObject<Block>> ALL =
-            List.of(BUILDERS_TABLE, CHOPPING_BLOCK, MINERS_BENCH, WEAPON_RACK);
+    /** Carpenter: sawhorse with a log and a saw blade. */
+    public static final RegistryObject<Block> CARPENTERS_SAWHORSE = block("carpenters_sawhorse",
+            () -> new JobBlock(wood().noOcclusion(), Block.box(0, 0, 3, 16, 15, 13)));
+    /** Apprentice: general workbench for every craft without a specialist. */
+    public static final RegistryObject<Block> APPRENTICE_WORKBENCH = block("apprentice_workbench",
+            () -> new JobBlock(wood().noOcclusion(), Block.box(0, 0, 0, 16, 16, 16)));
+    /** Storekeeper: ledger desk in the warehouse. */
+    public static final RegistryObject<Block> STOREKEEPER_DESK = block("storekeeper_desk",
+            () -> new JobBlock(wood().noOcclusion(), Block.box(0, 0, 2, 16, 16, 16)));
+
+    public static final List<RegistryObject<Block>> ALL = List.of(BUILDERS_TABLE, CHOPPING_BLOCK, MINERS_BENCH,
+            WEAPON_RACK, CARPENTERS_SAWHORSE, APPRENTICE_WORKBENCH, STOREKEEPER_DESK);
 
     public static final RegistryObject<CreativeModeTab> TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.livingvillages"))

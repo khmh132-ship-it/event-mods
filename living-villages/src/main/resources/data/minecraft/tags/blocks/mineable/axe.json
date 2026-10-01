@@ -3,6 +3,9 @@
   "values": [
     "livingvillages:builders_table",
     "livingvillages:chopping_block",
-    "livingvillages:weapon_rack"
+    "livingvillages:weapon_rack",
+    "livingvillages:carpenters_sawhorse",
+    "livingvillages:apprentice_workbench",
+    "livingvillages:storekeeper_desk"
   ]
 }

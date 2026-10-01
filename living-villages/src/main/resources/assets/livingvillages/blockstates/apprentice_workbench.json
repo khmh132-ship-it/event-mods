@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/apprentice_workbench"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/apprentice_workbench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/apprentice_workbench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/apprentice_workbench",
+      "y": 270
+    }
+  }
+}

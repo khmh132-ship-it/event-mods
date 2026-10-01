@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "livingvillages:block/carpenters_sawhorse"
+    },
+    "facing=east": {
+      "model": "livingvillages:block/carpenters_sawhorse",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "livingvillages:block/carpenters_sawhorse",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "livingvillages:block/carpenters_sawhorse",
+      "y": 270
+    }
+  }
+}
