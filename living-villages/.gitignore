@@ -10,3 +10,4 @@ run/
 .project
 .settings/
 bin/
+__pycache__/
