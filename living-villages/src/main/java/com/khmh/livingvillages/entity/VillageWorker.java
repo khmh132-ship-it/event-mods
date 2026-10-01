@@ -76,6 +76,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new BuilderWorkGoal(this));
         goalSelector.addGoal(2, new LumberjackWorkGoal(this));
         goalSelector.addGoal(2, new MinerWorkGoal(this));
+        goalSelector.addGoal(2, new ApprenticeWorkGoal(this));
         goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
@@ -208,7 +209,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
             return;
         }
         // A worker whose village or workplace is gone goes back to being an ordinary villager.
-        boolean lost = village().isEmpty() || job() != WorkerJob.BUILDER && workplace().isEmpty();
+        boolean lost = village().isEmpty() || !job().villageWide() && workplace().isEmpty();
         if (lost) {
             orphanTicks += 100;
             if (orphanTicks >= 600) {
@@ -227,6 +228,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         if (!(level() instanceof ServerLevel server)) {
             return;
         }
+        leaveJob();
         Villager villager = EntityType.VILLAGER.create(server);
         if (villager != null) {
             villager.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
@@ -239,11 +241,26 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
     @Override
     public void die(DamageSource source) {
         super.die(source);
+        if (!level().isClientSide) {
+            com.khmh.livingvillages.LivingVillages.LOGGER.info("Village worker ({}) died at {}: {}",
+                    job().name().toLowerCase(), blockPosition(), source.getMsgId());
+        }
+        leaveJob();
+    }
+
+    /** Frees the workplace and the village-wide job slot so somebody else can be hired. */
+    private void leaveJob() {
         workplace().ifPresent(b -> {
             if (getUUID().equals(b.workerId())) {
                 b.setWorkerId(null);
-                village().ifPresent(Village::markDirty);
             }
+        });
+        village().ifPresent(v -> {
+            String key = "worker_" + job().name().toLowerCase();
+            if (v.data().hasUUID(key) && v.data().getUUID(key).equals(getUUID())) {
+                v.data().remove(key);
+            }
+            v.markDirty();
         });
     }
 

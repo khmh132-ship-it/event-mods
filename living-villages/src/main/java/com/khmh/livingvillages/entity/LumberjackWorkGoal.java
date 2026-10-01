@@ -50,7 +50,8 @@ public class LumberjackWorkGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return worker.job() == WorkerJob.LUMBERJACK && worker.workplace().map(Building::isComplete).orElse(false);
+        // Works from his hut, or from the bell until the village has built him one.
+        return worker.job() == WorkerJob.LUMBERJACK && worker.workplace().map(Building::isComplete).orElse(true);
     }
 
     @Override
@@ -72,10 +73,11 @@ public class LumberjackWorkGoal extends Goal {
     @Override
     public void tick() {
         Village village = worker.village().orElse(null);
-        Building hut = worker.workplace().orElse(null);
-        if (village == null || hut == null) {
+        if (village == null) {
             return;
         }
+        Building hut = worker.workplace().orElse(null);
+        BlockPos home = hut != null ? hut.entrance() : village.center();
         Level level = worker.level();
         long now = level.getGameTime();
         timer++;
@@ -84,7 +86,7 @@ public class LumberjackWorkGoal extends Goal {
                 if (worker.carried() >= LOAD) {
                     go(State.RETURN);
                 } else if (--cooldown <= 0) {
-                    tree = findTree(level, village, hut.entrance());
+                    tree = findTree(level, village, home);
                     if (tree == null) {
                         cooldown = 200;
                         if (worker.carried() > 0) {
@@ -109,7 +111,9 @@ public class LumberjackWorkGoal extends Goal {
             }
             case CHOP -> {
                 worker.getLookControl().setLookAt(tree.getX() + 0.5, tree.getY() + 1.5, tree.getZ() + 0.5);
-                village.reportWorking(hut.id(), now);
+                if (hut != null) {
+                    village.reportWorking(hut.id(), now);
+                }
                 if (timer % 12 != 0) {
                     return;
                 }
@@ -129,7 +133,9 @@ public class LumberjackWorkGoal extends Goal {
                 }
             }
             case RETURN -> {
-                village.reportWorking(hut.id(), now);
+                if (hut != null) {
+                    village.reportWorking(hut.id(), now);
+                }
                 if (worker.unloadTick()) {
                     go(State.SEEK);
                 }

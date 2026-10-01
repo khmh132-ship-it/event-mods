@@ -90,6 +90,11 @@ public class Building {
         return lastStep;
     }
 
+    /** Built without materials (debug / creative). */
+    public boolean isFree() {
+        return data.getBoolean("free");
+    }
+
     /** Free-form state of the building's job (e.g. how far the mine tunnels got). */
     public CompoundTag data() {
         return data;

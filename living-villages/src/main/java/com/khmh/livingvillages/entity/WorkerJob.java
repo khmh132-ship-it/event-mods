@@ -6,7 +6,8 @@ import javax.annotation.Nullable;
 public enum WorkerJob {
     BUILDER("builder_workshop", "mason"),
     LUMBERJACK("lumberjack_hut", "leatherworker"),
-    MINER("mine", "toolsmith");
+    MINER("mine", "toolsmith"),
+    APPRENTICE("apprentice_workshop", "fletcher");
 
     private final String workplace;
     private final String outfit;
@@ -14,6 +15,11 @@ public enum WorkerJob {
     WorkerJob(String workplace, String outfit) {
         this.workplace = workplace;
         this.outfit = outfit;
+    }
+
+    /** Hired for the whole village as soon as there is work for them, before their workplace exists. */
+    public boolean villageWide() {
+        return this == BUILDER || this == APPRENTICE || this == LUMBERJACK || this == MINER;
     }
 
     /** Building type id that employs this job. */

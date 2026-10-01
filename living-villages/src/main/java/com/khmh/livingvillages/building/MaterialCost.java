@@ -55,7 +55,12 @@ public final class MaterialCost {
     }
 
     public static boolean canAfford(Stock storage, Map<CostKey, Integer> cost) {
-        return cost.entrySet().stream().allMatch(e -> e.getKey().available(storage) >= e.getValue());
+        return canAfford(storage, cost, 1.0);
+    }
+
+    /** True if the stock covers at least {@code share} of every material. */
+    public static boolean canAfford(Stock storage, Map<CostKey, Integer> cost, double share) {
+        return cost.entrySet().stream().allMatch(e -> e.getKey().available(storage) >= Math.ceil(e.getValue() * share));
     }
 
     public static boolean pay(Stock storage, Map<CostKey, Integer> cost) {
@@ -84,7 +89,7 @@ public final class MaterialCost {
     }
 
     @SuppressWarnings("deprecation")
-    static Map<CostKey, Double> of(BlockState s) {
+    public static Map<CostKey, Double> of(BlockState s) {
         if (s.isAir() || s.getBlock() instanceof LiquidBlock || isFree(s) || isSecondHalf(s)) {
             return Map.of();
         }

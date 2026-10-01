@@ -4,14 +4,9 @@ import com.khmh.livingvillages.stock.Stockpile;
 import com.khmh.livingvillages.village.Village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.BarrelBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +33,7 @@ class Unloading {
 
     void reset() {
         if (target != null && opened >= 0 && worker.level() instanceof ServerLevel level) {
-            close(level, target);
+            ContainerLid.close(level, target);
         }
         target = null;
         timer = 0;
@@ -79,7 +74,7 @@ class Unloading {
             return true;
         }
         if (opened < 0) {
-            open(level, target);
+            ContainerLid.open(level, target);
             opened = timer;
             return false;
         }
@@ -87,7 +82,7 @@ class Unloading {
             return false;
         }
         boolean emptied = putInto(level, target);
-        close(level, target);
+        ContainerLid.close(level, target);
         if (!emptied) {
             skip.add(target); // full: on to the next chest
         }
@@ -147,28 +142,6 @@ class Unloading {
         SimpleContainer inv = worker.getInventory();
         for (ItemStack s : inv.removeAllItems()) {
             village.storage().add(s.getItem(), s.getCount());
-        }
-    }
-
-    private static void open(ServerLevel level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof BarrelBlock) {
-            level.setBlock(pos, state.setValue(BarrelBlock.OPEN, true), Block.UPDATE_ALL);
-            level.playSound(null, pos, SoundEvents.BARREL_OPEN, SoundSource.BLOCKS, 0.5F, 1.0F);
-        } else {
-            level.blockEvent(pos, state.getBlock(), 1, 1);
-            level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.5F, 1.0F);
-        }
-    }
-
-    private static void close(ServerLevel level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof BarrelBlock) {
-            level.setBlock(pos, state.setValue(BarrelBlock.OPEN, false), Block.UPDATE_ALL);
-            level.playSound(null, pos, SoundEvents.BARREL_CLOSE, SoundSource.BLOCKS, 0.5F, 1.0F);
-        } else {
-            level.blockEvent(pos, state.getBlock(), 1, 0);
-            level.playSound(null, pos, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 0.5F, 1.0F);
         }
     }
 }

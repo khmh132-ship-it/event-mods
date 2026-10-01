@@ -6,6 +6,7 @@ import com.khmh.livingvillages.building.BuildingType;
 import com.khmh.livingvillages.building.PathBuilder;
 import com.khmh.livingvillages.building.SiteFinder;
 import com.khmh.livingvillages.config.LVConfig;
+import com.khmh.livingvillages.economy.Request;
 import com.khmh.livingvillages.stock.Stockpile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -53,6 +54,8 @@ public class Village {
     private final Map<UUID, Long> workSeen = new HashMap<>();
     private long builderSeen = Long.MIN_VALUE / 2;
     private double stockFill;
+    private final List<Request> requests = new ArrayList<>();
+    private CompoundTag data = new CompoundTag();
     private Runnable onChange = () -> {};
 
     public Village(UUID id, BlockPos center) {
@@ -200,6 +203,43 @@ public class Village {
         return whole;
     }
 
+    /** Free-form state of village-wide jobs (e.g. the quarry dug before there is a mine). */
+    public CompoundTag data() {
+        return data;
+    }
+
+    public List<Request> requests() {
+        return requests;
+    }
+
+    /** Posts (or tops up) a request for {@code count} of an item from one requester. */
+    public Request request(Item item, int count, String requester, long now) {
+        for (Request r : requests) {
+            if (r.item() == item && r.requester().equals(requester)) {
+                r.setRemaining(Math.max(r.remaining(), count));
+                return r;
+            }
+        }
+        Request r = new Request(UUID.randomUUID(), item, count, requester, now);
+        requests.add(r);
+        onChange.run();
+        return r;
+    }
+
+    public void withdrawRequest(Item item, String requester) {
+        for (Request r : requests) {
+            if (r.item() == item && r.requester().equals(requester)) {
+                r.setRemaining(0);
+            }
+        }
+    }
+
+    public void dropFinishedRequests(long now) {
+        if (requests.removeIf(r -> r.remaining() <= 0 || now - r.created() > 24000)) {
+            onChange.run();
+        }
+    }
+
     /** A builder of this village is alive and loaded. */
     public void noteBuilder(long now) {
         builderSeen = now;
@@ -310,6 +350,10 @@ public class Village {
             rep.add(r);
         });
         tag.put("reputation", rep);
+        ListTag reqs = new ListTag();
+        requests.forEach(r -> reqs.add(r.save()));
+        tag.put("requests", reqs);
+        tag.put("data", data);
         return tag;
     }
 
@@ -343,6 +387,14 @@ public class Village {
         for (int i = 0; i < rep.size(); i++) {
             CompoundTag r = rep.getCompound(i);
             v.reputation.put(r.getUUID("player"), r.getInt("value"));
+        }
+        v.data = tag.getCompound("data");
+        ListTag reqs = tag.getList("requests", Tag.TAG_COMPOUND);
+        for (int i = 0; i < reqs.size(); i++) {
+            Request r = Request.load(reqs.getCompound(i));
+            if (r != null) {
+                v.requests.add(r);
+            }
         }
         return v;
     }

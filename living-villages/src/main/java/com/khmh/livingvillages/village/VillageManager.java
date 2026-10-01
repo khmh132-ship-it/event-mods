@@ -55,7 +55,7 @@ public class VillageManager extends SavedData {
     public Village create(BlockPos bell) {
         Village v = new Village(UUID.randomUUID(), bell);
         // Starter stock so a fresh village can put up its first building.
-        v.storage().add(Items.OAK_LOG, 48);
+        v.storage().add(Items.OAK_LOG, 64);
         v.storage().add(Items.COBBLESTONE, 32);
         v.storage().add(Items.WHEAT, 16);
         v.storage().add(Items.SAND, 8);

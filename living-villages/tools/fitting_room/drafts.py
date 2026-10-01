@@ -81,7 +81,7 @@ def lumberjack():
     t.set(1, 1, 1, 'barrel', facing='up', open='false')
     t.set(5, 1, 1, 'crafting_table')
     t.set(1, 1, 5, 'chest', facing='east', type='single', waterlogged='false')
-    t.set(5, 1, 4, 'oak_log', axis='y')  # chopping block
+    t.set(5, 1, 4, 'livingvillages:chopping_block', facing='north')
     wall_torch(t, 3, 3, 1, 'south')
     # Woodpile under a lean-to on the east side.
     t.fill(7, 0, 1, 8, 0, 5, 'cobblestone')
@@ -106,6 +106,8 @@ def mine():
     for x, z in [(1, 1), (5, 1), (1, 5), (5, 5)]:
         t.fill(x, 1, z, x, 2, z, 'oak_fence')
     t.set(3, 1, 5, 'chest', facing='north', type='single', waterlogged='false')
+    t.set(2, 1, 5, 'livingvillages:miners_bench', facing='north')
+    t.set(4, 1, 5, 'furnace', facing='north', lit='false')
     t.set(3, 2, 1, 'wall_torch', facing='south')
     # House on top.
     box_house(t, 0, 0, 7, 7, 4, y0=g, lower='cobblestone', wall='cobblestone')
@@ -139,8 +141,7 @@ def warehouse():
         t.fill(7, 1, z, 7, 2, z, 'barrel', facing='west', open='false')
     for x in (3, 5):
         t.set(x, 1, 1, 'chest', facing='south', type='single', waterlogged='false')
-    t.set(4, 1, 1, 'hay_block', axis='y')
-    t.set(4, 2, 1, 'hay_block', axis='y')
+    t.set(4, 1, 1, 'livingvillages:storekeeper_desk', facing='south')
     t.set(4, 4, 4, 'lantern', hanging='false', waterlogged='false')
     t.set(4, 5, 4, 'oak_planks')
     return t
@@ -155,8 +156,10 @@ def builder_workshop():
     t.set(1, 1, 1, 'crafting_table')
     t.set(2, 1, 1, 'chest', facing='south', type='single', waterlogged='false')
     t.set(3, 1, 1, 'chest', facing='south', type='single', waterlogged='false')
-    t.set(5, 1, 1, 'lectern', facing='south', has_book='false', powered='false')
+    t.set(5, 1, 1, 'livingvillages:builders_table', facing='south')
     t.set(5, 1, 6, 'barrel', facing='up', open='false')
+    t.set(1, 1, 6, 'white_bed', facing='north', part='foot', occupied='false')
+    t.set(1, 1, 5, 'white_bed', facing='north', part='head', occupied='false')
     wall_torch(t, 3, 3, 1, 'south')
     # Material yard and scaffolding on the west side.
     t.fill(-3, 0, 1, -1, 0, 7, 'gravel')
@@ -174,8 +177,8 @@ def sawmill():
             t.fill(x, 1, z, x, 4, z, 'oak_log', axis='y')
     t.fill(1, 1, 0, 5, 3, 0, 'oak_planks')  # back wall only, the rest is open
     gable_roof(t, 0, 0, 6, 8, 4)
-    t.set(3, 1, 3, 'stonecutter', facing='south')
-    t.set(3, 1, 5, 'stonecutter', facing='south')
+    t.set(3, 1, 3, 'livingvillages:carpenters_sawhorse', facing='south')
+    t.set(3, 1, 5, 'crafting_table')
     t.fill(1, 1, 2, 1, 1, 6, 'oak_log', axis='z')
     t.fill(5, 1, 2, 5, 2, 6, 'stripped_oak_log', axis='z')
     t.set(4, 1, 1, 'barrel', facing='up', open='false')
@@ -198,7 +201,7 @@ def barracks():
     for z in (3, 6, 9):
         t.set(1, 1, z, 'chest', facing='east', type='single', waterlogged='false')
         t.set(7, 1, z, 'chest', facing='west', type='single', waterlogged='false')
-    t.set(4, 1, 1, 'smithing_table')
+    t.set(4, 1, 1, 'livingvillages:weapon_rack', facing='south')
     t.set(3, 1, 1, 'grindstone', face='floor', facing='south')
     for z in (3, 9):
         t.set(4, 3, z, 'lantern', hanging='false', waterlogged='false')
@@ -365,6 +368,22 @@ def tavern():
     return t
 
 
+def apprentice_workshop():
+    t = Template()
+    box_house(t, 0, 0, 7, 7, 4)
+    door(t, 3, 6)
+    window(t, 0, 2, 3)
+    window(t, 6, 2, 3)
+    t.set(1, 1, 1, 'livingvillages:apprentice_workbench', facing='south')
+    t.set(2, 1, 1, 'crafting_table')
+    t.set(4, 1, 1, 'furnace', facing='south', lit='false')
+    t.set(5, 1, 1, 'chest', facing='south', type='single', waterlogged='false')
+    t.set(5, 1, 4, 'white_bed', facing='north', part='foot', occupied='false')
+    t.set(5, 1, 3, 'white_bed', facing='north', part='head', occupied='false')
+    wall_torch(t, 3, 3, 1, 'south')
+    return t
+
+
 def quest_board():
     t = Template()
     t.fill(0, 0, 0, 4, 0, 1, 'dirt_path')
@@ -395,4 +414,5 @@ DRAFTS = {
     'town_hall': (town_hall, 'Ратуша'),
     'tavern': (tavern, 'Таверна'),
     'quest_board': (quest_board, 'Доска заданий'),
+    'apprentice_workshop': (apprentice_workshop, 'Мастерская подмастерья'),
 }

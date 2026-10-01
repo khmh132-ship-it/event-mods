@@ -2,6 +2,7 @@ package com.khmh.livingvillages.village;
 
 import com.khmh.livingvillages.building.Construction;
 import com.khmh.livingvillages.building.TemplateData;
+import com.khmh.livingvillages.economy.CraftPlanner;
 import com.khmh.livingvillages.entity.VillageWorker;
 import com.khmh.livingvillages.stock.Stockpile;
 import net.minecraft.core.BlockPos;
@@ -70,6 +71,7 @@ public final class VillageEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         TemplateData.clearCache();
+        CraftPlanner.clearCache();
     }
 
     private static void discover(ServerLevel level, VillageManager manager) {
@@ -130,6 +132,7 @@ public final class VillageEvents {
         Gathering.collectHarvest(v, villagers);
         Stockpile stock = v.stock(level);
         stock.flushBuffer();
+        v.dropFinishedRequests(level.getGameTime());
         v.setStockFill(stock.fill());
         Workers.hire(level, v, villagers, workers);
     }

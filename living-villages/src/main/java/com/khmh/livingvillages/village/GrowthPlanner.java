@@ -33,6 +33,7 @@ public final class GrowthPlanner {
             new Rule("warehouse", 1, l -> 99, v -> v.countGroup("warehouse") == 0 || v.stockFill() >= 0.8),
             new Rule("farm", 1, l -> l, v -> true),
             new Rule("builder", 1, 1),
+            new Rule("apprentice", 1, 1),
             new Rule("quest_board", 1, 1),
             new Rule("sawmill", 2, 1),
             new Rule("pen", 2, l -> l - 1, v -> true),
@@ -44,6 +45,8 @@ public final class GrowthPlanner {
             new Rule("golem_pad", 3, 1),
             new Rule("stable", 3, 1),
             new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 4 + 2 * v.level()));
+
+    private static final double START_SHARE = 0.3;
 
     private GrowthPlanner() {
     }
@@ -80,7 +83,8 @@ public final class GrowthPlanner {
                 continue;
             }
             Stockpile stock = v.stock(level);
-            if (!MaterialCost.canAfford(stock, data.cost())) {
+            // Materials are gathered and made while it goes up; a good start is enough to begin.
+            if (!MaterialCost.canAfford(stock, data.cost(), START_SHARE)) {
                 if (waiting == null) {
                     waiting = type.id();
                 }
@@ -111,9 +115,9 @@ public final class GrowthPlanner {
         v.setAutoGrowth(auto);
     }
 
+    /** Starts a building; materials are taken block by block as it goes up, not in advance. */
     public static Building start(ServerLevel level, Village v, BuildingType type, TemplateData data,
                                  SiteFinder.Site site, long now) {
-        MaterialCost.pay(v.stock(level), data.cost());
         Building b = v.addBuilding(type, site, now);
         LivingVillages.LOGGER.info("Village {} starts {} at {}", v.id().toString().substring(0, 8), type.id(),
                 site.origin());

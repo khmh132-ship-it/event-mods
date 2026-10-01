@@ -2,6 +2,7 @@ package com.khmh.livingvillages.village;
 
 import com.khmh.livingvillages.LivingVillages;
 import com.khmh.livingvillages.building.Building;
+import com.khmh.livingvillages.building.CostKey;
 import com.khmh.livingvillages.entity.LVEntities;
 import com.khmh.livingvillages.entity.VillageWorker;
 import com.khmh.livingvillages.entity.WorkerJob;
@@ -20,31 +21,26 @@ public final class Workers {
     }
 
     public static List<VillageWorker> of(ServerLevel level, Village v) {
-        AABB box = new AABB(v.center()).inflate(v.radius() + 16);
+        AABB box = new AABB(v.center()).inflate(v.radius() + 128); // miners tunnel far out
         return level.getEntitiesOfClass(VillageWorker.class, box,
                 w -> w.isAlive() && v.id().equals(w.villageId()));
     }
 
     static void hire(ServerLevel level, Village v, List<Villager> villagers, List<VillageWorker> workers) {
-        VillageWorker builder = workers.stream().filter(w -> w.job() == WorkerJob.BUILDER).findFirst().orElse(null);
-        Building workshop = v.buildings().stream()
-                .filter(b -> b.isComplete() && b.workerId() == null && "builder_workshop".equals(b.typeId()))
-                .findFirst().orElse(null);
-
-        // A village that builds always has a builder, workshop or not.
-        if (builder == null && v.buildings().stream().anyMatch(b -> !b.isComplete())) {
-            BlockPos site = v.buildings().stream().filter(b -> !b.isComplete()).findFirst().get().entrance();
-            builder = convert(level, v, villagers, WorkerJob.BUILDER, workshop, site);
-            if (builder != null && workshop != null) {
-                workshop.setWorkerId(builder.getUUID());
-            }
+        // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
+        boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
+        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0);
+        // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
+        boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
+                || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
+        // Likewise stone: a miner digs his own quarry until there is a mine.
+        boolean stoneShort = CostKey.Stone.INSTANCE.available(v.stock(level)) < 128
+                || v.buildings().stream().anyMatch(b -> "mine".equals(b.typeId()) && b.isComplete());
+        if (!villageWide(level, v, villagers, workers, WorkerJob.BUILDER, building)
+                || !villageWide(level, v, villagers, workers, WorkerJob.APPRENTICE, orders)
+                || !villageWide(level, v, villagers, workers, WorkerJob.LUMBERJACK, woodShort)
+                || !villageWide(level, v, villagers, workers, WorkerJob.MINER, stoneShort)) {
             return;
-        }
-        // A builder hired before the workshop existed moves in once it is built.
-        if (builder != null && workshop != null && !builder.hasWorkplace()) {
-            builder.setWorkplace(v, workshop);
-            workshop.setWorkerId(builder.getUUID());
-            v.markDirty();
         }
 
         for (Building b : v.buildings()) {
@@ -58,6 +54,41 @@ public final class Workers {
             }
             b.setWorkerId(worker.getUUID());
         }
+    }
+
+    /** Hires (if needed) and houses a village-wide worker; false if someone was just hired this scan. */
+    private static boolean villageWide(ServerLevel level, Village v, List<Villager> villagers,
+                                       List<VillageWorker> workers, WorkerJob job, boolean needed) {
+        VillageWorker worker = workers.stream().filter(w -> w.job() == job).findFirst().orElse(null);
+        // Known by id: he may simply be out of sight (deep in a tunnel, in an unloaded chunk).
+        String key = "worker_" + job.name().toLowerCase();
+        boolean registered = v.data().hasUUID(key);
+        if (worker == null && registered && level.getEntity(v.data().getUUID(key)) instanceof VillageWorker w) {
+            worker = w;
+        }
+        if (worker == null && registered) {
+            return true;
+        }
+        Building home = v.buildings().stream()
+                .filter(b -> b.isComplete() && b.workerId() == null && job.workplace().equals(b.typeId()))
+                .findFirst().orElse(null);
+        if (worker == null && needed) {
+            worker = convert(level, v, villagers, job, home, home != null ? home.entrance() : v.center());
+            if (worker != null) {
+                v.data().putUUID(key, worker.getUUID());
+                if (home != null) {
+                    home.setWorkerId(worker.getUUID());
+                }
+            }
+            return worker == null;
+        }
+        // Hired before the workplace existed: moves in once it is built.
+        if (worker != null && home != null && !worker.hasWorkplace()) {
+            worker.setWorkplace(v, home);
+            home.setWorkerId(worker.getUUID());
+            v.markDirty();
+        }
+        return true;
     }
 
     /** Turns the unemployed adult villager nearest to {@code near} into a worker; null if there is none. */

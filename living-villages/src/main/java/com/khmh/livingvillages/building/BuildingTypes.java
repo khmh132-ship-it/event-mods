@@ -22,6 +22,7 @@ public final class BuildingTypes {
         custom("warehouse", "warehouse", 1, 0, Map.of());
         custom("builder_workshop", "builder", 1, 0, Map.of());
         custom("quest_board", "quest_board", 1, 0, Map.of());
+        custom("apprentice_workshop", "apprentice", 1, 0, Map.of());
         custom("mine", "mine", 1, 6, Map.of(Items.COBBLESTONE, 4.0, Items.COAL, 0.75, Items.IRON_INGOT, 0.5,
                 Items.SAND, 1.0));
         custom("sawmill", "sawmill", 2, 0, Map.of(Items.OAK_LOG, 2.0));

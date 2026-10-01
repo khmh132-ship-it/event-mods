@@ -15,7 +15,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import com.khmh.livingvillages.stock.Stock;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -66,11 +73,124 @@ public final class Construction {
             if (steps == due) {
                 LOADED_LAST_TICK.add(b.id());
             }
+            Stock pay = village.stock(level);
             for (int i = 0; i < steps && !b.isComplete(); i++) {
+                if (!payFor(level, b, pay)) {
+                    b.setLastStep(now); // out of materials: wait, do not pile up a backlog
+                    break;
+                }
                 step(level, village, b);
             }
             village.markDirty();
         }
+    }
+
+    /** Fractional pooled costs owed per building by steps nobody carried materials for. */
+    private static final Map<UUID, Map<CostKey, Double>> DEBT = new HashMap<>();
+
+    /**
+     * Pays for the next step out of the village stock at pooled prices (wood, stone...). Used when blocks are
+     * placed without a builder carrying them: unloaded time, or a village with nobody to build.
+     */
+    private static boolean payFor(ServerLevel level, Building b, Stock stock) {
+        if (b.isFree() || b.phase() != Building.Phase.BUILD) {
+            return true;
+        }
+        Next next = next(level, b);
+        if (next == null) {
+            return true;
+        }
+        Map<CostKey, Double> debt = DEBT.computeIfAbsent(b.id(), k -> new HashMap<>());
+        MaterialCost.of(next.state()).forEach((k, v) -> debt.merge(k, v, Double::sum));
+        for (Map.Entry<CostKey, Double> e : debt.entrySet()) {
+            int whole = (int) Math.floor(e.getValue());
+            if (whole > 0) {
+                if (e.getKey().available(stock) < whole) {
+                    MaterialCost.of(next.state()).forEach((k, v) -> debt.merge(k, -v, Double::sum));
+                    return false;
+                }
+                e.getKey().take(stock, whole);
+                e.setValue(e.getValue() - whole);
+            }
+        }
+        return true;
+    }
+
+    /** The next block to place, already turned the building's way, and the item a builder needs for it. */
+    public record Next(BlockPos pos, BlockState state, @Nullable Item item) {
+    }
+
+    @Nullable
+    public static Next next(ServerLevel level, Building b) {
+        if (b.phase() != Building.Phase.BUILD) {
+            return null;
+        }
+        TemplateData data = TemplateData.get(level, b.type()).orElse(null);
+        if (data == null || b.progress() >= data.blocks().size()) {
+            return null;
+        }
+        TemplateData.Entry e = data.blocks().get(b.progress());
+        BlockState state = e.state().rotate(b.rotation());
+        return new Next(Placement.toWorld(b.origin(), b.rotation(), e.pos()), state,
+                b.isFree() ? null : requiredItem(state));
+    }
+
+    /** What a builder must carry to place this block; null for blocks that cost nothing (air, ground, water...). */
+    @Nullable
+    public static Item requiredItem(BlockState state) {
+        if (MaterialCost.of(state).isEmpty()) {
+            return null;
+        }
+        Item item = state.getBlock().asItem();
+        return item == Items.AIR ? null : item;
+    }
+
+    /** Items needed for the next {@code count} blocks, in order of need. */
+    public static Map<Item, Integer> lookahead(ServerLevel level, Building b, int count) {
+        Map<Item, Integer> out = new LinkedHashMap<>();
+        if (b.phase() != Building.Phase.BUILD || b.isFree()) {
+            return out;
+        }
+        TemplateData data = TemplateData.get(level, b.type()).orElse(null);
+        if (data == null) {
+            return out;
+        }
+        for (int i = b.progress(); i < Math.min(data.blocks().size(), b.progress() + count); i++) {
+            Item item = requiredItem(data.blocks().get(i).state());
+            if (item != null) {
+                out.merge(item, 1, Integer::sum);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The builder places the next block (he has already taken the item out of his inventory). With
+     * {@code substitute} he puts that block instead, or with {@code skip} leaves the spot as it is.
+     */
+    public static void placeByBuilder(ServerLevel level, Village village, Building b, long now,
+                                      @Nullable BlockState substitute, boolean skip) {
+        if (b.isComplete()) {
+            return;
+        }
+        if (b.phase() == Building.Phase.BUILD && (substitute != null || skip)) {
+            TemplateData data = TemplateData.get(level, b.type()).orElse(null);
+            Next next = next(level, b);
+            if (data != null && next != null) {
+                b.advance();
+                if (!skip) {
+                    level.setBlock(next.pos(), substitute, Block.UPDATE_ALL);
+                }
+                if (b.progress() >= data.blocks().size()) {
+                    b.nextPhase();
+                    village.onBuildingComplete(level, b);
+                }
+            }
+        } else {
+            step(level, village, b);
+        }
+        b.setLastStep(now);
+        village.markDirty();
     }
 
     /** Where the next step happens: the column being levelled, or the next block to place. */
@@ -92,16 +212,7 @@ public final class Construction {
         return Placement.toWorld(b.origin(), b.rotation(), data.blocks().get(b.progress()).pos());
     }
 
-    /** One step done by a builder on site. */
-    public static void buildOne(ServerLevel level, Village village, Building b, long now) {
-        if (!b.isComplete()) {
-            step(level, village, b);
-            b.setLastStep(now);
-            village.markDirty();
-        }
-    }
-
-    /** Finishes a building at once (debug). */
+    /** Finishes a building at once (debug); nothing is paid. */
     public static void finish(ServerLevel level, Village village, Building b) {
         while (!b.isComplete()) {
             step(level, village, b);

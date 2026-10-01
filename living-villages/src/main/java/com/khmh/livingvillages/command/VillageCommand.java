@@ -56,6 +56,11 @@ public final class VillageCommand {
                 .then(Commands.literal("discover").executes(VillageCommand::discover))
                 .then(Commands.literal("types").executes(VillageCommand::types))
                 .then(Commands.literal("buildings").executes(VillageCommand::buildings))
+                .then(Commands.literal("requests").executes(VillageCommand::requests))
+                .then(Commands.literal("request")
+                        .then(Commands.argument("item", ItemArgument.item(event.getBuildContext()))
+                                .then(Commands.argument("count", IntegerArgumentType.integer(1, 4096))
+                                        .executes(VillageCommand::request))))
                 .then(Commands.literal("build")
                         .then(Commands.argument("type", StringArgumentType.word())
                                 .suggests((c, b) -> SharedSuggestionProvider.suggest(
@@ -177,6 +182,28 @@ public final class VillageCommand {
         return v.buildings().size();
     }
 
+    private static int request(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Village v = here(ctx);
+        Item item = ItemArgument.getItem(ctx, "item").getItem();
+        int count = IntegerArgumentType.getInteger(ctx, "count");
+        v.request(item, count, "player", ctx.getSource().getLevel().getGameTime());
+        say(ctx, "Ordered " + count + " " + BuiltInRegistries.ITEM.getKey(item).getPath());
+        return 1;
+    }
+
+    private static int requests(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Village v = here(ctx);
+        long now = ctx.getSource().getLevel().getGameTime();
+        if (v.requests().isEmpty()) {
+            say(ctx, "No open requests");
+        }
+        v.requests().forEach(r -> say(ctx, String.format("%s x%d for %s%s%s",
+                BuiltInRegistries.ITEM.getKey(r.item()).getPath(), r.remaining(), r.requester(),
+                r.claimedBy() != null ? ", being made" : "",
+                r.unobtainableSince() >= 0 ? ", cannot be made (" + (now - r.unobtainableSince()) / 20 + "s)" : "")));
+        return v.requests().size();
+    }
+
     private static int build(CommandContext<CommandSourceStack> ctx, boolean free) throws CommandSyntaxException {
         Village v = here(ctx);
         String id = StringArgumentType.getString(ctx, "type");
@@ -190,17 +217,13 @@ public final class VillageCommand {
             ctx.getSource().sendFailure(Component.literal("Template missing: " + type.template()));
             return 0;
         }
-        if (!free && !MaterialCost.canAfford(v.stock(level), data.cost())) {
-            ctx.getSource().sendFailure(Component.literal("Not enough materials, needs " + MaterialCost.describe(data.cost())));
-            return 0;
-        }
         Optional<SiteFinder.Site> site = SiteFinder.find(level, v, type, data);
         if (site.isEmpty()) {
             ctx.getSource().sendFailure(Component.literal("No free site for " + id));
             return 0;
         }
         if (free) {
-            v.addBuilding(type, site.get(), level.getGameTime());
+            v.addBuilding(type, site.get(), level.getGameTime()).data().putBoolean("free", true);
         } else {
             GrowthPlanner.start(level, v, type, data, site.get(), level.getGameTime());
         }
