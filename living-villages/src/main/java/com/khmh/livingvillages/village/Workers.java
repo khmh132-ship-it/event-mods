@@ -163,7 +163,7 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 3600) {
+        if (now - v.data().getLong("lastReassign") < 1200) {
             return false;
         }
         VillageWorker donor = null;

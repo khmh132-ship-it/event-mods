@@ -24,7 +24,9 @@ final class Births {
     private static final int FOOD_PER_CHILD = 12;
     private static final List<Item> FOOD = List.of(Items.BREAD, Items.CARROT, Items.POTATO, Items.BEETROOT,
             Items.BAKED_POTATO, Items.COOKED_BEEF, Items.COOKED_PORKCHOP, Items.COOKED_MUTTON, Items.COOKED_CHICKEN,
-            Items.COOKED_COD, Items.COOKED_SALMON, Items.APPLE);
+            Items.COOKED_COD, Items.COOKED_SALMON, Items.APPLE, Items.SWEET_BERRIES,
+            // Raw meat last: a camp with no oven yet lives on what the hunter brings.
+            Items.BEEF, Items.PORKCHOP, Items.MUTTON, Items.CHICKEN, Items.RABBIT);
 
     private Births() {
     }

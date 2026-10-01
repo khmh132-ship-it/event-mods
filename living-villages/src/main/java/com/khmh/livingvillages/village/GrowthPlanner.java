@@ -20,6 +20,9 @@ import java.util.function.Predicate;
 
 /** Decides what a village builds next and where. One building at a time. */
 public final class GrowthPlanner {
+    /** The first rules: a village saves up for these rather than putting up something cheaper meanwhile. */
+    private static final int ESSENTIALS = 4;
+
     private record Rule(String group, int minLevel, IntUnaryOperator maxAtLevel, Predicate<Village> when) {
         Rule(String group, int minLevel, int max) {
             this(group, minLevel, level -> max, v -> true);
@@ -70,7 +73,11 @@ public final class GrowthPlanner {
         }
         String waiting = null;
         List<String> report = new ArrayList<>();
-        for (Rule rule : RULES) {
+        for (int i = 0; i < RULES.size(); i++) {
+            Rule rule = RULES.get(i);
+            if (waiting != null && i >= ESSENTIALS) {
+                break; // the basics (fields, a store, wood, beds) are saved up for before anything else
+            }
             if (v.level() < rule.minLevel() || !rule.when().test(v)
                     || v.countGroup(rule.group()) >= rule.maxAtLevel().applyAsInt(v.level())) {
                 continue;

@@ -13,12 +13,16 @@ def at(s, c):
 
 with TestServer(CFG, log_name='test_founding.log') as s:
     s.cmd('forceload add -96 -96 96 96')
-    for rule in ['doMobSpawning false', 'randomTickSpeed 3']:
+    for rule in ['doMobSpawning false', 'randomTickSpeed 3', 'doDaylightCycle false']:
         s.cmd('gamerule ' + rule)
     for x in range(-60, 61, 9):
         for z in (-50, -38, 38, 50):
             s.cmd(f'place feature minecraft:oak {x} 64 {z}', check=False)
             s.cmd(f'place feature minecraft:oak {z} 64 {x}', check=False)
+    for i in range(6):
+        s.cmd(f'summon cow {30 + i * 3} 64 {-20 + i}', check=False)
+        s.cmd(f'summon pig {-30 - i * 3} 64 {20 - i}', check=False)
+        s.cmd(f'summon chicken {20 - i * 3} 64 {30}', check=False)
     print(at(s, 'found'))
     for minute in range(int(__import__('sys').argv[1]) if len(__import__('sys').argv) > 1 else 12):
         time.sleep(60)
