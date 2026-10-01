@@ -126,7 +126,8 @@ class Unloading {
                 best = p;
             }
         }
-        if (best == null && village.countGroup("warehouse") == 0 && woodForChest(village) != null) {
+        if (best == null && village.countGroup("warehouse") == 0 && (chests.isEmpty() || village.stockFill() >= 0.7)
+                && woodForChest(village) != null) {
             // Nowhere to put things yet: knock a chest together and stand it in a house, like a player would.
             pendingChest = chestSpot(level, village);
             if (pendingChest != null) {
@@ -164,7 +165,7 @@ class Unloading {
                     box.maxY() - 1, box.maxZ() - 1)) {
                 if (!level.getBlockState(p).isAir() || !level.getBlockState(p.above()).isAir()
                         || !level.getBlockState(p.below()).isSolidRender(level, p.below())
-                        || level.canSeeSky(p) || p.closerThan(b.entrance(), 2.5)) {
+                        || p.closerThan(b.entrance(), 2.5) || !underRoof(level, p)) {
                     continue;
                 }
                 int walls = 0;
@@ -172,8 +173,11 @@ class Unloading {
                     BlockPos n = p.relative(d);
                     if (level.getBlockState(n).isSolidRender(level, n)) {
                         walls++;
+                    } else if (level.getBlockState(n).getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                            || level.getBlockState(n).getBlock() instanceof net.minecraft.world.level.block.DoorBlock) {
+                        walls = -9; // not against a bed or a door: leave the room usable
                     } else if (!level.getBlockState(n).isAir()) {
-                        walls = -9; // next to a bed, a door, a table: leave the room usable
+                        walls++; // glass, a fence, a pane: still a wall to stand against
                     }
                 }
                 if (walls >= 2 && (best == null || p.distSqr(worker.blockPosition()) < best.distSqr(worker.blockPosition()))) {
@@ -182,6 +186,15 @@ class Unloading {
             }
         }
         return best;
+    }
+
+    private static boolean underRoof(ServerLevel level, BlockPos p) {
+        for (int h = 2; h <= 6; h++) {
+            if (!level.getBlockState(p.above(h)).isAir()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Puts the chest down (paying for it with wood); false if the spot is taken or the wood is gone. */

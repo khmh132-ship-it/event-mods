@@ -58,7 +58,7 @@ public final class Workers {
 
         // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
         boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
-        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0
+        boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0 && r.unobtainableSince() < 0
                 && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
         // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
         boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
@@ -170,19 +170,20 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 1200) {
+        if (now - v.data().getLong("lastReassign") < 2400) {
             return false;
         }
         VillageWorker donor = null;
         // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
         for (WorkerJob from : all) {
             if (from != job && donor == null && !needed.getOrDefault(from, false)) {
-                donor = workers.stream().filter(w -> w.job() == from).findFirst().orElse(null);
+                donor = workers.stream().filter(w -> w.job() == from && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
             }
         }
         for (int i = lower.size() - 1; i >= 0 && donor == null; i--) {
             WorkerJob from = lower.get(i);
-            donor = workers.stream().filter(w -> w.job() == from).findFirst().orElse(null);
+            // Not in the middle of a trip: he finishes it (and unloads) first.
+            donor = workers.stream().filter(w -> w.job() == from && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
         }
         if (donor == null) {
             return false;
