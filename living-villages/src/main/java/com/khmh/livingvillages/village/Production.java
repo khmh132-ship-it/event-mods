@@ -50,17 +50,17 @@ public final class Production {
             return;
         }
         int cycles = (int) Math.min(due, LVConfig.MAX_CATCHUP_CYCLES.get());
-        runCycles(v, cycles);
+        runCycles(v, cycles, now);
         v.setLastProduction(cycles < due ? now : v.lastProduction() + due * interval);
     }
 
-    public static void runCycles(Village v, int cycles) {
+    public static void runCycles(Village v, int cycles, long now) {
         for (int i = 0; i < cycles; i++) {
-            cycle(v);
+            cycle(v, now);
         }
     }
 
-    private static void cycle(Village v) {
+    private static void cycle(Village v, long now) {
         if (v.population() <= 0) {
             return; // nobody left to work
         }
@@ -83,7 +83,9 @@ public final class Production {
             BY_PROFESSION.get("none").forEach((item, rate) -> out.merge(item, rate * unknown, Double::sum));
         }
         for (Building b : v.buildings()) {
-            if (b.isComplete() && BuildingTypes.get(b.typeId()) != null) {
+            // A worker doing the job for real replaces the building's abstract output.
+            boolean worked = v.isWorkedRecently(b.id(), now, 3L * LVConfig.PRODUCTION_INTERVAL.get());
+            if (b.isComplete() && BuildingTypes.get(b.typeId()) != null && !worked) {
                 b.type().produces().forEach((item, rate) -> out.merge(item, rate, Double::sum));
             }
         }

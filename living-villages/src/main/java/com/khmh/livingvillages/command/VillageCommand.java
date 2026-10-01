@@ -233,7 +233,7 @@ public final class VillageCommand {
     private static int produce(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Village v = here(ctx);
         int cycles = IntegerArgumentType.getInteger(ctx, "cycles");
-        Production.runCycles(v, cycles);
+        Production.runCycles(v, cycles, ctx.getSource().getLevel().getGameTime());
         say(ctx, "Ran " + cycles + " production cycles");
         return cycles;
     }

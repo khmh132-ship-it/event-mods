@@ -2,6 +2,7 @@ package com.khmh.livingvillages.village;
 
 import com.khmh.livingvillages.building.Construction;
 import com.khmh.livingvillages.building.TemplateData;
+import com.khmh.livingvillages.entity.VillageWorker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -49,7 +50,7 @@ public final class VillageEvents {
         }
         for (Village v : List.copyOf(manager.all())) {
             Production.tick(v, now);
-            Construction.tick(level, v, now, 1.0);
+            Construction.tick(level, v, now);
             if (level.hasChunkAt(v.center())) {
                 GrowthPlanner.tick(level, v, now);
             }
@@ -117,9 +118,14 @@ public final class VillageEvents {
                     .getPath();
             professions.merge(key, 1, Integer::sum);
         }
+        List<VillageWorker> workers = Workers.of(level, v);
+        for (VillageWorker w : workers) {
+            professions.merge(w.job().name().toLowerCase(), 1, Integer::sum);
+        }
         int beds = (int) level.getPoiManager().getCountInRange(type -> type.is(PoiTypes.HOME), v.center(),
                 v.radius(), PoiManager.Occupancy.ANY);
-        v.observe(villagers.size(), beds, professions, level.getGameTime());
+        v.observe(villagers.size() + workers.size(), beds, professions, level.getGameTime());
+        Workers.hire(level, v, villagers);
     }
 
     private static List<Villager> villagers(ServerLevel level, BlockPos center, int radius) {

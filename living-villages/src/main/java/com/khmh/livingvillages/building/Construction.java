@@ -6,6 +6,7 @@ import com.khmh.livingvillages.village.Village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -24,7 +25,7 @@ public final class Construction {
     }
 
     /** Called once per second for every village. */
-    public static void tick(ServerLevel level, Village village, long now, double speed) {
+    public static void tick(ServerLevel level, Village village, long now) {
         for (Building b : village.buildings()) {
             if (b.isComplete()) {
                 continue;
@@ -33,7 +34,9 @@ public final class Construction {
             if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
                 continue; // backlog keeps growing
             }
-            int interval = Math.max(1, (int) Math.round(LVConfig.BUILD_INTERVAL.get() / Math.max(0.01, speed)));
+            // A builder on site triples the pace.
+            double speed = village.isWorkedRecently(b.id(), now, 60) ? 3.0 : 1.0;
+            int interval = Math.max(1, (int) Math.round(LVConfig.BUILD_INTERVAL.get() / speed));
             long due = (now - b.lastStep()) / interval;
             int steps = (int) Math.min(due, LVConfig.MAX_BUILD_STEPS_PER_SECOND.get());
             if (steps <= 0) {
@@ -73,6 +76,9 @@ public final class Construction {
         BlockPos pos = Placement.toWorld(b.origin(), b.rotation(), e.pos());
         BlockState state = e.state().rotate(b.rotation());
         level.setBlock(pos, state, Block.UPDATE_ALL);
+        if (!state.isAir() && level.random.nextInt(3) == 0) {
+            level.playSound(null, pos, state.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 0.6F, 0.9F);
+        }
         if (e.nbt() != null) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be != null) {

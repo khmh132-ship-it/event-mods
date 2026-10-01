@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 /** One building of a village: where it stands and how far its construction got. */
@@ -23,6 +24,8 @@ public class Building {
     private Phase phase;
     private int progress;
     private long lastStep;
+    @Nullable
+    private UUID workerId;
 
     public Building(UUID id, String typeId, BlockPos origin, Rotation rotation, int groundY, BoundingBox box,
                     BlockPos entrance, Phase phase, int progress, long lastStep) {
@@ -86,6 +89,15 @@ public class Building {
         return lastStep;
     }
 
+    @Nullable
+    public UUID workerId() {
+        return workerId;
+    }
+
+    public void setWorkerId(@Nullable UUID workerId) {
+        this.workerId = workerId;
+    }
+
     void setLastStep(long lastStep) {
         this.lastStep = lastStep;
     }
@@ -111,14 +123,21 @@ public class Building {
         t.putString("phase", phase.name());
         t.putInt("progress", progress);
         t.putLong("lastStep", lastStep);
+        if (workerId != null) {
+            t.putUUID("worker", workerId);
+        }
         return t;
     }
 
     public static Building load(CompoundTag t) {
         int[] b = t.getIntArray("box");
-        return new Building(t.getUUID("id"), t.getString("type"), BlockPos.of(t.getLong("origin")),
+        Building building = new Building(t.getUUID("id"), t.getString("type"), BlockPos.of(t.getLong("origin")),
                 Rotation.valueOf(t.getString("rotation")), t.getInt("groundY"),
                 new BoundingBox(b[0], b[1], b[2], b[3], b[4], b[5]), BlockPos.of(t.getLong("entrance")),
                 Phase.valueOf(t.getString("phase")), t.getInt("progress"), t.getLong("lastStep"));
+        if (t.hasUUID("worker")) {
+            building.workerId = t.getUUID("worker");
+        }
+        return building;
     }
 }

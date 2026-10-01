@@ -49,6 +49,7 @@ public class Village {
     private final Map<Item, Double> fractions = new HashMap<>();
     private double foodDebt;
     private List<String> lastPlanReport = List.of();
+    private final Map<UUID, Long> workSeen = new HashMap<>();
     private Runnable onChange = () -> {};
 
     public Village(UUID id, BlockPos center) {
@@ -180,6 +181,16 @@ public class Village {
         int whole = (int) Math.floor(foodDebt);
         foodDebt -= whole;
         return whole;
+    }
+
+    /** A worker is busy at (or for) a building right now. */
+    public void reportWorking(UUID buildingId, long now) {
+        workSeen.put(buildingId, now);
+    }
+
+    public boolean isWorkedRecently(UUID buildingId, long now, long window) {
+        Long seen = workSeen.get(buildingId);
+        return seen != null && now - seen <= window;
     }
 
     public List<Building> buildings() {
