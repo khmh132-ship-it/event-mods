@@ -31,10 +31,17 @@ public final class Production {
             Map.entry("toolsmith", Map.of(Items.IRON_INGOT, 0.25, Items.COAL, 0.25)),
             Map.entry("weaponsmith", Map.of(Items.IRON_INGOT, 0.25, Items.COAL, 0.25)),
             Map.entry("armorer", Map.of(Items.IRON_INGOT, 0.25, Items.COAL, 0.25)),
-            Map.entry("fletcher", Map.of(Items.STICK, 1.0)));
+            Map.entry("fletcher", Map.of(Items.STICK, 1.0)),
+            // The village's own workers, for the time nobody is around to watch them do it for real.
+            Map.entry("lumberjack", Map.of(Items.OAK_LOG, 4.0, Items.OAK_SAPLING, 0.5, Items.APPLE, 0.2)),
+            Map.entry("miner", Map.of(Items.COBBLESTONE, 6.0, Items.COAL, 0.5, Items.RAW_IRON, 0.3,
+                    Items.RAW_COPPER, 0.2)),
+            Map.entry("cleric", Map.of(Items.ROTTEN_FLESH, 0.1)),
+            Map.entry("librarian", Map.of(Items.SUGAR_CANE, 0.5)));
 
     /** Professions whose output comes from the world itself while the village is loaded. */
-    private static final Set<String> REAL_WHEN_LOADED = Set.of("none", "nitwit", "farmer");
+    private static final Set<String> REAL_WHEN_LOADED = Set.of("none", "nitwit", "farmer", "lumberjack", "miner",
+            "butcher", "shepherd", "fisherman", "cleric", "librarian");
     /** Building groups worked for real while loaded. */
     private static final Set<String> REAL_BUILDINGS = Set.of("lumberjack", "mine", "farm");
 
