@@ -338,7 +338,7 @@ public class MinerWorkGoal extends Goal {
                 walkedOut = true;
                 if (worker.unloadTick(KEEP)) {
                     walkedOut = false;
-                    go(State.WORK);
+                    go(supplied ? State.WORK : State.SUPPLY); // more timber and torches while up here
                 }
             }
         }
@@ -414,7 +414,13 @@ public class MinerWorkGoal extends Goal {
     }
 
     private void work(ServerLevel level, Village village) {
-        if (worker.carried() >= LOAD || worker.inventoryFull()) {
+        var inv = worker.getInventory();
+        boolean bare = inv.countItem(Items.OAK_FENCE) < 4 && inv.countItem(Items.TORCH) == 0
+                && inv.countItem(Items.COAL) == 0;
+        if (worker.carried() >= LOAD || worker.inventoryFull() || bare && worker.carried() >= 64) {
+            if (bare) {
+                supplied = false;
+            }
             resetDig();
             go(State.UNLOAD);
             return;

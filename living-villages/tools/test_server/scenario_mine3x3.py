@@ -13,7 +13,7 @@ def at(s, c):
     return s.cmd(f'execute positioned 0 64 0 run village {c}', check=False)
 
 
-with TestServer(CFG, log_name='test_mine3x3.log') as s:
+with TestServer(CFG, log_name='test_mine3x3.log', difficulty='easy') as s:
     s.cmd('forceload add -96 -96 96 96')
     for rule in ['doMobSpawning false', 'doDaylightCycle false', 'time set noon']:
         s.cmd('gamerule ' + rule if 'time' not in rule else rule, check=False)
@@ -39,6 +39,8 @@ with TestServer(CFG, log_name='test_mine3x3.log') as s:
     for minute in range(minutes):
         time.sleep(60)
         print(f'--- {minute + 1} min')
+        if minute == 5:
+            print(s.cmd('execute at @e[type=livingvillages:worker,nbt={Job:2},limit=1] run summon zombie ^ ^ ^4 {PersistenceRequired:1b}', check=False))
         print(at(s, 'workers'))
         print(s.cmd(f'execute positioned {mx} {my} {mz} run village count 40', check=False))
     print(at(s, 'info'))
