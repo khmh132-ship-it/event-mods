@@ -3,7 +3,6 @@
   "values": [
     "livingvillages:builders_table",
     "livingvillages:chopping_block",
-    "livingvillages:weapon_rack",
-    "livingvillages:stockpile_crate"
+    "livingvillages:weapon_rack"
   ]
 }

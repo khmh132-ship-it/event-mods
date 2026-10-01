@@ -384,7 +384,7 @@ DRAFTS = {
     'lumberjack_hut': (lumberjack, 'Хижина дровосека'),
     'mine': (mine, 'Шахта'),
     'warehouse': (warehouse, 'Склад'),
-    'builder_workshop': (builder_workshop, 'Мастерская строителя'),
+    'builder_workshop': (builder_workshop, 'Дом строителя'),
     'sawmill': (sawmill, 'Лесопилка'),
     'barracks': (barracks, 'Казарма'),
     'watchtower': (watchtower, 'Сторожевая вышка'),

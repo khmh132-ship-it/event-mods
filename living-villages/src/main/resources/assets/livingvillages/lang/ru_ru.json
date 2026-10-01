@@ -1,12 +1,11 @@
 {
-  "entity.livingvillages.worker": "\u0420\u0430\u0431\u043e\u0442\u043d\u0438\u043a \u0434\u0435\u0440\u0435\u0432\u043d\u0438",
-  "entity.livingvillages.worker.job.builder": "\u0421\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044c",
-  "entity.livingvillages.worker.job.lumberjack": "\u0414\u0440\u043e\u0432\u043e\u0441\u0435\u043a",
-  "entity.livingvillages.worker.job.miner": "\u0428\u0430\u0445\u0442\u0451\u0440",
-  "block.livingvillages.builders_table": "\u0421\u0442\u043e\u043b \u0441\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044f",
-  "block.livingvillages.chopping_block": "\u041a\u043e\u043b\u043e\u0434\u0430 \u0434\u0440\u043e\u0432\u043e\u0441\u0435\u043a\u0430",
-  "block.livingvillages.miners_bench": "\u0412\u0435\u0440\u0441\u0442\u0430\u043a \u0448\u0430\u0445\u0442\u0451\u0440\u0430",
-  "block.livingvillages.weapon_rack": "\u041e\u0440\u0443\u0436\u0435\u0439\u043d\u0430\u044f \u0441\u0442\u043e\u0439\u043a\u0430",
-  "block.livingvillages.stockpile_crate": "\u0421\u043a\u043b\u0430\u0434\u0441\u043a\u043e\u0439 \u044f\u0449\u0438\u043a",
-  "itemGroup.livingvillages": "\u0416\u0438\u0432\u044b\u0435 \u0434\u0435\u0440\u0435\u0432\u043d\u0438"
+  "entity.livingvillages.worker": "Работник деревни",
+  "entity.livingvillages.worker.job.builder": "Строитель",
+  "entity.livingvillages.worker.job.lumberjack": "Дровосек",
+  "entity.livingvillages.worker.job.miner": "Шахтёр",
+  "block.livingvillages.builders_table": "Стол строителя",
+  "block.livingvillages.chopping_block": "Колода дровосека",
+  "block.livingvillages.miners_bench": "Верстак шахтёра",
+  "block.livingvillages.weapon_rack": "Оружейная стойка",
+  "itemGroup.livingvillages": "Живые деревни"
 }

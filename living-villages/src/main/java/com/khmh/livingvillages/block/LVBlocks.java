@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -49,12 +48,9 @@ public final class LVBlocks {
                     Direction.SOUTH, Block.box(0, 0, 0, 16, 16, 4),
                     Direction.EAST, Block.box(0, 0, 0, 4, 16, 16),
                     Direction.WEST, Block.box(12, 0, 0, 16, 16, 16))));
-    /** Warehouse: where workers hand in what they gathered. */
-    public static final RegistryObject<Block> STOCKPILE_CRATE = block("stockpile_crate",
-            () -> new JobBlock(wood(), Shapes.block()));
 
     public static final List<RegistryObject<Block>> ALL =
-            List.of(BUILDERS_TABLE, CHOPPING_BLOCK, MINERS_BENCH, WEAPON_RACK, STOCKPILE_CRATE);
+            List.of(BUILDERS_TABLE, CHOPPING_BLOCK, MINERS_BENCH, WEAPON_RACK);
 
     public static final RegistryObject<CreativeModeTab> TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.livingvillages"))

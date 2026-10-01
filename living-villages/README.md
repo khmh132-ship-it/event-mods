@@ -19,12 +19,12 @@ Requires JDK 17 (Gradle downloads it automatically through the toolchain if it i
   sand, wool and iron; farmers: crops; masons: stone...) and finished buildings add their output. The village eats;
   hungry villages work at half speed. Missed cycles are made up for, so villages grow while nobody is around.
 - **Growth.** The planner picks the next building by level and needs (lumberjack hut, houses when beds run short,
-  warehouse, farms, builder's workshop, quest board; mine, sawmill, pens, watchtower, vanilla workshops at level 2;
+  warehouse, farms, builder's house, quest board; mine, sawmill, pens, watchtower, vanilla workshops at level 2;
   town hall, tavern, barracks, golem pad, stables at level 3), pays for it from the stockpile and finds a flat
   natural site facing the bell. Trees on the site are felled into the stockpile.
 - **Construction.** Block by block: the site is levelled, then the building goes up bottom-up, then a dirt path is
   laid to the bell. Construction continues while unloaded and catches up when the area loads again.
-- **Workers.** A finished builder's workshop or lumberjack hut hires an unemployed villager. The builder works on
+- **Workers.** A finished builder's house or lumberjack hut hires an unemployed villager. The builder works on
   site and triples the pace; the lumberjack fells and replants trees and carries the logs to the warehouse.
 - **Levels.** Level 2 at 6 villagers and 4 buildings, level 3 at 12 villagers, 10 buildings and a warehouse.
 
