@@ -24,12 +24,16 @@ public enum WorkerJob {
     ARMORER("", "armorer"),
     FLETCHER("", "fletcher"),
     LEATHERWORKER("", "leatherworker"),
-    CARPENTER("sawmill", "fletcher");
+    CARPENTER("sawmill", "fletcher"),
+    FISHERMAN("", "fisherman"),
+    CLERIC("", "cleric"),
+    LIBRARIAN("", "librarian"),
+    CARTOGRAPHER("", "cartographer");
 
     /** Jobs that make things to order (see {@link com.khmh.livingvillages.economy.Trades}). */
     public boolean crafts() {
         return this == APPRENTICE || this == MASON || this == TOOLSMITH || this == WEAPONSMITH || this == ARMORER
-                || this == FLETCHER || this == LEATHERWORKER || this == CARPENTER;
+                || this == FLETCHER || this == LEATHERWORKER || this == CARPENTER || this == LIBRARIAN;
     }
 
     private final String workplace;
@@ -50,6 +54,7 @@ public enum WorkerJob {
             case SHEPHERD -> net.minecraftforge.common.Tags.Items.SHEARS;
             case BUTCHER -> ItemTags.AXES;
             case GUARD -> ItemTags.SWORDS;
+            case FISHERMAN -> net.minecraftforge.common.Tags.Items.TOOLS_FISHING_RODS;
             default -> null;
         };
     }
@@ -63,6 +68,7 @@ public enum WorkerJob {
             case SHEPHERD -> Items.SHEARS;
             case BUTCHER -> Items.STONE_AXE;
             case GUARD -> Items.STONE_SWORD;
+            case FISHERMAN -> Items.FISHING_ROD;
             default -> Items.AIR;
         };
     }

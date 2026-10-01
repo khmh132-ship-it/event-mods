@@ -70,7 +70,11 @@ public final class Workers {
                     : p == VillagerProfession.WEAPONSMITH ? WorkerJob.WEAPONSMITH
                     : p == VillagerProfession.ARMORER ? WorkerJob.ARMORER
                     : p == VillagerProfession.FLETCHER ? WorkerJob.FLETCHER
-                    : p == VillagerProfession.LEATHERWORKER ? WorkerJob.LEATHERWORKER : null;
+                    : p == VillagerProfession.LEATHERWORKER ? WorkerJob.LEATHERWORKER
+                    : p == VillagerProfession.FISHERMAN ? WorkerJob.FISHERMAN
+                    : p == VillagerProfession.CLERIC ? WorkerJob.CLERIC
+                    : p == VillagerProfession.LIBRARIAN ? WorkerJob.LIBRARIAN
+                    : p == VillagerProfession.CARTOGRAPHER ? WorkerJob.CARTOGRAPHER : null;
             if (job != null) {
                 takeOver(level, v, villagers, farmer, job);
             }

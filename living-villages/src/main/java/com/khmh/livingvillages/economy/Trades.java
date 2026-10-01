@@ -41,7 +41,11 @@ public final class Trades {
                 || item == Items.STRING) {
             return WorkerJob.FLETCHER;
         }
-        if (item == Items.LEATHER || item == Items.BOOK || item == Items.ITEM_FRAME || item == Items.SADDLE) {
+        if (item == Items.PAPER || item == Items.BOOK || item == Items.BOOKSHELF || item == Items.LECTERN
+                || item == Items.WRITABLE_BOOK || item == Items.MAP) {
+            return WorkerJob.LIBRARIAN;
+        }
+        if (item == Items.LEATHER || item == Items.ITEM_FRAME || item == Items.SADDLE) {
             return WorkerJob.LEATHERWORKER;
         }
         if (s.is(ItemTags.PLANKS) || s.is(ItemTags.WOODEN_STAIRS) || s.is(ItemTags.WOODEN_SLABS)

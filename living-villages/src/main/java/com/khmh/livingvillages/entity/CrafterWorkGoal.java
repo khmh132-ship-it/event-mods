@@ -45,6 +45,7 @@ public class CrafterWorkGoal extends Goal {
     private int timer;
     private int cooldown;
     private boolean furnaceLoaded;
+    private boolean nothingToDo;
     /** A crafting table or furnace to set up before the actual order. */
     private Item setUp;
 
@@ -66,7 +67,8 @@ public class CrafterWorkGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return worker.job().crafts() && worker.village().isPresent();
+        // Free again once there is nothing to make (the librarian goes cutting cane, say).
+        return worker.job().crafts() && worker.village().isPresent() && !(state == State.PICK && nothingToDo);
     }
 
     @Override
@@ -126,6 +128,7 @@ public class CrafterWorkGoal extends Goal {
     }
 
     private void pick(ServerLevel level, Village village) {
+        nothingToDo = false;
         Map<Item, Integer> stock = new HashMap<>(village.stock(level).totals());
         SimpleContainer inv = worker.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -166,6 +169,8 @@ public class CrafterWorkGoal extends Goal {
         }
         if (worker.carried() > 0) {
             go(State.DELIVER);
+        } else {
+            nothingToDo = true;
         }
     }
 

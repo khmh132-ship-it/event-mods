@@ -95,6 +95,11 @@ public class LumberjackWorkGoal extends Goal {
                     go(State.RETURN);
                 } else if (--cooldown <= 0) {
                     tree = findTree(level, village, home);
+                    if (tree == null && level instanceof net.minecraft.server.level.ServerLevel sl) {
+                        // Nothing near the hut: woods the cartographer has charted.
+                        tree = Scouting.nearest(village, "trees", home, sl,
+                                p -> sl.getBlockState(p).is(BlockTags.LOGS) && !unreachable.contains(p.asLong()));
+                    }
                     if (tree == null) {
                         cooldown = 200;
                         if (worker.carried() > 0) {
