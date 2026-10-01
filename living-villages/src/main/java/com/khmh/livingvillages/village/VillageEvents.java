@@ -127,7 +127,7 @@ public final class VillageEvents {
                 v.radius(), PoiManager.Occupancy.ANY);
         v.observe(villagers.size() + workers.size(), beds, professions, level.getGameTime());
         Gathering.collectHarvest(v, villagers);
-        Workers.hire(level, v, villagers);
+        Workers.hire(level, v, villagers, workers);
     }
 
     private static List<Villager> villagers(ServerLevel level, BlockPos center, int radius) {

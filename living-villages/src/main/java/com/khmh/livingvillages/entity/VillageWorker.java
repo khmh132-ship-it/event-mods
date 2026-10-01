@@ -88,11 +88,24 @@ public class VillageWorker extends PathfinderMob {
         return WorkerJob.byId(entityData.get(DATA_JOB));
     }
 
-    public void assign(WorkerJob job, Village village, Building workplace) {
+    /** Gives the worker a job. A builder may have no workplace yet: he serves the whole village. */
+    public void assign(WorkerJob job, Village village, @Nullable Building workplace) {
         entityData.set(DATA_JOB, job.ordinal());
         villageId = village.id();
-        workplaceId = workplace.id();
-        restrictTo(workplace.entrance(), 24);
+        setWorkplace(village, workplace);
+    }
+
+    public void setWorkplace(Village village, @Nullable Building workplace) {
+        workplaceId = workplace == null ? null : workplace.id();
+        if (workplace != null) {
+            restrictTo(workplace.entrance(), 24);
+        } else {
+            restrictTo(village.center(), village.radius());
+        }
+    }
+
+    public boolean hasWorkplace() {
+        return workplaceId != null;
     }
 
     public Optional<Village> village() {
@@ -140,22 +153,27 @@ public class VillageWorker extends PathfinderMob {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (level().isClientSide || tickCount % 100 != 0) {
+        if (level().isClientSide) {
+            return;
+        }
+        if (job() == WorkerJob.BUILDER && tickCount % 20 == 0) {
+            village().ifPresent(v -> v.noteBuilder(level().getGameTime()));
+        }
+        if (tickCount % 100 != 0) {
             return;
         }
         // A worker whose village or workplace is gone goes back to being an ordinary villager.
-        if (workplace().isEmpty()) {
+        boolean lost = village().isEmpty() || job() != WorkerJob.BUILDER && workplace().isEmpty();
+        if (lost) {
             orphanTicks += 100;
             if (orphanTicks >= 600) {
                 retire();
             }
         } else {
             orphanTicks = 0;
-            workplace().ifPresent(w -> {
-                if (!hasRestriction()) {
-                    restrictTo(w.entrance(), 24);
-                }
-            });
+            if (!hasRestriction()) {
+                village().ifPresent(v -> setWorkplace(v, workplace().orElse(null)));
+            }
         }
     }
 
@@ -187,9 +205,9 @@ public class VillageWorker extends PathfinderMob {
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!level().isClientSide) {
-            String what = workplace().map(b -> village().map(v -> v.buildings().stream()
+            String what = village().map(v -> v.buildings().stream()
                     .filter(x -> !x.isComplete()).findFirst()
-                    .map(x -> "working on " + x.typeId()).orElse("waiting for work")).orElse(""))
+                    .map(x -> "working on " + x.typeId()).orElse("waiting for work"))
                     .orElse("without a village");
             if (job() != WorkerJob.BUILDER) {
                 what = carried.isEmpty() ? "working" : "carrying " + carried;

@@ -50,6 +50,7 @@ public class Village {
     private double foodDebt;
     private List<String> lastPlanReport = List.of();
     private final Map<UUID, Long> workSeen = new HashMap<>();
+    private long builderSeen = Long.MIN_VALUE / 2;
     private Runnable onChange = () -> {};
 
     public Village(UUID id, BlockPos center) {
@@ -181,6 +182,15 @@ public class Village {
         int whole = (int) Math.floor(foodDebt);
         foodDebt -= whole;
         return whole;
+    }
+
+    /** A builder of this village is alive and loaded. */
+    public void noteBuilder(long now) {
+        builderSeen = now;
+    }
+
+    public boolean hasBuilder(long now) {
+        return now - builderSeen <= 200;
     }
 
     /** A worker is busy at (or for) a building right now. */

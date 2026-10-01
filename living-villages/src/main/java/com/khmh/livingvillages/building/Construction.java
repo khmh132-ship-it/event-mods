@@ -37,7 +37,7 @@ public final class Construction {
 
     /** Called once per second for every village. */
     public static void tick(ServerLevel level, Village village, long now) {
-        boolean builder = hasBuilder(village);
+        boolean builder = village.hasBuilder(now);
         for (Building b : village.buildings()) {
             if (b.isComplete()) {
                 continue;
@@ -50,9 +50,9 @@ public final class Construction {
             int interval = LVConfig.BUILD_INTERVAL.get();
             long due = (now - b.lastStep()) / interval;
             boolean catchingUp = !LOADED_LAST_TICK.contains(b.id()) && due > 2;
-            // While the builder is on the job he does all the work. If he is nowhere near (just hired, far away,
-            // unloaded) the villagers keep building slowly so nothing stalls.
-            if (builder && !catchingUp && village.isWorkedRecently(b.id(), now, 200)) {
+            // While the village has a builder around, he does all the work himself; blocks only appear on their
+            // own for time that passed while the site was unloaded, or in a village with nobody to build.
+            if (builder && !catchingUp) {
                 LOADED_LAST_TICK.add(b.id());
                 b.setLastStep(now);
                 continue;
@@ -71,16 +71,6 @@ public final class Construction {
             }
             village.markDirty();
         }
-    }
-
-    /** True if a finished builder's workshop has a hired builder. */
-    public static boolean hasBuilder(Village village) {
-        for (Building b : village.buildings()) {
-            if (b.isComplete() && b.workerId() != null && "builder_workshop".equals(b.typeId())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** Where the next step happens: the column being levelled, or the next block to place. */
