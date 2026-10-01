@@ -18,8 +18,11 @@ with TestServer(CFG, log_name='test_apprentice.log') as s:
     at(s, 'create')
     at(s, 'storage add minecraft:oak_log 300')  # no lumberjack needed
     at(s, 'storage add minecraft:cobblestone 200')  # no miner needed
-    print(at(s, 'request minecraft:glass_pane 6'))
-    print(at(s, 'request minecraft:oak_door 2'))
+    at(s, 'storage take minecraft:sand 8')  # glass has to come from crushed cobblestone
+    at(s, 'storage add minecraft:white_wool 2')
+    print(at(s, 'request minecraft:glass 4'))
+    print(at(s, 'request minecraft:stone_pickaxe 1'))
+    print(at(s, 'request minecraft:string 4'))
     for _ in range(14):
         time.sleep(15)
         inv = s.cmd('data get entity @e[type=livingvillages:worker,limit=1] Inventory', check=False)

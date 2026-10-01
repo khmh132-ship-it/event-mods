@@ -10,10 +10,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -39,9 +42,9 @@ public class MinerWorkGoal extends Goal {
     private static final int BRANCH_EVERY = 6;
     private static final int BRANCH_LEN = 8;
     private static final int ROUNDS = 4;
-    private static final ItemStack PICK = new ItemStack(Items.IRON_PICKAXE);
+    private static final List<Item> RAW_ORES = List.of(Items.RAW_IRON, Items.RAW_COPPER, Items.RAW_GOLD);
 
-    private enum State { TO_MINE, DIG, RETURN }
+    private enum State { TO_MINE, DIG, SMELT, RETURN }
 
     private record Cell(BlockPos pos, BlockPos from, int segment, int height) {
     }
@@ -54,9 +57,11 @@ public class MinerWorkGoal extends Goal {
     private int planRound = -1;
     private BlockPos digging;
     private int digTicks;
+    private final Tooling tooling;
 
     public MinerWorkGoal(VillageWorker worker) {
         this.worker = worker;
+        this.tooling = new Tooling(worker);
         setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -81,6 +86,7 @@ public class MinerWorkGoal extends Goal {
     public void stop() {
         worker.getNavigation().stop();
         worker.resetUnloading();
+        tooling.reset();
         resetDig();
     }
 
@@ -115,8 +121,11 @@ public class MinerWorkGoal extends Goal {
         switch (state) {
             case TO_MINE -> {
                 if (worker.carried() >= LOAD || worker.inventoryFull()) {
-                    go(State.RETURN);
+                    go(State.SMELT);
                     return;
+                }
+                if (tooling.tick(level, village) == Tooling.Status.BUSY) {
+                    return; // off to the warehouse for a pickaxe
                 }
                 Cell c = current(level, village);
                 if (c == null) {
@@ -136,6 +145,7 @@ public class MinerWorkGoal extends Goal {
                 }
             }
             case DIG -> dig(level, village);
+            case SMELT -> smelt(level, village);
             case RETURN -> {
                 if (worker.unloadTick()) {
                     go(State.TO_MINE);
@@ -152,12 +162,15 @@ public class MinerWorkGoal extends Goal {
                 worker.teleportTo(out.getX() + 0.5, out.getY(), out.getZ() + 0.5); // up the ladder
             }
             resetDig();
-            smelt();
-            go(State.RETURN);
+            go(State.SMELT);
             return;
         }
         if (!level.hasChunkAt(c.pos())) {
             return;
+        }
+        if (tooling.tick(level, village) == Tooling.Status.BUSY) {
+            resetDig();
+            return; // gone to the warehouse for a pickaxe
         }
         double dx = worker.getX() - (c.pos().getX() + 0.5), dz = worker.getZ() - (c.pos().getZ() + 0.5);
         if (dx * dx + dz * dz > 2.9 * 2.9 || Math.abs(worker.getY() - c.pos().getY()) > 2.5) {
@@ -195,11 +208,15 @@ public class MinerWorkGoal extends Goal {
             village.markDirty();
             return;
         }
+        if (!tooling.canHarvest(state)) {
+            resetDig();
+            return; // no pickaxe for stone: wait for one (it has been asked for)
+        }
         if (!block.equals(digging)) {
             resetDig();
             digging = block;
         }
-        int need = Math.max(4, Math.min(60, (int) (state.getDestroySpeed(level, block) * 12)));
+        int need = tooling.breakTicks(level, block, state);
         digTicks++;
         level.destroyBlockProgress(worker.getId(), block, Math.min(9, digTicks * 10 / need));
         if (digTicks % 5 == 0) {
@@ -208,11 +225,13 @@ public class MinerWorkGoal extends Goal {
         if (digTicks >= need) {
             boolean worthCarrying = !state.is(BlockTags.DIRT);
             if (worthCarrying) {
-                for (ItemStack drop : Block.getDrops(state, level, block, level.getBlockEntity(block), worker, PICK)) {
+                for (ItemStack drop : Block.getDrops(state, level, block, level.getBlockEntity(block), worker,
+                        worker.getMainHandItem())) {
                     worker.carry(drop.getItem(), drop.getCount());
                 }
             }
             level.destroyBlock(block, false, worker);
+            tooling.used();
             resetDig();
         }
     }
@@ -418,20 +437,63 @@ public class MinerWorkGoal extends Goal {
     }
 
     /**
-     * Stand-in until miners use a real furnace (stage 5): ores come out smelted and some cobblestone is ground
-     * into sand on the way up.
+     * On the way up the miner takes his raw ore to a furnace (the mine's own, or the village's), collects what
+     * finished smelting since last time, puts the new ore in and feeds it with coal from his load.
      */
-    private void smelt() {
-        worker.convertCarried(Items.RAW_IRON, Items.IRON_INGOT);
-        worker.convertCarried(Items.RAW_COPPER, Items.COPPER_INGOT);
-        worker.convertCarried(Items.RAW_GOLD, Items.GOLD_INGOT);
-        var inv = worker.getInventory();
-        int cobble = inv.countItem(Items.COBBLESTONE);
-        int sand = Math.min(4, cobble / 8);
-        if (sand > 0) {
-            inv.removeItemType(Items.COBBLESTONE, sand * 4);
-            inv.addItem(new ItemStack(Items.SAND, sand));
+    private void smelt(ServerLevel level, Village village) {
+        Item ore = RAW_ORES.stream().filter(o -> worker.getInventory().countItem(o) > 0).findFirst().orElse(null);
+        BlockPos at = ore == null ? null : furnace(level, village);
+        if (at == null) {
+            go(State.RETURN);
+            return;
         }
+        if (worker.distanceToSqr(at.getX() + 0.5, at.getY() + 0.5, at.getZ() + 0.5) > 6.25) {
+            if (timer > 400) {
+                go(State.RETURN);
+            } else if (timer % 20 == 1) {
+                worker.getNavigation().moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0.6);
+            }
+            return;
+        }
+        worker.getNavigation().stop();
+        if (level.getBlockEntity(at) instanceof AbstractFurnaceBlockEntity furnace) {
+            SimpleContainer inv = worker.getInventory();
+            ItemStack out = furnace.getItem(2);
+            if (!out.isEmpty()) {
+                worker.carry(out.getItem(), out.getCount());
+                furnace.setItem(2, ItemStack.EMPTY);
+            }
+            ItemStack in = furnace.getItem(0);
+            if (in.isEmpty() || in.is(ore)) {
+                int n = Math.min(inv.countItem(ore), 64 - in.getCount());
+                inv.removeItemType(ore, n);
+                furnace.setItem(0, new ItemStack(ore, in.getCount() + n));
+                ItemStack fuel = furnace.getItem(1);
+                int coal = Math.min(inv.countItem(Items.COAL), (n + 7) / 8);
+                if (coal > 0 && (fuel.isEmpty() || fuel.is(Items.COAL)) && fuel.getCount() + coal <= 64) {
+                    inv.removeItemType(Items.COAL, coal);
+                    furnace.setItem(1, new ItemStack(Items.COAL, fuel.getCount() + coal));
+                }
+            }
+            furnace.setChanged();
+        }
+        go(State.RETURN);
+    }
+
+    @Nullable
+    private BlockPos furnace(ServerLevel level, Village village) {
+        Building mine = mine();
+        if (mine != null) {
+            BoundingBox b = mine.box();
+            BlockPos own = BlockPos.betweenClosedStream(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ())
+                    .filter(p -> level.getBlockEntity(p) instanceof AbstractFurnaceBlockEntity)
+                    .map(BlockPos::immutable).findFirst().orElse(null);
+            if (own != null) {
+                return own;
+            }
+        }
+        return Stations.find(level, village, com.khmh.livingvillages.economy.CraftPlanner.Station.FURNACE,
+                worker.blockPosition());
     }
 
     private void resetDig() {

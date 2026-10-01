@@ -204,10 +204,29 @@ public final class CraftPlanner {
         for (SmeltingRecipe r : level.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING)) {
             add(out, r, access, Station.FURNACE);
         }
+        villagerRecipes(out);
         // Simple recipes first: by hand, then table, then furnace; fewer ingredients first.
         out.values().forEach(list -> list.sort(Comparator.comparingInt((Candidate c) -> c.station().ordinal())
                 .thenComparingInt(c -> c.ingredients().size())));
         return out;
+    }
+
+    /**
+     * Crafts villagers know that players do not, where the vanilla way is impractical for a village: shepherds
+     * spin wool into string, leatherworkers tan rotten flesh, masons crush stone into gravel and sand, fletchers
+     * knap flint. Done at a crafting table until those professions have their own workstations.
+     */
+    private static void villagerRecipes(Map<Item, List<Candidate>> out) {
+        villager(out, Items.STRING, 4, Ingredient.of(net.minecraft.tags.ItemTags.WOOL));
+        villager(out, Items.LEATHER, 1, Ingredient.of(Items.ROTTEN_FLESH), Ingredient.of(Items.ROTTEN_FLESH),
+                Ingredient.of(Items.ROTTEN_FLESH), Ingredient.of(Items.ROTTEN_FLESH));
+        villager(out, Items.GRAVEL, 1, Ingredient.of(Items.COBBLESTONE), Ingredient.of(Items.COBBLESTONE));
+        villager(out, Items.SAND, 1, Ingredient.of(Items.GRAVEL));
+        villager(out, Items.FLINT, 1, Ingredient.of(Items.GRAVEL), Ingredient.of(Items.GRAVEL));
+    }
+
+    private static void villager(Map<Item, List<Candidate>> out, Item result, int count, Ingredient... ingredients) {
+        out.computeIfAbsent(result, k -> new ArrayList<>()).add(new Candidate(Station.TABLE, count, List.of(ingredients)));
     }
 
     private static void add(Map<Item, List<Candidate>> out, Recipe<?> r, RegistryAccess access, Station station) {
@@ -215,7 +234,9 @@ public final class CraftPlanner {
             return;
         }
         ItemStack result = r.getResultItem(access);
-        if (result.isEmpty() || result.hasTag()) {
+        // Tools come with a Damage:0 tag; anything carrying other data (enchanted books, potions...) is skipped.
+        boolean plainTag = !result.hasTag() || result.getTag().size() == 1 && result.getTag().contains("Damage");
+        if (result.isEmpty() || !plainTag) {
             return;
         }
         List<Ingredient> ings = new ArrayList<>();

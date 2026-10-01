@@ -42,9 +42,12 @@ public class LumberjackWorkGoal extends Goal {
     private int timer;
     private int cooldown;
     private String lastLog = "minecraft:oak_log";
+    private final Tooling tooling;
+    private int chopTicks;
 
     public LumberjackWorkGoal(VillageWorker worker) {
         this.worker = worker;
+        this.tooling = new Tooling(worker);
         setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -68,6 +71,7 @@ public class LumberjackWorkGoal extends Goal {
     public void stop() {
         worker.getNavigation().stop();
         worker.resetUnloading();
+        tooling.reset();
     }
 
     @Override
@@ -83,6 +87,9 @@ public class LumberjackWorkGoal extends Goal {
         timer++;
         switch (state) {
             case SEEK -> {
+                if (tooling.tick((net.minecraft.server.level.ServerLevel) level, village) == Tooling.Status.BUSY) {
+                    return; // off to the warehouse for an axe
+                }
                 if (worker.carried() >= LOAD) {
                     go(State.RETURN);
                 } else if (--cooldown <= 0) {
@@ -114,16 +121,27 @@ public class LumberjackWorkGoal extends Goal {
                 if (hut != null) {
                     village.reportWorking(hut.id(), now);
                 }
-                if (timer % 12 != 0) {
-                    return;
-                }
                 if (logs.isEmpty()) {
                     replant(level, tree, lastLog);
                     go(worker.carried() >= LOAD ? State.RETURN : State.SEEK);
                     return;
                 }
-                BlockPos log = logs.remove(logs.size() - 1);
+                BlockPos log = logs.get(logs.size() - 1);
                 BlockState state = level.getBlockState(log);
+                if (state.is(BlockTags.LOGS)) {
+                    int need = tooling.breakTicks((net.minecraft.server.level.ServerLevel) level, log, state);
+                    level.destroyBlockProgress(worker.getId(), log, Math.min(9, chopTicks * 10 / need));
+                    if (chopTicks % 6 == 0) {
+                        worker.swing(InteractionHand.MAIN_HAND);
+                    }
+                    if (++chopTicks < need) {
+                        return;
+                    }
+                    chopTicks = 0;
+                    level.destroyBlockProgress(worker.getId(), log, -1);
+                    tooling.used();
+                }
+                logs.remove(logs.size() - 1);
                 if (state.is(BlockTags.LOGS)) {
                     Item item = state.getBlock().asItem();
                     lastLog = BuiltInRegistries.ITEM.getKey(item).toString();
