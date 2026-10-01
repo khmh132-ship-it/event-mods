@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 import java.util.Comparator;
@@ -41,6 +42,14 @@ public final class Workers {
                 || !villageWide(level, v, villagers, workers, WorkerJob.LUMBERJACK, woodShort)
                 || !villageWide(level, v, villagers, workers, WorkerJob.MINER, stoneShort)) {
             return;
+        }
+
+        // Vanilla farmers come under the village: they keep their looks and work the fields for real.
+        for (Villager farmer : List.copyOf(villagers)) {
+            if (farmer.isAlive() && !farmer.isBaby()
+                    && farmer.getVillagerData().getProfession() == VillagerProfession.FARMER) {
+                takeOver(level, v, villagers, farmer, WorkerJob.FARMER);
+            }
         }
 
         for (Building b : v.buildings()) {
@@ -89,6 +98,28 @@ public final class Workers {
             v.markDirty();
         }
         return true;
+    }
+
+    /** Puts a particular villager (keeping its profession's look) under the village's own AI. */
+    private static void takeOver(ServerLevel level, Village v, List<Villager> villagers, Villager villager,
+                                 WorkerJob job) {
+        VillageWorker worker = LVEntities.WORKER.get().create(level);
+        if (worker == null) {
+            return;
+        }
+        worker.moveTo(villager.getX(), villager.getY(), villager.getZ(), villager.getYRot(), 0);
+        worker.setCustomName(villager.getCustomName());
+        worker.assign(job, v, null);
+        for (ItemStack s : villager.getInventory().removeAllItems()) {
+            worker.getInventory().addItem(s); // its seeds and harvest come along
+        }
+        Villager.POI_MEMORIES.keySet().forEach(villager::releasePoi);
+        villager.discard();
+        level.addFreshEntity(worker);
+        villagers.remove(villager);
+        v.markDirty();
+        LivingVillages.LOGGER.info("Village {} took over a {}", v.id().toString().substring(0, 8),
+                job.name().toLowerCase());
     }
 
     /** Turns the unemployed adult villager nearest to {@code near} into a worker; null if there is none. */

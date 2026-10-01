@@ -26,6 +26,8 @@ class Unloading {
     private BlockPos target;
     private int timer;
     private int opened = -1;
+    /** Items the worker keeps for his own work (a farmer's seeds), item -> how many. */
+    private java.util.Map<net.minecraft.world.item.Item, Integer> keep = java.util.Map.of();
 
     Unloading(VillageWorker worker) {
         this.worker = worker;
@@ -41,8 +43,20 @@ class Unloading {
         skip.clear();
     }
 
+    void keep(java.util.Map<net.minecraft.world.item.Item, Integer> keep) {
+        this.keep = keep;
+    }
+
+    private int keptCount() {
+        int n = 0;
+        for (var e : keep.entrySet()) {
+            n += Math.min(e.getValue(), worker.getInventory().countItem(e.getKey()));
+        }
+        return n;
+    }
+
     boolean tick() {
-        if (worker.carried() == 0) {
+        if (worker.carried() - keptCount() <= 0) {
             reset();
             return true;
         }
@@ -125,23 +139,43 @@ class Unloading {
             return false;
         }
         SimpleContainer inv = worker.getInventory();
+        java.util.Map<net.minecraft.world.item.Item, Integer> keepLeft = new java.util.HashMap<>(keep);
         boolean all = true;
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
             if (s.isEmpty()) {
                 continue;
             }
-            ItemStack rest = Stockpile.insertInto(c, s);
-            inv.setItem(i, rest);
+            int kept = Math.min(s.getCount(), keepLeft.getOrDefault(s.getItem(), 0));
+            if (kept > 0) {
+                keepLeft.put(s.getItem(), keepLeft.get(s.getItem()) - kept);
+                if (kept == s.getCount()) {
+                    continue;
+                }
+            }
+            ItemStack give = s.copyWithCount(s.getCount() - kept);
+            ItemStack rest = Stockpile.insertInto(c, give);
+            s.setCount(kept + rest.getCount());
             all &= rest.isEmpty();
         }
+        inv.setChanged();
         return all;
     }
 
     private void putInBuffer(Village village) {
         SimpleContainer inv = worker.getInventory();
-        for (ItemStack s : inv.removeAllItems()) {
-            village.storage().add(s.getItem(), s.getCount());
+        java.util.Map<net.minecraft.world.item.Item, Integer> keepLeft = new java.util.HashMap<>(keep);
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            int kept = Math.min(s.getCount(), keepLeft.getOrDefault(s.getItem(), 0));
+            if (s.isEmpty() || kept == s.getCount()) {
+                keepLeft.computeIfPresent(s.getItem(), (k, v) -> v - kept);
+                continue;
+            }
+            keepLeft.computeIfPresent(s.getItem(), (k, v) -> v - kept);
+            village.storage().add(s.getItem(), s.getCount() - kept);
+            s.setCount(kept);
         }
+        inv.setChanged();
     }
 }

@@ -12,7 +12,9 @@ public enum WorkerJob {
     BUILDER("builder_workshop", "mason"),
     LUMBERJACK("lumberjack_hut", "leatherworker"),
     MINER("mine", "toolsmith"),
-    APPRENTICE("apprentice_workshop", "fletcher");
+    APPRENTICE("apprentice_workshop", "fletcher"),
+    /** A vanilla farmer taken over by the village: works every field around it. */
+    FARMER("", "farmer");
 
     private final String workplace;
     private final String outfit;
@@ -28,6 +30,7 @@ public enum WorkerJob {
         return switch (this) {
             case LUMBERJACK -> ItemTags.AXES;
             case MINER -> ItemTags.PICKAXES;
+            case FARMER -> ItemTags.HOES;
             default -> null;
         };
     }
@@ -37,13 +40,14 @@ public enum WorkerJob {
         return switch (this) {
             case LUMBERJACK -> Items.STONE_AXE;
             case MINER -> Items.STONE_PICKAXE;
+            case FARMER -> Items.STONE_HOE;
             default -> Items.AIR;
         };
     }
 
     /** Hired for the whole village as soon as there is work for them, before their workplace exists. */
     public boolean villageWide() {
-        return this == BUILDER || this == APPRENTICE || this == LUMBERJACK || this == MINER;
+        return this == BUILDER || this == APPRENTICE || this == LUMBERJACK || this == MINER || this == FARMER;
     }
 
     /** Building type id that employs this job. */

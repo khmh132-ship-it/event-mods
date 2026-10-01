@@ -83,6 +83,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new LumberjackWorkGoal(this));
         goalSelector.addGoal(2, new MinerWorkGoal(this));
         goalSelector.addGoal(2, new ApprenticeWorkGoal(this));
+        goalSelector.addGoal(2, new FarmerWorkGoal(this));
         goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
@@ -207,6 +208,12 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
 
     /** Walks to the warehouse and puts everything into the chests; true once done. */
     boolean unloadTick() {
+        return unloading.tick();
+    }
+
+    /** Like {@link #unloadTick()}, but the worker keeps some items for his own work. */
+    boolean unloadTick(java.util.Map<Item, Integer> keep) {
+        unloading.keep(keep);
         return unloading.tick();
     }
 
