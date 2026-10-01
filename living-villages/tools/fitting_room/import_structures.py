@@ -42,6 +42,10 @@ def clean(src, dst, ground, dug_in=False):
             dropped += 1
             continue
         kept.append(b)
+    # The structure block's frame is often taller than the building: drop empty layers on top.
+    top = max((int(b['pos'][1]) for b in kept if str(palette[int(b['state'])]['Name']) != 'minecraft:air'), default=0)
+    kept = [b for b in kept if int(b['pos'][1]) <= top]
+    t['size'][1] = nbtlib.Int(top + 1)
     t['blocks'] = List[Compound](kept)
     t.save(dst, gzipped=True)
     return dropped
