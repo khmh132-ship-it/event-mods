@@ -52,12 +52,30 @@ public final class VillageEvents {
         }
         for (Village v : List.copyOf(manager.all())) {
             boolean loaded = level.hasChunkAt(v.center());
+            if (loaded) {
+                checkAlarm(level, v);
+            }
             Production.tick(v, now, loaded);
             Construction.tick(level, v, now);
             if (loaded) {
                 GrowthPlanner.tick(level, v, now);
             }
         }
+    }
+
+    /** A raid, or a pack of monsters at night, rings the bell: guards turn out, everyone else takes cover. */
+    private static void checkAlarm(ServerLevel level, Village v) {
+        boolean raid = level.getRaidAt(v.center()) != null;
+        int monsters = level.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class,
+                new AABB(v.center()).inflate(v.radius()), m -> m.isAlive()).size();
+        boolean alarm = raid || monsters >= 3;
+        if (alarm && !v.alarm()) {
+            var state = level.getBlockState(v.center());
+            if (state.getBlock() instanceof net.minecraft.world.level.block.BellBlock bell) {
+                bell.attemptToRing(level, v.center(), null);
+            }
+        }
+        v.setAlarm(alarm);
     }
 
     @SubscribeEvent

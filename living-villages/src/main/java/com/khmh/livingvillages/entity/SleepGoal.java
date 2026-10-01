@@ -20,12 +20,14 @@ public class SleepGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return worker.level().isNight() && worker.village().isPresent();
+        // Guards keep watch; everybody else sleeps at night, and hides in bed while the bell rings an alarm.
+        return worker.job() != WorkerJob.GUARD
+                && worker.village().map(v -> worker.level().isNight() || v.alarm()).orElse(false);
     }
 
     @Override
     public boolean canContinueToUse() {
-        return worker.level().isNight();
+        return canUse();
     }
 
     @Override

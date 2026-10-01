@@ -54,6 +54,7 @@ public class Village {
     private final Map<UUID, Long> workSeen = new HashMap<>();
     private long builderSeen = Long.MIN_VALUE / 2;
     private double stockFill;
+    private boolean alarm;
     private final List<Request> requests = new ArrayList<>();
     private CompoundTag data = new CompoundTag();
     private Runnable onChange = () -> {};
@@ -168,6 +169,15 @@ public class Village {
     /** The village's goods as they really are: warehouse chests plus the buffer. */
     public Stockpile stock(ServerLevel level) {
         return Stockpile.of(level, this);
+    }
+
+    /** Raid or monsters in the village: guards fight, everybody else stays in bed. */
+    public boolean alarm() {
+        return alarm;
+    }
+
+    public void setAlarm(boolean alarm) {
+        this.alarm = alarm;
     }
 
     public double stockFill() {

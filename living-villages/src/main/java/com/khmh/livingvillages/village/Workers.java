@@ -44,6 +44,17 @@ public final class Workers {
             return;
         }
 
+        // Guards: one for every six villagers (at least one from four on), two more while the alarm is up.
+        int wanted = v.population() < 4 ? 0 : Math.max(1, v.population() / 6) + (v.alarm() ? 2 : 0);
+        long guards = workers.stream().filter(w -> w.job() == WorkerJob.GUARD).count();
+        if (guards < wanted) {
+            Building barracks = v.buildings().stream()
+                    .filter(b -> b.isComplete() && "barracks".equals(b.typeId())).findFirst().orElse(null);
+            if (convert(level, v, villagers, WorkerJob.GUARD, barracks, v.center()) != null) {
+                return;
+            }
+        }
+
         // Vanilla farmers come under the village: they keep their looks and work the fields for real.
         for (Villager farmer : List.copyOf(villagers)) {
             if (!farmer.isAlive() || farmer.isBaby()) {

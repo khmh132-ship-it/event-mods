@@ -16,7 +16,8 @@ public enum WorkerJob {
     /** A vanilla farmer taken over by the village: works every field around it. */
     FARMER("", "farmer"),
     SHEPHERD("", "shepherd"),
-    BUTCHER("", "butcher");
+    BUTCHER("", "butcher"),
+    GUARD("barracks", "weaponsmith");
 
     private final String workplace;
     private final String outfit;
@@ -35,6 +36,7 @@ public enum WorkerJob {
             case FARMER -> ItemTags.HOES;
             case SHEPHERD -> net.minecraftforge.common.Tags.Items.SHEARS;
             case BUTCHER -> ItemTags.AXES;
+            case GUARD -> ItemTags.SWORDS;
             default -> null;
         };
     }
@@ -47,6 +49,7 @@ public enum WorkerJob {
             case FARMER -> Items.STONE_HOE;
             case SHEPHERD -> Items.SHEARS;
             case BUTCHER -> Items.STONE_AXE;
+            case GUARD -> Items.STONE_SWORD;
             default -> Items.AIR;
         };
     }
