@@ -46,9 +46,15 @@ public final class Workers {
 
         // Vanilla farmers come under the village: they keep their looks and work the fields for real.
         for (Villager farmer : List.copyOf(villagers)) {
-            if (farmer.isAlive() && !farmer.isBaby()
-                    && farmer.getVillagerData().getProfession() == VillagerProfession.FARMER) {
-                takeOver(level, v, villagers, farmer, WorkerJob.FARMER);
+            if (!farmer.isAlive() || farmer.isBaby()) {
+                continue;
+            }
+            VillagerProfession p = farmer.getVillagerData().getProfession();
+            WorkerJob job = p == VillagerProfession.FARMER ? WorkerJob.FARMER
+                    : p == VillagerProfession.SHEPHERD ? WorkerJob.SHEPHERD
+                    : p == VillagerProfession.BUTCHER ? WorkerJob.BUTCHER : null;
+            if (job != null) {
+                takeOver(level, v, villagers, farmer, job);
             }
         }
 

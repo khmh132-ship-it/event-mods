@@ -78,6 +78,7 @@ public class FarmerWorkGoal extends Goal {
             return;
         }
         timer++;
+        worker.setStatus(state.name().toLowerCase() + " t" + timer);
         if (state == State.RETURN) {
             if (worker.unloadTick(KEEP)) {
                 state = State.WORK;

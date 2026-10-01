@@ -114,6 +114,7 @@ public class MinerWorkGoal extends Goal {
             return;
         }
         timer++;
+        worker.setStatus(state.name().toLowerCase() + " t" + timer);
         Building mine = mine();
         if (mine != null) {
             village.reportWorking(mine.id(), level.getGameTime());

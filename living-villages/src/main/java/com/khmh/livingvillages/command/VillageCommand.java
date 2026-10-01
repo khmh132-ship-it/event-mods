@@ -7,7 +7,9 @@ import com.khmh.livingvillages.building.Construction;
 import com.khmh.livingvillages.building.MaterialCost;
 import com.khmh.livingvillages.building.SiteFinder;
 import com.khmh.livingvillages.building.TemplateData;
+import com.khmh.livingvillages.entity.VillageWorker;
 import com.khmh.livingvillages.stock.Stockpile;
+import com.khmh.livingvillages.village.Workers;
 import com.khmh.livingvillages.village.GrowthPlanner;
 import com.khmh.livingvillages.village.Production;
 import com.khmh.livingvillages.village.Village;
@@ -32,6 +34,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,6 +60,7 @@ public final class VillageCommand {
                 .then(Commands.literal("types").executes(VillageCommand::types))
                 .then(Commands.literal("buildings").executes(VillageCommand::buildings))
                 .then(Commands.literal("requests").executes(VillageCommand::requests))
+                .then(Commands.literal("workers").executes(VillageCommand::workers))
                 .then(Commands.literal("request")
                         .then(Commands.argument("item", ItemArgument.item(event.getBuildContext()))
                                 .then(Commands.argument("count", IntegerArgumentType.integer(1, 4096))
@@ -180,6 +184,25 @@ public final class VillageCommand {
                     b.rotation(), b.phase(), b.progress()));
         }
         return v.buildings().size();
+    }
+
+    private static int workers(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Village v = here(ctx);
+        List<VillageWorker> list = Workers.of(ctx.getSource().getLevel(), v);
+        for (VillageWorker w : list) {
+            StringBuilder inv = new StringBuilder();
+            for (int i = 0; i < w.getInventory().getContainerSize(); i++) {
+                var s = w.getInventory().getItem(i);
+                if (!s.isEmpty()) {
+                    inv.append(' ').append(BuiltInRegistries.ITEM.getKey(s.getItem()).getPath()).append('x').append(s.getCount());
+                }
+            }
+            say(ctx, String.format("%s @%s food %d, tool %s: %s |%s", w.job().name().toLowerCase(),
+                    w.blockPosition().toShortString(), w.food(),
+                    w.getMainHandItem().isEmpty() ? "-" : BuiltInRegistries.ITEM.getKey(w.getMainHandItem().getItem()).getPath(),
+                    w.status(), inv));
+        }
+        return list.size();
     }
 
     private static int request(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

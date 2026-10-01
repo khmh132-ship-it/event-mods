@@ -14,7 +14,9 @@ public enum WorkerJob {
     MINER("mine", "toolsmith"),
     APPRENTICE("apprentice_workshop", "fletcher"),
     /** A vanilla farmer taken over by the village: works every field around it. */
-    FARMER("", "farmer");
+    FARMER("", "farmer"),
+    SHEPHERD("", "shepherd"),
+    BUTCHER("", "butcher");
 
     private final String workplace;
     private final String outfit;
@@ -31,6 +33,8 @@ public enum WorkerJob {
             case LUMBERJACK -> ItemTags.AXES;
             case MINER -> ItemTags.PICKAXES;
             case FARMER -> ItemTags.HOES;
+            case SHEPHERD -> net.minecraftforge.common.Tags.Items.SHEARS;
+            case BUTCHER -> ItemTags.AXES;
             default -> null;
         };
     }
@@ -41,13 +45,15 @@ public enum WorkerJob {
             case LUMBERJACK -> Items.STONE_AXE;
             case MINER -> Items.STONE_PICKAXE;
             case FARMER -> Items.STONE_HOE;
+            case SHEPHERD -> Items.SHEARS;
+            case BUTCHER -> Items.STONE_AXE;
             default -> Items.AIR;
         };
     }
 
     /** Hired for the whole village as soon as there is work for them, before their workplace exists. */
     public boolean villageWide() {
-        return this == BUILDER || this == APPRENTICE || this == LUMBERJACK || this == MINER || this == FARMER;
+        return true; // every job can start before its workplace exists
     }
 
     /** Building type id that employs this job. */

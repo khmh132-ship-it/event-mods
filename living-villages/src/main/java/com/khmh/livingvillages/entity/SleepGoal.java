@@ -49,6 +49,7 @@ public class SleepGoal extends Goal {
 
     @Override
     public void tick() {
+        worker.setStatus(worker.isSleeping() ? "sleeping" : "going to bed");
         if (worker.isSleeping() || !(worker.level() instanceof ServerLevel level)) {
             return;
         }

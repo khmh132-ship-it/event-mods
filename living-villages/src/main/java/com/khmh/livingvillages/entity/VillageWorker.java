@@ -55,6 +55,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
     private int food = 20;
     @Nullable
     private BlockPos bed;
+    private String status = "idle";
     private int orphanTicks;
 
     public VillageWorker(EntityType<? extends VillageWorker> type, Level level) {
@@ -84,6 +85,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new MinerWorkGoal(this));
         goalSelector.addGoal(2, new ApprenticeWorkGoal(this));
         goalSelector.addGoal(2, new FarmerWorkGoal(this));
+        goalSelector.addGoal(2, new AnimalWorkGoal(this));
         goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
@@ -128,6 +130,15 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
 
     public Optional<Building> workplace() {
         return village().flatMap(v -> v.buildings().stream().filter(b -> b.id().equals(workplaceId)).findFirst());
+    }
+
+    /** What he is doing right now, for /village workers. */
+    public String status() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public int food() {

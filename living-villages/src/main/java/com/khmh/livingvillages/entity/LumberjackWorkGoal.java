@@ -85,6 +85,7 @@ public class LumberjackWorkGoal extends Goal {
         Level level = worker.level();
         long now = level.getGameTime();
         timer++;
+        worker.setStatus(state.name().toLowerCase() + " t" + timer);
         switch (state) {
             case SEEK -> {
                 if (tooling.tick((net.minecraft.server.level.ServerLevel) level, village) == Tooling.Status.BUSY) {

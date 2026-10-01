@@ -101,6 +101,7 @@ public class ApprenticeWorkGoal extends Goal {
             return;
         }
         timer++;
+        worker.setStatus(state.name().toLowerCase() + " t" + timer);
         switch (state) {
             case PICK -> pick(level, village);
             case FETCH -> {

@@ -124,6 +124,8 @@ public class BuilderWorkGoal extends Goal {
         }
         long now = level.getGameTime();
         village.reportWorking(target.id(), now);
+        worker.setStatus("building " + target.typeId() + " " + target.phase().name().toLowerCase() + " "
+                + target.progress() + (waitingSince >= 0 ? " (waiting for materials)" : ""));
 
         Construction.Next next = Construction.next(level, target);
         BlockPos pos = next != null ? next.pos() : Construction.nextTarget(level, target);
