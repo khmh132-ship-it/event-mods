@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.Collection;
@@ -53,6 +54,11 @@ public class VillageManager extends SavedData {
 
     public Village create(BlockPos bell) {
         Village v = new Village(UUID.randomUUID(), bell);
+        // Starter stock so a fresh village can put up its first building.
+        v.storage().add(Items.OAK_LOG, 48);
+        v.storage().add(Items.COBBLESTONE, 32);
+        v.storage().add(Items.WHEAT, 16);
+        v.storage().add(Items.SAND, 8);
         add(v);
         setDirty();
         LivingVillages.LOGGER.info("Village {} founded at {}", v.id(), bell);

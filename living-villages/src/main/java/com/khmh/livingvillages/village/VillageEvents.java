@@ -1,6 +1,9 @@
 package com.khmh.livingvillages.village;
 
+import com.khmh.livingvillages.building.Construction;
+import com.khmh.livingvillages.building.TemplateData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -10,14 +13,18 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Discovers villages around players (any bell with villagers nearby becomes one),
- * keeps loaded villages' population up to date and disbands villages whose bell is gone.
+ * Drives villages: discovers them around players (any bell with villagers nearby becomes one), keeps loaded
+ * villages' counts up to date, disbands villages whose bell is gone, and once a second runs production,
+ * construction and growth planning.
  */
 public final class VillageEvents {
     private static final int SCAN_INTERVAL = 100;
@@ -31,12 +38,22 @@ public final class VillageEvents {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) {
             return;
         }
-        if (level.getGameTime() % SCAN_INTERVAL != 0) {
+        long now = level.getGameTime();
+        if (now % 20 != 0) {
             return;
         }
         VillageManager manager = VillageManager.get(level);
-        discover(level, manager);
-        refresh(level, manager);
+        if (now % SCAN_INTERVAL == 0) {
+            discover(level, manager);
+            refresh(level, manager);
+        }
+        for (Village v : List.copyOf(manager.all())) {
+            Production.tick(v, now);
+            Construction.tick(level, v, now, 1.0);
+            if (level.hasChunkAt(v.center())) {
+                GrowthPlanner.tick(level, v, now);
+            }
+        }
     }
 
     @SubscribeEvent
@@ -45,6 +62,11 @@ public final class VillageEvents {
             VillageManager manager = VillageManager.get(level);
             manager.byBell(event.getPos()).ifPresent(manager::remove);
         }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        TemplateData.clearCache();
     }
 
     private static void discover(ServerLevel level, VillageManager manager) {
@@ -58,9 +80,8 @@ public final class VillageEvents {
                 if (manager.at(bell).isPresent()) {
                     continue;
                 }
-                int villagers = countVillagers(level, bell, Village.DEFAULT_RADIUS);
-                if (villagers > 0) {
-                    manager.create(bell).observe(villagers, level.getGameTime());
+                if (!villagers(level, bell, Village.DEFAULT_RADIUS).isEmpty()) {
+                    observe(level, manager.create(bell));
                 }
             }
         }
@@ -70,20 +91,33 @@ public final class VillageEvents {
         List<Village> gone = new ArrayList<>();
         for (Village v : manager.all()) {
             if (!level.hasChunkAt(v.center())) {
-                continue; // unloaded: keep last known state, abstract simulation will handle it
+                continue; // unloaded: keep last known state, the abstract simulation goes on
             }
             if (!level.getBlockState(v.center()).is(Blocks.BELL)) {
                 gone.add(v); // bell removed by explosion, piston, /setblock...
                 continue;
             }
-            v.observe(countVillagers(level, v.center(), v.radius()), level.getGameTime());
+            observe(level, v);
         }
         gone.forEach(manager::remove);
     }
 
-    private static int countVillagers(ServerLevel level, BlockPos center, int radius) {
+    static void observe(ServerLevel level, Village v) {
+        List<Villager> villagers = villagers(level, v.center(), v.radius());
+        Map<String, Integer> professions = new HashMap<>();
+        for (Villager villager : villagers) {
+            String key = BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession())
+                    .getPath();
+            professions.merge(key, 1, Integer::sum);
+        }
+        int beds = (int) level.getPoiManager().getCountInRange(type -> type.is(PoiTypes.HOME), v.center(),
+                v.radius(), PoiManager.Occupancy.ANY);
+        v.observe(villagers.size(), beds, professions, level.getGameTime());
+    }
+
+    private static List<Villager> villagers(ServerLevel level, BlockPos center, int radius) {
         AABB box = new AABB(center).inflate(radius);
         return level.getEntitiesOfClass(Villager.class, box,
-                v -> v.isAlive() && v.blockPosition().distSqr(center) <= (double) radius * radius).size();
+                v -> v.isAlive() && v.blockPosition().distSqr(center) <= (double) radius * radius);
     }
 }
