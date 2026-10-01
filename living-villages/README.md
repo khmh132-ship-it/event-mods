@@ -12,19 +12,46 @@ Requires JDK 17 (Gradle downloads it automatically through the toolchain if it i
 ./gradlew runClient    # dev client with the mod loaded
 ```
 
+## How a village lives
+
+- **Discovery.** Any bell with villagers around it, near a player, becomes a village (radius 48, +16 per level).
+- **Economy.** Every production cycle (1 min) villagers gather by profession (unemployed: wood, stone, a little
+  sand, wool and iron; farmers: crops; masons: stone...) and finished buildings add their output. The village eats;
+  hungry villages work at half speed. Missed cycles are made up for, so villages grow while nobody is around.
+- **Growth.** The planner picks the next building by level and needs (lumberjack hut, houses when beds run short,
+  warehouse, farms, builder's workshop, quest board; mine, sawmill, pens, watchtower, vanilla workshops at level 2;
+  town hall, tavern, barracks, golem pad, stables at level 3), pays for it from the stockpile and finds a flat
+  natural site facing the bell. Trees on the site are felled into the stockpile.
+- **Construction.** Block by block: the site is levelled, then the building goes up bottom-up, then a dirt path is
+  laid to the bell. Construction continues while unloaded and catches up when the area loads again.
+- **Workers.** A finished builder's workshop or lumberjack hut hires an unemployed villager. The builder works on
+  site and triples the pace; the lumberjack fells and replants trees and carries the logs to the warehouse.
+- **Levels.** Level 2 at 6 villagers and 4 buildings, level 3 at 12 villagers, 10 buildings and a warehouse.
+
+Settings are in `serverconfig/livingvillages-server.toml` of each world.
+
 ## Roadmap
 
-1. **Village data** (done): bell-anchored `Village` stored in `SavedData`, shared stockpile, reputation.
-2. Resource gathering: real work when loaded, abstract production when chunks are unloaded.
-3. Construction: NBT house templates, site selection, builders placing blocks from the stockpile.
-4. Defense: guards, towers, golems built from stockpile iron, reaction to raids.
-5. Quests: a board near the bell, generated from stockpile shortages.
+1. ~~Village data~~, ~~economy~~, ~~construction and growth~~, ~~builder and lumberjack~~.
+2. More workers: miner, farmer, guards.
+3. Defense: guards, towers, golems built from stockpile iron, reaction to raids; walls (templates exist).
+4. Quests: a board near the bell, generated from stockpile shortages; reputation rewards.
+5. Other biome styles.
 
-## Debug commands (op level 2)
+## Commands (op level 2)
 
-- `/village list`: all villages in the current dimension
-- `/village info`: the village you are standing in, with its stockpile
-- `/village storage add|take <item> <count>`: change the stockpile
+- `/village list`, `/village info`, `/village buildings`, `/village types`
+- `/village discover`: find villages around you; `/village create`: make the nearest bell a village
+- `/village build <type> [free]`: build now at an automatically chosen site
+- `/village plan`: run the planner now and show why candidates were skipped
+- `/village finish`: complete everything under construction
+- `/village produce <cycles>`, `/village growth <true|false>`
+- `/village storage add|take <item> <count>`
+
+## Tests
+
+`tools/test_server/scenario_*.py` start the dev server on a throwaway world and drive it over RCON
+(construction, real terrain, unload catch-up, workers, restart).
 
 ## Fitting room (house editing)
 

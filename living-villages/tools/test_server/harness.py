@@ -25,7 +25,8 @@ FLAT = {'layers': [{'block': 'minecraft:bedrock', 'height': 1}, {'block': 'minec
 
 
 class TestServer:
-    def __init__(self, config=None, log_name='test_server.log', flat=True, seed='livingvillages'):
+    def __init__(self, config=None, log_name='test_server.log', flat=True, seed='livingvillages', fresh=True):
+        self.fresh = fresh
         self.config = config or {}
         self.flat = flat
         self.seed = seed
@@ -35,7 +36,7 @@ class TestServer:
 
     def __enter__(self):
         world = os.path.join(RUN, LEVEL)
-        if os.path.exists(world):
+        if self.fresh and os.path.exists(world):
             shutil.rmtree(world)
         os.makedirs(os.path.join(RUN, 'defaultconfigs'), exist_ok=True)
         with open(os.path.join(RUN, 'eula.txt'), 'w') as f:
