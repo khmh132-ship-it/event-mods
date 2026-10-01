@@ -26,6 +26,7 @@ public class Building {
     private long lastStep;
     @Nullable
     private UUID workerId;
+    private CompoundTag data = new CompoundTag();
 
     public Building(UUID id, String typeId, BlockPos origin, Rotation rotation, int groundY, BoundingBox box,
                     BlockPos entrance, Phase phase, int progress, long lastStep) {
@@ -89,6 +90,11 @@ public class Building {
         return lastStep;
     }
 
+    /** Free-form state of the building's job (e.g. how far the mine tunnels got). */
+    public CompoundTag data() {
+        return data;
+    }
+
     @Nullable
     public UUID workerId() {
         return workerId;
@@ -126,6 +132,7 @@ public class Building {
         if (workerId != null) {
             t.putUUID("worker", workerId);
         }
+        t.put("data", data);
         return t;
     }
 
@@ -138,6 +145,7 @@ public class Building {
         if (t.hasUUID("worker")) {
             building.workerId = t.getUUID("worker");
         }
+        building.data = t.getCompound("data");
         return building;
     }
 }

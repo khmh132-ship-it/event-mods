@@ -49,9 +49,10 @@ public final class VillageEvents {
             refresh(level, manager);
         }
         for (Village v : List.copyOf(manager.all())) {
-            Production.tick(v, now);
+            boolean loaded = level.hasChunkAt(v.center());
+            Production.tick(v, now, loaded);
             Construction.tick(level, v, now);
-            if (level.hasChunkAt(v.center())) {
+            if (loaded) {
                 GrowthPlanner.tick(level, v, now);
             }
         }
@@ -125,6 +126,7 @@ public final class VillageEvents {
         int beds = (int) level.getPoiManager().getCountInRange(type -> type.is(PoiTypes.HOME), v.center(),
                 v.radius(), PoiManager.Occupancy.ANY);
         v.observe(villagers.size() + workers.size(), beds, professions, level.getGameTime());
+        Gathering.collectHarvest(v, villagers);
         Workers.hire(level, v, villagers);
     }
 

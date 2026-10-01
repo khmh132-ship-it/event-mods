@@ -104,7 +104,7 @@ public final class MaterialCost {
         if (is(item, ItemTags.WOODEN_TRAPDOORS)) return Map.of(WOOD, 3.0);
         if (is(item, ItemTags.WOODEN_PRESSURE_PLATES)) return Map.of(WOOD, 2.0);
         if (is(item, ItemTags.WOODEN_BUTTONS) || is(item, ItemTags.SIGNS)) return Map.of(WOOD, 1.0);
-        if (is(item, ItemTags.BEDS)) return Map.of(WOOD, 3.0, WOOL, 3.0);
+        if (is(item, ItemTags.BEDS)) return Map.of(WOOD, 4.0); // wool once shepherds are real workers
         if (is(item, ItemTags.WOOL)) return Map.of(WOOL, 1.0);
         if (is(item, ItemTags.WOOL_CARPETS)) return Map.of(WOOL, 0.67);
 

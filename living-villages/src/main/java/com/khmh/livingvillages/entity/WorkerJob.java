@@ -5,7 +5,8 @@ import javax.annotation.Nullable;
 /** What a hired worker does, and which building employs them. */
 public enum WorkerJob {
     BUILDER("builder_workshop", "mason"),
-    LUMBERJACK("lumberjack_hut", "leatherworker");
+    LUMBERJACK("lumberjack_hut", "leatherworker"),
+    MINER("mine", "toolsmith");
 
     private final String workplace;
     private final String outfit;

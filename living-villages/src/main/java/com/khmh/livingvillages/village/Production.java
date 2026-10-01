@@ -9,6 +9,7 @@ import net.minecraft.world.item.Items;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Abstract economy: every production cycle each villager and each finished production building adds goods to
@@ -32,6 +33,11 @@ public final class Production {
             Map.entry("armorer", Map.of(Items.IRON_INGOT, 0.25, Items.COAL, 0.25)),
             Map.entry("fletcher", Map.of(Items.STICK, 1.0)));
 
+    /** Professions whose output comes from the world itself while the village is loaded. */
+    private static final Set<String> REAL_WHEN_LOADED = Set.of("none", "nitwit", "farmer");
+    /** Building groups worked for real while loaded. */
+    private static final Set<String> REAL_BUILDINGS = Set.of("lumberjack", "mine", "farm");
+
     private static final List<Item> FOOD = List.of(Items.BREAD, Items.WHEAT, Items.CARROT, Items.POTATO,
             Items.BEETROOT, Items.COD, Items.SALMON, Items.BEEF, Items.PORKCHOP, Items.MUTTON, Items.CHICKEN);
     private static final double FOOD_PER_VILLAGER = 0.25;
@@ -39,7 +45,7 @@ public final class Production {
     private Production() {
     }
 
-    public static void tick(Village v, long now) {
+    public static void tick(Village v, long now, boolean loaded) {
         int interval = LVConfig.PRODUCTION_INTERVAL.get();
         if (v.lastProduction() <= 0) {
             v.setLastProduction(now);
@@ -50,27 +56,39 @@ public final class Production {
             return;
         }
         int cycles = (int) Math.min(due, LVConfig.MAX_CATCHUP_CYCLES.get());
-        runCycles(v, cycles, now);
+        // Cycles that passed while nobody was around are simulated; only the current one is "live".
+        int live = loaded ? 1 : 0;
+        runCycles(v, cycles - live, now, false);
+        runCycles(v, live, now, true);
         v.setLastProduction(cycles < due ? now : v.lastProduction() + due * interval);
     }
 
-    public static void runCycles(Village v, int cycles, long now) {
+    public static void runCycles(Village v, int cycles, long now, boolean loaded) {
         for (int i = 0; i < cycles; i++) {
-            cycle(v, now);
+            cycle(v, now, loaded);
         }
     }
 
-    private static void cycle(Village v, long now) {
+    /**
+     * One production cycle. In an unloaded village everything is simulated. In a loaded one, work that is done
+     * for real is left out: unemployed villagers just idle, farmers' harvest is collected from their inventories
+     * (see {@link Gathering}), and buildings whose job has a real worker (lumberjack hut, mine) or real villagers
+     * (farms) produce nothing by themselves. Professions without a real implementation yet stay simulated.
+     */
+    private static void cycle(Village v, long now, boolean loaded) {
         if (v.population() <= 0) {
             return; // nobody left to work
         }
-        double efficiency = eat(v) ? 1.0 : 0.5;
+        double efficiency = loaded || eat(v) ? 1.0 : 0.5;
         double mult = LVConfig.PRODUCTION_MULTIPLIER.get() * efficiency;
         Map<Item, Double> out = new HashMap<>();
         int employed = 0;
         for (Map.Entry<String, Integer> e : v.professions().entrySet()) {
             if (!e.getKey().equals("none")) {
                 employed += e.getValue();
+            }
+            if (loaded && REAL_WHEN_LOADED.contains(e.getKey())) {
+                continue;
             }
             Map<Item, Double> rates = BY_PROFESSION.get(e.getKey());
             if (rates != null) {
@@ -79,15 +97,19 @@ public final class Production {
         }
         // Villagers not seen yet (e.g. counted while unloaded) gather like unemployed ones.
         int unknown = v.population() - employed - v.professions().getOrDefault("none", 0);
-        if (unknown > 0) {
+        if (unknown > 0 && !loaded) {
             BY_PROFESSION.get("none").forEach((item, rate) -> out.merge(item, rate * unknown, Double::sum));
         }
         for (Building b : v.buildings()) {
-            // A worker doing the job for real replaces the building's abstract output.
-            boolean worked = v.isWorkedRecently(b.id(), now, 3L * LVConfig.PRODUCTION_INTERVAL.get());
-            if (b.isComplete() && BuildingTypes.get(b.typeId()) != null && !worked) {
-                b.type().produces().forEach((item, rate) -> out.merge(item, rate, Double::sum));
+            if (!b.isComplete() || BuildingTypes.get(b.typeId()) == null) {
+                continue;
             }
+            // A worker doing the job for real replaces the building's simulated output.
+            boolean worked = v.isWorkedRecently(b.id(), now, 3L * LVConfig.PRODUCTION_INTERVAL.get());
+            if (worked || loaded && REAL_BUILDINGS.contains(b.type().group())) {
+                continue;
+            }
+            b.type().produces().forEach((item, rate) -> out.merge(item, rate, Double::sum));
         }
         int cap = v.storageCap();
         out.forEach((item, amount) -> {

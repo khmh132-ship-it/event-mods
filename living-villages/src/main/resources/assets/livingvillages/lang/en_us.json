@@ -1,5 +1,6 @@
 {
   "entity.livingvillages.worker": "Village Worker",
   "entity.livingvillages.worker.job.builder": "Builder",
-  "entity.livingvillages.worker.job.lumberjack": "Lumberjack"
+  "entity.livingvillages.worker.job.lumberjack": "Lumberjack",
+  "entity.livingvillages.worker.job.miner": "Miner"
 }

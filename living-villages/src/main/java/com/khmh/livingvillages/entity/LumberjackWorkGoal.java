@@ -10,7 +10,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -42,6 +41,7 @@ public class LumberjackWorkGoal extends Goal {
     private List<BlockPos> logs = new ArrayList<>();
     private int timer;
     private int cooldown;
+    private String lastLog = "minecraft:oak_log";
 
     public LumberjackWorkGoal(VillageWorker worker) {
         this.worker = worker;
@@ -113,14 +113,15 @@ public class LumberjackWorkGoal extends Goal {
                     return;
                 }
                 if (logs.isEmpty()) {
-                    replant(level, tree, worker.carriedItem());
+                    replant(level, tree, lastLog);
                     go(worker.carried() >= LOAD ? State.RETURN : State.SEEK);
                     return;
                 }
                 BlockPos log = logs.remove(logs.size() - 1);
                 BlockState state = level.getBlockState(log);
                 if (state.is(BlockTags.LOGS)) {
-                    String item = BuiltInRegistries.ITEM.getKey(state.getBlock().asItem()).toString();
+                    Item item = state.getBlock().asItem();
+                    lastLog = BuiltInRegistries.ITEM.getKey(item).toString();
                     level.destroyBlock(log, false, worker);
                     worker.carry(item, 1);
                     worker.swing(InteractionHand.MAIN_HAND);
@@ -130,7 +131,7 @@ public class LumberjackWorkGoal extends Goal {
                 BlockPos drop = depositPoint(village, hut);
                 village.reportWorking(hut.id(), now);
                 if (horizontalDistSqr(drop) <= 9 || timer > 600) {
-                    deposit(village);
+                    worker.deposit(village);
                     go(State.SEEK);
                 } else if (timer % 40 == 1) {
                     BlockPos stand = VillageWorker.standAt(level, drop);
@@ -156,17 +157,6 @@ public class LumberjackWorkGoal extends Goal {
                 .map(Building::entrance)
                 .min(Comparator.comparingDouble(e -> e.distSqr(worker.blockPosition())))
                 .orElse(hut.entrance());
-    }
-
-    private void deposit(Village village) {
-        if (worker.carried() <= 0) {
-            return;
-        }
-        ResourceLocation id = ResourceLocation.tryParse(worker.carriedItem());
-        Item item = id != null && BuiltInRegistries.ITEM.containsKey(id) ? BuiltInRegistries.ITEM.get(id) : Items.OAK_LOG;
-        int room = Math.max(0, village.storageCap() - village.storage().count(item));
-        village.storage().add(item, Math.min(room, worker.carried()));
-        worker.dropCarried();
     }
 
     /** Nearest trunk base of a natural tree (logs on dirt with leaves on top) outside all village buildings. */

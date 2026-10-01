@@ -27,12 +27,12 @@ public final class GrowthPlanner {
 
     private static final List<Rule> RULES = List.of(
             new Rule("lumberjack", 1, 1),
+            new Rule("mine", 1, 1),
             new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 2),
             new Rule("warehouse", 1, 1),
             new Rule("farm", 1, l -> l, v -> true),
             new Rule("builder", 1, 1),
             new Rule("quest_board", 1, 1),
-            new Rule("mine", 2, 1),
             new Rule("sawmill", 2, 1),
             new Rule("pen", 2, l -> l - 1, v -> true),
             new Rule("watchtower", 2, l -> l == 2 ? 1 : 3, v -> true),

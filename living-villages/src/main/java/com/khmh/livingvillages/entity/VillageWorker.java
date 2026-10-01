@@ -4,6 +4,9 @@ import com.khmh.livingvillages.building.Building;
 import com.khmh.livingvillages.village.Village;
 import com.khmh.livingvillages.village.VillageManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -29,6 +32,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,8 +49,7 @@ public class VillageWorker extends PathfinderMob {
     private UUID villageId;
     @Nullable
     private UUID workplaceId;
-    private int carried;
-    private String carriedItem = "minecraft:oak_log";
+    private final Map<String, Integer> carried = new LinkedHashMap<>();
     private int orphanTicks;
 
     public VillageWorker(EntityType<? extends VillageWorker> type, Level level) {
@@ -68,6 +72,7 @@ public class VillageWorker extends PathfinderMob {
         goalSelector.addGoal(1, new OpenDoorGoal(this, true));
         goalSelector.addGoal(2, new BuilderWorkGoal(this));
         goalSelector.addGoal(2, new LumberjackWorkGoal(this));
+        goalSelector.addGoal(2, new MinerWorkGoal(this));
         goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
@@ -101,21 +106,35 @@ public class VillageWorker extends PathfinderMob {
         return village().flatMap(v -> v.buildings().stream().filter(b -> b.id().equals(workplaceId)).findFirst());
     }
 
+    /** Total number of items carried. */
     public int carried() {
-        return carried;
+        return carried.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    public String carriedItem() {
-        return carriedItem;
+    void carry(Item item, int amount) {
+        if (amount > 0) {
+            carried.merge(BuiltInRegistries.ITEM.getKey(item).toString(), amount, Integer::sum);
+        }
     }
 
-    void carry(String item, int amount) {
-        carriedItem = item;
-        carried += amount;
+    void convertCarried(Item from, Item to) {
+        Integer n = carried.remove(BuiltInRegistries.ITEM.getKey(from).toString());
+        if (n != null) {
+            carry(to, n);
+        }
     }
 
-    void dropCarried() {
-        carried = 0;
+    /** Hands everything carried over to the village stockpile (as much as fits). */
+    void deposit(Village village) {
+        carried.forEach((id, n) -> {
+            ResourceLocation key = ResourceLocation.tryParse(id);
+            if (key != null && BuiltInRegistries.ITEM.containsKey(key)) {
+                Item item = BuiltInRegistries.ITEM.get(key);
+                int room = Math.max(0, village.storageCap() - village.storage().count(item));
+                village.storage().add(item, Math.min(room, n));
+            }
+        });
+        carried.clear();
     }
 
     @Override
@@ -172,8 +191,8 @@ public class VillageWorker extends PathfinderMob {
                     .filter(x -> !x.isComplete()).findFirst()
                     .map(x -> "working on " + x.typeId()).orElse("waiting for work")).orElse(""))
                     .orElse("without a village");
-            if (job() == WorkerJob.LUMBERJACK) {
-                what = carried > 0 ? "carrying " + carried + " logs" : "looking for trees";
+            if (job() != WorkerJob.BUILDER) {
+                what = carried.isEmpty() ? "working" : "carrying " + carried;
             }
             player.displayClientMessage(Component.translatable("entity.livingvillages.worker.job." +
                     job().name().toLowerCase()).append(": " + what), true);
@@ -206,8 +225,9 @@ public class VillageWorker extends PathfinderMob {
         if (workplaceId != null) {
             tag.putUUID("Workplace", workplaceId);
         }
-        tag.putInt("Carried", carried);
-        tag.putString("CarriedItem", carriedItem);
+        CompoundTag load = new CompoundTag();
+        carried.forEach(load::putInt);
+        tag.put("Carried", load);
     }
 
     @Override
@@ -216,9 +236,10 @@ public class VillageWorker extends PathfinderMob {
         entityData.set(DATA_JOB, tag.getInt("Job"));
         villageId = tag.hasUUID("Village") ? tag.getUUID("Village") : null;
         workplaceId = tag.hasUUID("Workplace") ? tag.getUUID("Workplace") : null;
-        carried = tag.getInt("Carried");
-        if (tag.contains("CarriedItem")) {
-            carriedItem = tag.getString("CarriedItem");
+        carried.clear();
+        CompoundTag load = tag.getCompound("Carried");
+        for (String k : load.getAllKeys()) {
+            carried.put(k, load.getInt(k));
         }
     }
 

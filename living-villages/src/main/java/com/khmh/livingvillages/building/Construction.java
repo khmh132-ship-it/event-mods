@@ -15,37 +15,98 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 /**
- * Advances buildings under construction. Each step levels one ground column or places one block. While a site
- * is not loaded, steps pile up and are placed (quickly, capped per second) once it is loaded again, so a village
- * keeps building while nobody watches.
+ * Advances buildings under construction. Each step levels one ground column or places one block.
+ *
+ * <p>While a village has a hired builder and the site is loaded, the builder places every block himself
+ * ({@link #buildOne}). Without a builder the villagers build slowly on their own. While a site is unloaded, steps
+ * pile up and are placed (quickly, capped per second) once it is loaded again, so a village keeps building while
+ * nobody watches.
  */
 public final class Construction {
+    /** Buildings whose site was loaded on the previous tick; anything else is catching up on unloaded time. */
+    private static final Set<UUID> LOADED_LAST_TICK = new HashSet<>();
+
     private Construction() {
     }
 
     /** Called once per second for every village. */
     public static void tick(ServerLevel level, Village village, long now) {
+        boolean builder = hasBuilder(village);
         for (Building b : village.buildings()) {
             if (b.isComplete()) {
                 continue;
             }
             BoundingBox box = b.box();
             if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                LOADED_LAST_TICK.remove(b.id());
                 continue; // backlog keeps growing
             }
-            // A builder on site triples the pace.
-            double speed = village.isWorkedRecently(b.id(), now, 60) ? 3.0 : 1.0;
-            int interval = Math.max(1, (int) Math.round(LVConfig.BUILD_INTERVAL.get() / speed));
+            int interval = LVConfig.BUILD_INTERVAL.get();
             long due = (now - b.lastStep()) / interval;
+            boolean catchingUp = !LOADED_LAST_TICK.contains(b.id()) && due > 2;
+            // While the builder is on the job he does all the work. If he is nowhere near (just hired, far away,
+            // unloaded) the villagers keep building slowly so nothing stalls.
+            if (builder && !catchingUp && village.isWorkedRecently(b.id(), now, 200)) {
+                LOADED_LAST_TICK.add(b.id());
+                b.setLastStep(now);
+                continue;
+            }
             int steps = (int) Math.min(due, LVConfig.MAX_BUILD_STEPS_PER_SECOND.get());
             if (steps <= 0) {
+                LOADED_LAST_TICK.add(b.id());
                 continue;
             }
             b.setLastStep(b.lastStep() + (long) steps * interval); // anything over the cap stays as backlog
+            if (steps == due) {
+                LOADED_LAST_TICK.add(b.id());
+            }
             for (int i = 0; i < steps && !b.isComplete(); i++) {
                 step(level, village, b);
             }
+            village.markDirty();
+        }
+    }
+
+    /** True if a finished builder's workshop has a hired builder. */
+    public static boolean hasBuilder(Village village) {
+        for (Building b : village.buildings()) {
+            if (b.isComplete() && b.workerId() != null && "builder_workshop".equals(b.typeId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Where the next step happens: the column being levelled, or the next block to place. */
+    @Nullable
+    public static BlockPos nextTarget(ServerLevel level, Building b) {
+        if (b.isComplete()) {
+            return null;
+        }
+        if (b.phase() == Building.Phase.PREPARE) {
+            BoundingBox box = b.box();
+            int w = box.getXSpan();
+            int i = Math.min(b.progress(), w * box.getZSpan() - 1);
+            return new BlockPos(box.minX() + i % w, b.groundY(), box.minZ() + i / w);
+        }
+        TemplateData data = TemplateData.get(level, b.type()).orElse(null);
+        if (data == null || b.progress() >= data.blocks().size()) {
+            return b.entrance();
+        }
+        return Placement.toWorld(b.origin(), b.rotation(), data.blocks().get(b.progress()).pos());
+    }
+
+    /** One step done by a builder on site. */
+    public static void buildOne(ServerLevel level, Village village, Building b, long now) {
+        if (!b.isComplete()) {
+            step(level, village, b);
+            b.setLastStep(now);
             village.markDirty();
         }
     }

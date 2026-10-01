@@ -59,6 +59,7 @@ public class VillageManager extends SavedData {
         v.storage().add(Items.COBBLESTONE, 32);
         v.storage().add(Items.WHEAT, 16);
         v.storage().add(Items.SAND, 8);
+        v.storage().add(Items.IRON_INGOT, 8); // enough to fit out the first mine
         add(v);
         setDirty();
         LivingVillages.LOGGER.info("Village {} founded at {}", v.id(), bell);

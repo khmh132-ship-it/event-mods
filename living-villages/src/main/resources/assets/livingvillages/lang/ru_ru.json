@@ -1,5 +1,6 @@
 {
   "entity.livingvillages.worker": "Работник деревни",
   "entity.livingvillages.worker.job.builder": "Строитель",
-  "entity.livingvillages.worker.job.lumberjack": "Дровосек"
+  "entity.livingvillages.worker.job.lumberjack": "Дровосек",
+  "entity.livingvillages.worker.job.miner": "Шахтёр"
 }
