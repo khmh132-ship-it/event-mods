@@ -77,10 +77,15 @@ public final class Workers {
         if (stalled) {
             v.data().putLong("builderStall", level.getGameTime());
         }
+        // (only if there is something he can fetch: wood or stone; waiting for a craft he can do nothing about)
         boolean recentlyStalled = level.getGameTime() - v.data().getLong("builderStall") < 6000
-                && v.data().contains("builderStall");
+                && v.data().contains("builderStall")
+                && v.requests().stream().anyMatch(r -> r.requester().startsWith("build:") && r.unobtainableSince() >= 0);
         needed.put(WorkerJob.BUILDER, building && !stalled && !recentlyStalled);
-        needed.put(WorkerJob.APPRENTICE, orders);
+        // An apprentice with nothing he can make is no use as one.
+        boolean idleApprentice = workers.stream().anyMatch(w -> w.job() == WorkerJob.APPRENTICE
+                && w.status().startsWith("pick"));
+        needed.put(WorkerJob.APPRENTICE, orders && !idleApprentice);
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
         // Hysteresis, so the second pair of hands does not flip between axe and workbench every minute.
@@ -183,7 +188,14 @@ public final class Workers {
 
     /** Eight minutes at least in a job before being moved again: walking about between jobs is no work. */
     private static boolean settled(ServerLevel level, VillageWorker w) {
-        return !w.getPersistentData().getBoolean("lvPermanent") && level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
+        if (w.getPersistentData().getBoolean("lvPermanent")) {
+            return false;
+        }
+        // Standing about with nothing to do: free to go at once, whatever the time in the job.
+        if (w.status().startsWith("pick") || w.status().startsWith("none") || w.status().startsWith("idle")) {
+            return true;
+        }
+        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
     }
 
     /** A gatherer on his way back with a load: he finishes the trip first. */

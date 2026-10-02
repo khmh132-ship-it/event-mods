@@ -268,6 +268,45 @@ public final class Construction {
         }
     }
 
+    /** One block of site work for a builder: something to break (top down), or a dip to fill with dirt. */
+    public record Prep(BlockPos pos, boolean fill) {
+    }
+
+    /**
+     * The next block of levelling, column by column: the highest thing above the ground in the column comes off
+     * first (so nothing falls on anyone), then dips get filled. Finished columns are passed over; null once the
+     * site is level (the building moves on to construction).
+     */
+    @Nullable
+    public static Prep nextPrep(ServerLevel level, Building b) {
+        if (b.phase() != Building.Phase.PREPARE) {
+            return null;
+        }
+        BoundingBox box = b.box();
+        int w = box.getXSpan();
+        int columns = w * box.getZSpan();
+        while (b.progress() < columns) {
+            int x = box.minX() + b.progress() % w;
+            int z = box.minZ() + b.progress() / w;
+            int ground = b.groundY();
+            int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+            for (int y = Math.max(top, box.maxY()); y > ground; y--) {
+                BlockPos p = new BlockPos(x, y, z);
+                BlockState s = level.getBlockState(p);
+                if (!s.isAir() && s.getFluidState().isEmpty()) {
+                    return new Prep(p, false);
+                }
+            }
+            if (top < ground) {
+                return new Prep(new BlockPos(x, top + 1, z), true);
+            }
+            b.advance();
+        }
+        b.nextPhase();
+        LivingVillages.LOGGER.debug("Site of {} levelled", b.typeId());
+        return null;
+    }
+
     /** Levels one column of the site: fills dips with dirt and clears everything above the ground. */
     private static void prepareColumn(ServerLevel level, Village village, Building b) {
         BoundingBox box = b.box();

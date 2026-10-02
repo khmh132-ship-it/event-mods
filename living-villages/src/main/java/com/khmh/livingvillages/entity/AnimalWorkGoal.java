@@ -102,6 +102,7 @@ public class AnimalWorkGoal extends Goal {
         }
         timer++;
         if (fetching.active()) {
+            worker.setStatus("fetching");
             fetching.tick();
             return;
         }

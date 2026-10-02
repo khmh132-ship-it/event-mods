@@ -16,6 +16,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
@@ -117,10 +119,12 @@ public class BuilderWorkGoal extends Goal {
             return;
         }
         if (unloading) {
+            worker.setStatus("unloading");
             worker.unloadTick();
             return;
         }
         if (fetching.active()) {
+            worker.setStatus("fetching materials");
             fetching.tick();
             return;
         }
@@ -129,6 +133,10 @@ public class BuilderWorkGoal extends Goal {
         worker.setStatus("building " + target.typeId() + " " + target.phase().name().toLowerCase() + " "
                 + target.progress() + (waitingSince >= 0 ? " (waiting for materials)" : ""));
 
+        if (target.phase() == com.khmh.livingvillages.building.Building.Phase.PREPARE) {
+            prepare(level, village, now);
+            return;
+        }
         Construction.Next next = Construction.next(level, target);
         BlockPos pos = next != null ? next.pos() : Construction.nextTarget(level, target);
         if (pos == null) {
@@ -225,6 +233,106 @@ public class BuilderWorkGoal extends Goal {
         if (!skip) {
             worker.swing(InteractionHand.MAIN_HAND);
         }
+    }
+
+    private BlockPos prepBlock;
+    private int prepTicks;
+    private int prepWalk;
+
+    /**
+     * Levelling the site by hand: each block in the way is broken like a player breaks it (time by hardness and
+     * the best tool he carries, cracks showing, the drops into his pockets); dips are filled with the dirt he dug.
+     */
+    private void prepare(ServerLevel level, Village village, long now) {
+        if (worker.inventoryFull()) {
+            unloading = true; // pockets full of dirt and stone: to the chests first
+            return;
+        }
+        Construction.Prep work = Construction.nextPrep(level, target);
+        if (work == null) {
+            return; // level: building starts next tick
+        }
+        BlockPos pos = work.pos();
+        if (!pos.equals(prepBlock)) {
+            if (prepBlock != null) {
+                level.destroyBlockProgress(worker.getId(), prepBlock, -1);
+            }
+            prepBlock = pos;
+            prepTicks = 0;
+            prepWalk = 0;
+        }
+        double dist = Math.sqrt(worker.distanceToSqr(Vec3.atCenterOf(pos)));
+        // Up close if he can get there; a long arm's length if the way is blocked for a while.
+        if (dist > REACH && !(prepWalk > 200 && dist <= 8)) {
+            prepWalk++;
+            if (--repath <= 0) {
+                worker.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.6);
+                repath = 20;
+            }
+            return;
+        }
+        worker.getNavigation().stop();
+        worker.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        var inv = worker.getInventory();
+        if (work.fill()) {
+            if (worker.getBoundingBox().intersects(new AABB(pos))) {
+                stepOff();
+                return;
+            }
+            Item soil = inv.countItem(Items.DIRT) > 0 ? Items.DIRT : inv.countItem(Items.COBBLESTONE) > 0 ? Items.COBBLESTONE : null;
+            if (soil == null && village.stock(level).count(Items.DIRT) >= 1) {
+                fetching.start(Map.of(Items.DIRT, Math.min(32, village.stock(level).count(Items.DIRT))));
+                return;
+            }
+            if (soil != null) {
+                inv.removeItemType(soil, 1);
+            }
+            level.setBlock(pos, (soil == Items.COBBLESTONE ? Blocks.COBBLESTONE : Blocks.DIRT).defaultBlockState(),
+                    Block.UPDATE_ALL);
+            worker.swing(InteractionHand.MAIN_HAND);
+            return;
+        }
+        BlockState state = level.getBlockState(pos);
+        ItemStack tool = bestToolFor(state);
+        float hardness = state.getDestroySpeed(level, pos);
+        float speed = Math.max(1.0F, tool.getDestroySpeed(state));
+        boolean proper = !state.requiresCorrectToolForDrops() || tool.isCorrectToolForDrops(state);
+        int need = Math.max(2, Math.round(hardness * (proper ? 30 : 100) / speed / (float) worker.workSpeed()));
+        prepTicks++;
+        level.destroyBlockProgress(worker.getId(), pos, Math.min(9, prepTicks * 10 / need));
+        if (prepTicks % 5 == 0) {
+            worker.swing(InteractionHand.MAIN_HAND);
+        }
+        if (prepTicks < need) {
+            return;
+        }
+        level.destroyBlockProgress(worker.getId(), pos, -1);
+        if (proper) {
+            for (ItemStack drop : Block.getDrops(state, level, pos, level.getBlockEntity(pos), worker, tool)) {
+                worker.carry(drop.getItem(), drop.getCount());
+            }
+        }
+        level.destroyBlock(pos, false, worker); // the cracking sound and dust, no item on the ground
+        if (!tool.isEmpty() && tool.isDamageableItem()) {
+            tool.hurtAndBreak(1, worker, w -> { });
+        }
+        prepBlock = null;
+        village.markDirty();
+    }
+
+    /** The tool in his pockets (or hand) that breaks this block fastest; empty for bare hands. */
+    private ItemStack bestToolFor(BlockState state) {
+        ItemStack best = worker.getMainHandItem();
+        float bestSpeed = best.getDestroySpeed(state);
+        var inv = worker.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (!s.isEmpty() && s.getDestroySpeed(state) > bestSpeed) {
+                best = s;
+                bestSpeed = s.getDestroySpeed(state);
+            }
+        }
+        return best;
     }
 
     /** Fetches what the warehouse has of the next blocks' needs; false if it has none of {@code need}. */

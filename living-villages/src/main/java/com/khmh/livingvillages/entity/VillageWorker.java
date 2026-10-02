@@ -144,11 +144,15 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
 
     /** What he is doing right now, for /village workers. */
     public String status() {
-        return status;
+        // Goals set their status every tick they run; one not refreshed for a while is stale.
+        return tickCount - statusSetAt > 100 ? "idle" : status;
     }
+
+    private int statusSetAt;
 
     public void setStatus(String status) {
         this.status = status;
+        this.statusSetAt = tickCount;
     }
 
     public int food() {
