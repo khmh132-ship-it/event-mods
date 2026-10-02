@@ -72,6 +72,9 @@ public final class VillageEvents {
         if (now % 400 == 0) {
             Founding.tick(level, manager);
         }
+        if (now % 200 == 0 && level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+            VillageLoader.tick(level, manager);
+        }
         for (Village v : List.copyOf(manager.all())) {
             boolean loaded = level.hasChunkAt(v.center());
             if (loaded) {
@@ -123,6 +126,7 @@ public final class VillageEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         TemplateData.clearCache();
+        VillageLoader.clear();
         CraftPlanner.clearCache();
     }
 

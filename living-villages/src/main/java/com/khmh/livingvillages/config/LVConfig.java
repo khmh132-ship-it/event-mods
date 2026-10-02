@@ -8,6 +8,9 @@ public final class LVConfig {
 
     public static final ForgeConfigSpec.BooleanValue NATURAL_FOUNDING;
     public static final ForgeConfigSpec.IntValue TEST_SPEED;
+    public static final ForgeConfigSpec.BooleanValue KEEP_LOADED;
+    public static final ForgeConfigSpec.IntValue MAX_LOADED_VILLAGES;
+    public static final ForgeConfigSpec.IntValue LOADED_CHUNK_RADIUS;
     public static final ForgeConfigSpec.IntValue FOUNDING_SPACING;
     public static final ForgeConfigSpec.IntValue PRODUCTION_INTERVAL;
     public static final ForgeConfigSpec.DoubleValue PRODUCTION_MULTIPLIER;
@@ -37,6 +40,14 @@ public final class LVConfig {
         b.push("debug");
         TEST_SPEED = b.comment("Run the whole server this many times faster (automated tests only; leave at 1)")
                 .defineInRange("testSpeed", 1, 1, 50);
+        b.pop();
+        b.push("loading");
+        KEEP_LOADED = b.comment("Villages keep their own chunks loaded, so they live and grow while no player is near")
+                .define("keepVillagesLoaded", true);
+        MAX_LOADED_VILLAGES = b.comment("How many villages (the biggest first) are kept loaded at once")
+                .defineInRange("maxLoadedVillages", 8, 0, 256);
+        LOADED_CHUNK_RADIUS = b.comment("Largest radius, in chunks, kept loaded around a village's bell")
+                .defineInRange("loadedChunkRadius", 5, 1, 16);
         b.pop();
         b.push("founding");
         NATURAL_FOUNDING = b.comment("New villages appear as small camps near players (vanilla villages are not generated)")
