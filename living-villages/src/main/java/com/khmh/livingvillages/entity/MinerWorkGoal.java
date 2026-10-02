@@ -58,8 +58,26 @@ public class MinerWorkGoal extends Goal {
     private static final int QUARRY_DROP = 14;
     private static final int FLOOR_Y = 0;
     private static final double REACH = 5.5;
-    private static final Map<Item, Integer> KEEP = Map.of(Items.OAK_FENCE, 16, Items.OAK_PLANKS, 16,
+    private static final String[] WOODS = {"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry"};
+    private static final Map<Item, Integer> BASE_KEEP = Map.of(Items.OAK_FENCE, 16, Items.OAK_PLANKS, 16,
             Items.TORCH, 32, Items.STICK, 8, Items.COAL, 8, Items.COBBLESTONE, 32);
+    /** Timber of any wood will do for supports; what he keeps on him when unloading. */
+    private static final Map<Item, Integer> KEEP = keep();
+
+    private static Map<Item, Integer> keep() {
+        Map<Item, Integer> m = new java.util.HashMap<>(BASE_KEEP);
+        for (String w : WOODS) {
+            for (String kind : new String[]{"_fence", "_planks"}) {
+                Item it = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
+                        new net.minecraft.resources.ResourceLocation(w + kind));
+                if (it != null && it != Items.AIR) {
+                    m.put(it, 16);
+                }
+            }
+        }
+        return m;
+    }
+
 
     private static final int CORRIDOR = 0, STAIRS = 1;
     private static final int OPEN = 0, DONE = 1, ABANDONED = 2;
@@ -366,7 +384,7 @@ public class MinerWorkGoal extends Goal {
             return;
         }
         var inv = worker.getInventory();
-        int fences = inv.countItem(Items.OAK_FENCE), planks = inv.countItem(Items.OAK_PLANKS);
+        int fences = count(net.minecraft.tags.ItemTags.WOODEN_FENCES), planks = count(net.minecraft.tags.ItemTags.PLANKS);
         int torches = inv.countItem(Items.TORCH);
         if (fences >= 8 && planks >= 6 && torches >= 8) {
             supplied = true;
@@ -377,14 +395,32 @@ public class MinerWorkGoal extends Goal {
         long now = level.getGameTime();
         if (now - lastRequest > 2400) {
             lastRequest = now;
-            if (stock.count(Items.OAK_FENCE) < 16) {
-                village.request(Items.OAK_FENCE, 16, "mine:" + worker.getUUID(), now);
+            if (mostInStock(stock.totals(), net.minecraft.tags.ItemTags.WOODEN_FENCES) == null) {
+                // a fence of the wood the village has most of
+                Item planksKind = mostInStock(stock.totals(), net.minecraft.tags.ItemTags.PLANKS);
+                Item logKind = mostInStock(stock.totals(), net.minecraft.tags.ItemTags.LOGS);
+                String wood = "oak";
+                String src = planksKind != null ? net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(planksKind).getPath()
+                        : logKind != null ? net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(logKind).getPath() : "oak_log";
+                int bestLen = 0;
+                for (String w : WOODS) {
+                    if (src.startsWith(w + "_") && w.length() > bestLen) { // dark_oak over oak
+                        wood = w;
+                        bestLen = w.length();
+                    }
+                }
+                Item fenceItem = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
+                        new net.minecraft.resources.ResourceLocation(wood + "_fence"));
+                village.request(fenceItem == null ? Items.OAK_FENCE : fenceItem, 16, "mine:" + worker.getUUID(), now);
             }
             if (stock.count(Items.TORCH) < 16 && stock.count(Items.COAL) == 0) {
                 village.request(Items.TORCH, 16, "mine:" + worker.getUUID(), now);
             }
         }
-        fetching.start(Map.of(Items.OAK_FENCE, Math.max(0, 16 - fences), Items.OAK_PLANKS, Math.max(0, 16 - planks),
+        Item fenceKind = mostInStock(stock.totals(), net.minecraft.tags.ItemTags.WOODEN_FENCES);
+        Item planksKind = mostInStock(stock.totals(), net.minecraft.tags.ItemTags.PLANKS);
+        fetching.start(Map.of(fenceKind == null ? Items.OAK_FENCE : fenceKind, Math.max(0, 16 - fences),
+                planksKind == null ? Items.OAK_PLANKS : planksKind, Math.max(0, 16 - planks),
                 Items.TORCH, Math.max(0, 32 - torches), Items.COAL, Math.max(0, 4 - inv.countItem(Items.COAL))));
         if (!fetching.active()) {
             supplied = true;
@@ -430,7 +466,7 @@ public class MinerWorkGoal extends Goal {
             return;
         }
         var inv = worker.getInventory();
-        boolean bare = inv.countItem(Items.OAK_FENCE) < 4 && inv.countItem(Items.TORCH) == 0
+        boolean bare = count(net.minecraft.tags.ItemTags.WOODEN_FENCES) < 4 && inv.countItem(Items.TORCH) == 0
                 && inv.countItem(Items.COAL) == 0;
         // From a quarry it is a long way up: he brings stone up in smaller loads so the village sees some.
         int load = mine() != null ? LOAD : 128;
@@ -571,7 +607,7 @@ public class MinerWorkGoal extends Goal {
 
     /** Our own supports and torches, met again where a branch starts. */
     private static boolean isOurs(BlockState s) {
-        return s.is(Blocks.OAK_FENCE) || s.is(Blocks.OAK_PLANKS) || s.is(Blocks.TORCH) || s.is(Blocks.WALL_TORCH);
+        return s.is(BlockTags.WOODEN_FENCES) || s.is(BlockTags.PLANKS) || s.is(Blocks.TORCH) || s.is(Blocks.WALL_TORCH);
     }
 
     /** Swings at a block until it breaks; true once broken. */
@@ -649,7 +685,7 @@ public class MinerWorkGoal extends Goal {
         } else if (seg.kind() == CORRIDOR && k % 4 == 3) {
             // The far face of the last beam: only now is there room for its torch.
             BlockPos beam = seg.slice(k - 1).above(2);
-            if (level.getBlockState(beam).is(Blocks.OAK_PLANKS)) {
+            if (level.getBlockState(beam).is(BlockTags.PLANKS)) {
                 placeTorch(level, beam.relative(seg.dir()), Blocks.WALL_TORCH.defaultBlockState()
                         .setValue(WallTorchBlock.FACING, seg.dir()));
             }
@@ -666,17 +702,21 @@ public class MinerWorkGoal extends Goal {
     private void support(ServerLevel level, BlockPos c, Direction dir) {
         var inv = worker.getInventory();
         Direction side = dir.getClockWise();
-        if (inv.countItem(Items.OAK_FENCE) >= 4 && inv.countItem(Items.OAK_PLANKS) >= 3) {
+        Item fenceItem = most(net.minecraft.tags.ItemTags.WOODEN_FENCES);
+        Item planksItem = most(net.minecraft.tags.ItemTags.PLANKS);
+        if (fenceItem != null && planksItem != null && inv.countItem(fenceItem) >= 4 && inv.countItem(planksItem) >= 3) {
+            BlockState fenceState = Block.byItem(fenceItem).defaultBlockState();
+            BlockState planksState = Block.byItem(planksItem).defaultBlockState();
             for (int w : new int[]{-1, 1}) {
                 for (int h = 0; h < 2; h++) {
-                    place(level, c.relative(side, w).above(h), Blocks.OAK_FENCE.defaultBlockState());
+                    place(level, c.relative(side, w).above(h), fenceState);
                 }
             }
             for (int w = -1; w <= 1; w++) {
-                place(level, c.relative(side, w).above(2), Blocks.OAK_PLANKS.defaultBlockState());
+                place(level, c.relative(side, w).above(2), planksState);
             }
-            inv.removeItemType(Items.OAK_FENCE, 4);
-            inv.removeItemType(Items.OAK_PLANKS, 3);
+            inv.removeItemType(fenceItem, 4);
+            inv.removeItemType(planksItem, 3);
             BlockPos beam = c.above(2);
             for (Direction face : new Direction[]{dir, dir.getOpposite()}) {
                 placeTorch(level, beam.relative(face), Blocks.WALL_TORCH.defaultBlockState()
@@ -689,9 +729,50 @@ public class MinerWorkGoal extends Goal {
                 placeTorch(level, at, Blocks.TORCH.defaultBlockState());
             }
         }
-        if (inv.countItem(Items.OAK_FENCE) < 4 || inv.countItem(Items.OAK_PLANKS) < 3) {
+        if (count(net.minecraft.tags.ItemTags.WOODEN_FENCES) < 4 || count(net.minecraft.tags.ItemTags.PLANKS) < 3) {
             supplied = false; // fetch more on the next trip up
         }
+    }
+
+    /** The wooden fence (or planks) he has most of; null if none. */
+    @Nullable
+    private Item most(net.minecraft.tags.TagKey<Item> tag) {
+        var inv = worker.getInventory();
+        Item best = null;
+        int n = 0;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack st = inv.getItem(i);
+            if (st.is(tag) && inv.countItem(st.getItem()) > n) {
+                best = st.getItem();
+                n = inv.countItem(best);
+            }
+        }
+        return best;
+    }
+
+    private int count(net.minecraft.tags.TagKey<Item> tag) {
+        var inv = worker.getInventory();
+        int n = 0;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(tag)) {
+                n += inv.getItem(i).getCount();
+            }
+        }
+        return n;
+    }
+
+    /** What of a kind (fences, planks) the stores have most of. */
+    @Nullable
+    private static Item mostInStock(Map<Item, Integer> stock, net.minecraft.tags.TagKey<Item> tag) {
+        Item best = null;
+        int n = 0;
+        for (Map.Entry<Item, Integer> e : stock.entrySet()) {
+            if (e.getValue() > n && new ItemStack(e.getKey()).is(tag)) {
+                best = e.getKey();
+                n = e.getValue();
+            }
+        }
+        return best;
     }
 
     private void place(ServerLevel level, BlockPos pos, BlockState state) {
@@ -716,8 +797,9 @@ public class MinerWorkGoal extends Goal {
         if (inv.countItem(Items.TORCH) >= 4 || inv.countItem(Items.COAL) == 0) {
             return;
         }
-        if (inv.countItem(Items.STICK) == 0 && inv.countItem(Items.OAK_PLANKS) >= 5) {
-            inv.removeItemType(Items.OAK_PLANKS, 2);
+        Item anyPlanks = most(net.minecraft.tags.ItemTags.PLANKS);
+        if (inv.countItem(Items.STICK) == 0 && anyPlanks != null && inv.countItem(anyPlanks) >= 5) {
+            inv.removeItemType(anyPlanks, 2);
             worker.carry(Items.STICK, 4);
         }
         if (inv.countItem(Items.STICK) > 0) {
