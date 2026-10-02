@@ -105,10 +105,14 @@ final class GuardGoals {
     /** Gearing up, walking the rounds, resting at the bell when hurt. */
     static class Patrol extends Goal {
         private static final Map<EquipmentSlot, List<Item>> ARMOR = Map.of(
-                EquipmentSlot.HEAD, List.of(Items.IRON_HELMET, Items.CHAINMAIL_HELMET, Items.LEATHER_HELMET),
-                EquipmentSlot.CHEST, List.of(Items.IRON_CHESTPLATE, Items.CHAINMAIL_CHESTPLATE, Items.LEATHER_CHESTPLATE),
-                EquipmentSlot.LEGS, List.of(Items.IRON_LEGGINGS, Items.CHAINMAIL_LEGGINGS, Items.LEATHER_LEGGINGS),
-                EquipmentSlot.FEET, List.of(Items.IRON_BOOTS, Items.CHAINMAIL_BOOTS, Items.LEATHER_BOOTS));
+                EquipmentSlot.HEAD, List.of(Items.NETHERITE_HELMET, Items.DIAMOND_HELMET, Items.IRON_HELMET,
+                        Items.CHAINMAIL_HELMET, Items.LEATHER_HELMET),
+                EquipmentSlot.CHEST, List.of(Items.NETHERITE_CHESTPLATE, Items.DIAMOND_CHESTPLATE, Items.IRON_CHESTPLATE,
+                        Items.CHAINMAIL_CHESTPLATE, Items.LEATHER_CHESTPLATE),
+                EquipmentSlot.LEGS, List.of(Items.NETHERITE_LEGGINGS, Items.DIAMOND_LEGGINGS, Items.IRON_LEGGINGS,
+                        Items.CHAINMAIL_LEGGINGS, Items.LEATHER_LEGGINGS),
+                EquipmentSlot.FEET, List.of(Items.NETHERITE_BOOTS, Items.DIAMOND_BOOTS, Items.IRON_BOOTS,
+                        Items.CHAINMAIL_BOOTS, Items.LEATHER_BOOTS));
 
         private final VillageWorker worker;
         private final Tooling sword;
@@ -194,26 +198,41 @@ final class GuardGoals {
         private boolean gearUp(ServerLevel level, Village village) {
             var stock = village.stock(level).totals();
             for (Map.Entry<EquipmentSlot, List<Item>> slot : ARMOR.entrySet()) {
-                if (!worker.getItemBySlot(slot.getKey()).isEmpty()) {
+                ItemStack worn = worker.getItemBySlot(slot.getKey());
+                // The best piece he carries goes on (the real one, enchantments and all); the old one into his pack.
+                var inv = worker.getInventory();
+                int best = -1;
+                for (int i = 0; i < inv.getContainerSize(); i++) {
+                    ItemStack s = inv.getItem(i);
+                    if (slot.getValue().contains(s.getItem()) && Gear.score(s) > Gear.score(worn)
+                            && (best < 0 || Gear.score(s) > Gear.score(inv.getItem(best)))) {
+                        best = i;
+                    }
+                }
+                if (best >= 0) {
+                    ItemStack piece = inv.removeItemNoUpdate(best);
+                    if (!worn.isEmpty()) {
+                        inv.addItem(worn);
+                    }
+                    worker.setItemSlot(slot.getKey(), piece);
+                    worker.setDropChance(slot.getKey(), 1.0F);
+                    return true;
+                }
+                if (timer % 2400 == 1 || worn.isEmpty()) {
+                    for (Item piece : slot.getValue()) {
+                        if (stock.getOrDefault(piece, 0) > 0 && Gear.score(piece) > Gear.score(worn.getItem())) {
+                            fetching.start(Map.of(piece, 1));
+                            return true;
+                        }
+                    }
+                }
+                if (!worn.isEmpty()) {
                     continue;
-                }
-                for (Item piece : slot.getValue()) {
-                    if (worker.getInventory().countItem(piece) > 0) {
-                        worker.getInventory().removeItemType(piece, 1);
-                        worker.setItemSlot(slot.getKey(), new ItemStack(piece));
-                        worker.setDropChance(slot.getKey(), 1.0F);
-                        return true;
-                    }
-                }
-                for (Item piece : slot.getValue()) {
-                    if (stock.getOrDefault(piece, 0) > 0) {
-                        fetching.start(Map.of(piece, 1));
-                        return true;
-                    }
                 }
                 long now = level.getGameTime();
                 if (now - lastRequest > 2400 && slot.getKey() == EquipmentSlot.CHEST) {
-                    Item want = stock.getOrDefault(Items.IRON_INGOT, 0) >= 8 ? Items.IRON_CHESTPLATE : Items.LEATHER_CHESTPLATE;
+                    Item want = stock.getOrDefault(Items.DIAMOND, 0) >= 8 ? Items.DIAMOND_CHESTPLATE
+                            : stock.getOrDefault(Items.IRON_INGOT, 0) >= 8 ? Items.IRON_CHESTPLATE : Items.LEATHER_CHESTPLATE;
                     village.request(want, 1, "guard:" + worker.getUUID(), now);
                     lastRequest = now;
                 }

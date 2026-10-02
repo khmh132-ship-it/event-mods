@@ -85,6 +85,15 @@ class Fetching {
             }
             return false;
         }
+        if (!target.equals(village.center()) && !Reach.sees(worker, target)) {
+            if (timer >= GIVE_UP_TICKS) {
+                skip.add(target); // walled in: some other chest
+                target = null;
+            } else if (timer % 20 == 1) { // a wall in between: round to the chest's open side
+                worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.6);
+            }
+            return false;
+        }
         worker.getNavigation().stop();
         worker.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
         if (atBell) {

@@ -51,9 +51,77 @@ class Tooling {
         fetching.reset();
     }
 
+    private long lastUpgrade = Long.MIN_VALUE / 2;
+
+    /**
+     * Now and then: a better tool in the stores is fetched (iron over stone, diamond over iron, enchanted over
+     * plain); with diamonds or iron in store but no such tool, one is asked for.
+     */
+    private void upgrade(ServerLevel level, Village village, TagKey<Item> tag) {
+        long now = level.getGameTime();
+        if (now - lastUpgrade < 2400) {
+            return;
+        }
+        lastUpgrade = now;
+        swapToBest(tag);
+        ItemStack hand = worker.getMainHandItem();
+        int mine = tier(hand);
+        var stock = village.stock(level).totals();
+        Item better = null;
+        for (Map.Entry<Item, Integer> e : stock.entrySet()) {
+            if (e.getValue() > 0 && new ItemStack(e.getKey()).is(tag) && Gear.score(e.getKey()) > mine
+                    && (better == null || Gear.score(e.getKey()) > Gear.score(better))) {
+                better = e.getKey();
+            }
+        }
+        if (better != null) {
+            fetching.start(Map.of(better, 1));
+            return;
+        }
+        for (String[] m : new String[][]{{"diamond_", "DIAMOND"}, {"iron_", "IRON_INGOT"}}) {
+            Item target = Gear.inMaterial(hand.getItem(), m[0]);
+            Item mat = m[1].equals("DIAMOND") ? net.minecraft.world.item.Items.DIAMOND : net.minecraft.world.item.Items.IRON_INGOT;
+            if (target != null && Gear.score(target) > Gear.score(hand.getItem()) && stock.getOrDefault(mat, 0) >= 3) {
+                village.request(target, 1, "tool:" + worker.getUUID(), now);
+                return;
+            }
+        }
+    }
+
+    /** Puts the best tool of the kind he carries into his hand (the old one goes into his pocket). */
+    private void swapToBest(TagKey<Item> tag) {
+        SimpleContainer inv = worker.getInventory();
+        int best = -1;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(tag) && tier(inv.getItem(i)) > tier(worker.getMainHandItem())
+                    && (best < 0 || tier(inv.getItem(i)) > tier(inv.getItem(best)))) {
+                best = i;
+            }
+        }
+        if (best >= 0) {
+            ItemStack tool = inv.removeItemNoUpdate(best);
+            ItemStack old = worker.getMainHandItem();
+            worker.setItemInHand(InteractionHand.MAIN_HAND, tool);
+            if (!old.isEmpty()) {
+                inv.addItem(old);
+            }
+        }
+    }
+
     Status tick(ServerLevel level, Village village) {
         TagKey<Item> tag = worker.job().toolTag();
-        if (tag == null || worker.getMainHandItem().is(tag)) {
+        if (tag == null) {
+            return Status.READY;
+        }
+        if (worker.getMainHandItem().is(tag)) {
+            if (fetching.active()) {
+                fetching.tick(); // going for a better one
+                if (!fetching.active()) {
+                    swapToBest(tag);
+                }
+                return Status.BUSY;
+            }
+            upgrade(level, village, tag);
             return Status.READY;
         }
         SimpleContainer inv = worker.getInventory();
@@ -150,6 +218,6 @@ class Tooling {
     }
 
     private static int tier(ItemStack s) {
-        return s.getItem() instanceof TieredItem t ? t.getTier().getLevel() * 100 + (int) t.getTier().getSpeed() : 0;
+        return Gear.score(s);
     }
 }

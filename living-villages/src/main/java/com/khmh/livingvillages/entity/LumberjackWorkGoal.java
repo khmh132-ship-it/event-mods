@@ -123,7 +123,28 @@ public class LumberjackWorkGoal extends Goal {
                 }
             }
             case CHOP -> {
-                worker.getLookControl().setLookAt(tree.getX() + 0.5, tree.getY() + 1.5, tree.getZ() + 0.5);
+                if (!logs.isEmpty()) {
+                    BlockPos at = logs.get(logs.size() - 1);
+                    worker.getLookControl().setLookAt(at.getX() + 0.5, at.getY() + 0.5, at.getZ() + 0.5);
+                    // Leaves between him and the log come off first, as they would for a player.
+                    BlockPos leaf = leafInTheWay(level, at);
+                    if (leaf != null) {
+                        BlockState ls = level.getBlockState(leaf);
+                        int needLeaf = tooling.breakTicks((net.minecraft.server.level.ServerLevel) level, leaf, ls);
+                        level.destroyBlockProgress(worker.getId(), leaf, Math.min(9, chopTicks * 10 / Math.max(1, needLeaf)));
+                        if (chopTicks % 6 == 0) {
+                            worker.swing(InteractionHand.MAIN_HAND);
+                        }
+                        if (++chopTicks >= needLeaf) {
+                            chopTicks = 0;
+                            level.destroyBlockProgress(worker.getId(), leaf, -1);
+                            level.destroyBlock(leaf, true, worker); // saplings and apples fall where they can be picked up
+                        }
+                        return;
+                    }
+                } else {
+                    worker.getLookControl().setLookAt(tree.getX() + 0.5, tree.getY() + 1.5, tree.getZ() + 0.5);
+                }
                 if (hut != null) {
                     village.reportWorking(hut.id(), now);
                 }
@@ -170,6 +191,17 @@ public class LumberjackWorkGoal extends Goal {
     private void go(State next) {
         state = next;
         timer = 0;
+    }
+
+    /** The first leaf block on the line from his eyes to the log, if any. */
+    private BlockPos leafInTheWay(Level level, BlockPos log) {
+        var hit = level.clip(new net.minecraft.world.level.ClipContext(worker.getEyePosition(), log.getCenter(),
+                net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, worker));
+        if (hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK && !hit.getBlockPos().equals(log)
+                && level.getBlockState(hit.getBlockPos()).is(BlockTags.LEAVES)) {
+            return hit.getBlockPos();
+        }
+        return null;
     }
 
     private double horizontalDistSqr(BlockPos p) {

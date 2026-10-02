@@ -157,6 +157,7 @@ public final class Workers {
                 break; // nobody free; try again on the next scan
             }
             b.setWorkerId(worker.getUUID());
+            worker.getPersistentData().putBoolean("lvPermanent", true); // his workplace, for good
             return;
         }
 
@@ -182,7 +183,7 @@ public final class Workers {
 
     /** Eight minutes at least in a job before being moved again: walking about between jobs is no work. */
     private static boolean settled(ServerLevel level, VillageWorker w) {
-        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
+        return !w.getPersistentData().getBoolean("lvPermanent") && level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
     }
 
     /** A gatherer on his way back with a load: he finishes the trip first. */
@@ -285,6 +286,7 @@ public final class Workers {
         worker.moveTo(villager.getX(), villager.getY(), villager.getZ(), villager.getYRot(), 0);
         worker.setCustomName(villager.getCustomName());
         worker.assign(job, v, null);
+        worker.getPersistentData().putBoolean("lvPermanent", true); // took a job block: his for good (trading later)
         for (ItemStack s : villager.getInventory().removeAllItems()) {
             worker.getInventory().addItem(s); // its seeds and harvest come along
         }

@@ -29,7 +29,12 @@ public class CollectItemsGoal extends Goal {
         cooldown = 10;
         List<ItemEntity> items = worker.level().getEntitiesOfClass(ItemEntity.class,
                 worker.getBoundingBox().inflate(RANGE, 4, RANGE),
-                e -> e.isAlive() && !e.hasPickUpDelay() && worker.wantsToPickUp(e.getItem()));
+                e -> e.isAlive() && !e.hasPickUpDelay() && worker.wantsToPickUp(e.getItem())
+                        && !given.contains(e.getUUID())
+                        // Not up a tree or on a roof: a sapling caught in the leaves stays there.
+                        && e.getY() < worker.getY() + 1.5
+                        && worker.level().getBlockState(e.blockPosition().below()).getBlock()
+                                instanceof net.minecraft.world.level.block.LeavesBlock == false);
         target = items.stream().min(Comparator.comparingDouble(worker::distanceToSqr)).orElse(null);
         return target != null;
     }
@@ -44,8 +49,17 @@ public class CollectItemsGoal extends Goal {
         timer = 0;
     }
 
+    /** Items given up on: could not get to them in time. */
+    private final java.util.Set<java.util.UUID> given = new java.util.HashSet<>();
+
     @Override
     public void stop() {
+        if (target != null && target.isAlive() && timer >= 200) {
+            given.add(target.getUUID());
+            if (given.size() > 64) {
+                given.clear();
+            }
+        }
         target = null;
         worker.getNavigation().stop();
     }

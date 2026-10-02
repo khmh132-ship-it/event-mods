@@ -73,9 +73,12 @@ public class SleepGoal extends Goal {
             }
         }
         timer++;
-        if (worker.distanceToSqr(bed.getX() + 0.5, bed.getY() + 0.5, bed.getZ() + 0.5) <= 4.0 || timer > 900) {
+        if (worker.distanceToSqr(bed.getX() + 0.5, bed.getY() + 0.5, bed.getZ() + 0.5) <= 4.0
+                && com.khmh.livingvillages.entity.Reach.sees(worker, bed)) {
             worker.getNavigation().stop();
             worker.startSleeping(bed);
+        } else if (timer > 900) {
+            worker.getNavigation().stop(); // cannot get to the bed: rests where he is, no walking through walls
         } else if (timer % 20 == 1) {
             worker.getNavigation().moveTo(bed.getX() + 0.5, bed.getY(), bed.getZ() + 0.5, 0.6);
         }
