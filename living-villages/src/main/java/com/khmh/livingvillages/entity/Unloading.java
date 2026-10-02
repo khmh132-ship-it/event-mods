@@ -72,7 +72,8 @@ class Unloading {
         timer++;
         boolean bell = target.equals(village.center());
         // The bell stands on whatever ground there is: after a while anywhere near it will do.
-        double reach = bell ? (timer > GIVE_UP_TICKS ? 144 : 16) : 6.25;
+        // (and if the bell cannot be got at at all, what he carries counts as delivered to the village store)
+        double reach = bell ? (timer > GIVE_UP_TICKS * 4 ? Double.MAX_VALUE : timer > GIVE_UP_TICKS ? 144 : 16) : 6.25;
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > reach) {
             if (!bell && timer > GIVE_UP_TICKS) {
                 skip.add(target);

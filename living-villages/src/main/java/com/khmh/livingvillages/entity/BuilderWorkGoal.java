@@ -183,7 +183,11 @@ public class BuilderWorkGoal extends Goal {
             if (waitingSince < 0) {
                 waitingSince = now;
             }
-            if (now - waitingSince < SUBSTITUTE_TICKS) {
+            // Once a stand-in had to be used for this item on this site, the rest get one straight away.
+            String needId = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(need).toString();
+            boolean givenUp = target.data().getList("standIns", net.minecraft.nbt.Tag.TAG_STRING).stream()
+                    .anyMatch(t -> t.getAsString().equals(needId));
+            if (!givenUp && now - waitingSince < SUBSTITUTE_TICKS) {
                 // Nobody to make it: he puts the trowel down and makes it himself, as a player would.
                 if (village.professions().getOrDefault("apprentice", 0) == 0 && com.khmh.livingvillages.economy.CraftPlanner
                         .plan(level, village.stock(level).totals(), other != null ? other.getBlock().asItem() : need, 1)
@@ -193,6 +197,13 @@ public class BuilderWorkGoal extends Goal {
                 }
                 idleNear(pos);
                 return;
+            }
+            if (!givenUp) {
+                net.minecraft.nbt.ListTag standIns = target.data().getList("standIns", net.minecraft.nbt.Tag.TAG_STRING);
+                standIns.add(net.minecraft.nbt.StringTag.valueOf(needId));
+                target.data().put("standIns", standIns);
+                village.withdrawRequest(need, "build:" + target.id());
+                village.markDirty();
             }
             Item alt = substituteFor(next.state(), village.stock(level));
             if (alt != null && worker.getInventory().countItem(alt) == 0) {
@@ -484,6 +495,15 @@ public class BuilderWorkGoal extends Goal {
         if (kinds.contains(CostKey.Stone.INSTANCE)) {
             return worker.getInventory().countItem(Items.COBBLESTONE) > 0 || stock.count(Items.COBBLESTONE) > 0
                     ? Items.COBBLESTONE : null;
+        }
+        // A wall block nobody can make (terracotta, wool...): any solid block rather than a hole in the wall.
+        if (state.isSolidRender(worker.level(), worker.blockPosition())) {
+            for (Item solid : new Item[]{Items.COBBLESTONE, Items.OAK_PLANKS, Items.SPRUCE_PLANKS, Items.BIRCH_PLANKS,
+                    Items.DIRT}) {
+                if (worker.getInventory().countItem(solid) > 0 || stock.count(solid) > 0) {
+                    return solid;
+                }
+            }
         }
         return null;
     }

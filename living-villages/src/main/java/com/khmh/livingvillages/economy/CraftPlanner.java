@@ -241,6 +241,8 @@ public final class CraftPlanner {
                 Ingredient.of(Items.WHEAT), planks, planks, planks);
         villager(out, Items.WHITE_BED, 1, Ingredient.of(Items.LEATHER), Ingredient.of(Items.LEATHER),
                 Ingredient.of(Items.LEATHER), planks, planks, planks);
+        // And with nothing soft at all: a plank bunk.
+        villager(out, Items.WHITE_BED, 1, planks, planks, planks, planks, planks, planks);
     }
 
     private static void villager(Map<Item, List<Candidate>> out, Item result, int count, Ingredient... ingredients) {
