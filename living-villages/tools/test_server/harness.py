@@ -14,7 +14,26 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'fitting_room')
 from build_world import Rcon  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-RUN = os.path.join(ROOT, 'run')
+# With LV_SNAPSHOT=<dir> the server runs from a copy of the project made at start, so the real project can be
+# edited and rebuilt while a long test is going.
+SNAPSHOT = os.environ.get('LV_SNAPSHOT')
+SERVER_ROOT = SNAPSHOT or ROOT
+RUN = os.path.join(SERVER_ROOT, 'run')
+
+
+def make_snapshot():
+    if not SNAPSHOT:
+        return
+    os.makedirs(SNAPSHOT, exist_ok=True)
+    for name in ['src', 'gradle']:
+        dst = os.path.join(SNAPSHOT, name)
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+        shutil.copytree(os.path.join(ROOT, name), dst)
+    for name in ['build.gradle', 'settings.gradle', 'gradle.properties', 'gradlew']:
+        shutil.copy2(os.path.join(ROOT, name), os.path.join(SNAPSHOT, name))
+    if not os.path.exists(os.path.join(SNAPSHOT, 'build')) and os.path.exists(os.path.join(ROOT, 'build')):
+        shutil.copytree(os.path.join(ROOT, 'build'), os.path.join(SNAPSHOT, 'build'), symlinks=True)
 LEVEL = 'test_world'
 PORT, PASSWORD = 25576, 'test'
 
@@ -37,6 +56,7 @@ class TestServer:
         self.rcon = None
 
     def __enter__(self):
+        make_snapshot()
         world = os.path.join(RUN, LEVEL)
         if self.fresh and os.path.exists(world):
             shutil.rmtree(world)
@@ -60,7 +80,7 @@ class TestServer:
                 'view-distance=4', 'simulation-distance=4', '']))
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
         self.log = open(self.log_path, 'w')
-        self.proc = subprocess.Popen(['./gradlew', 'runServer', '--console=plain'], cwd=ROOT, stdout=self.log,
+        self.proc = subprocess.Popen(['./gradlew', 'runServer', '--console=plain'], cwd=SERVER_ROOT, stdout=self.log,
                                      stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
         for _ in range(600):
             if self.proc.poll() is not None:

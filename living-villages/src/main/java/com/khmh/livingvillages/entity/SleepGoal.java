@@ -23,7 +23,13 @@ public class SleepGoal extends Goal {
         // Guards keep watch; everybody else sleeps at night, and hides in bed while the bell rings an alarm.
         // Starving, he goes to eat first (and not to bed on an empty stomach).
         return worker.job() != WorkerJob.GUARD && !(worker.isStarving() && !worker.isSleeping())
-                && worker.village().map(v -> worker.level().isNight() || v.alarm()).orElse(false);
+                && worker.village().map(v -> bedtime(worker.level()) || v.alarm()).orElse(false);
+    }
+
+    /** Night by the clock, as vanilla villagers keep it (rain or thunder do not send anyone to bed). */
+    static boolean bedtime(net.minecraft.world.level.Level level) {
+        long t = level.getDayTime() % 24000L;
+        return t >= 12600 && t < 23400;
     }
 
     @Override

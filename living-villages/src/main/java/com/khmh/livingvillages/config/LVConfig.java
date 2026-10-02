@@ -7,6 +7,7 @@ public final class LVConfig {
     public static final ForgeConfigSpec SPEC;
 
     public static final ForgeConfigSpec.BooleanValue NATURAL_FOUNDING;
+    public static final ForgeConfigSpec.IntValue TEST_SPEED;
     public static final ForgeConfigSpec.IntValue FOUNDING_SPACING;
     public static final ForgeConfigSpec.IntValue PRODUCTION_INTERVAL;
     public static final ForgeConfigSpec.DoubleValue PRODUCTION_MULTIPLIER;
@@ -32,6 +33,10 @@ public final class LVConfig {
                 .defineInRange("birthInterval", 6000, 20, 1000000);
         STORAGE_CAP = b.comment("Max amount of one item a village keeps per warehouse level (base village counts as one)")
                 .defineInRange("storageCap", 512, 16, 1000000);
+        b.pop();
+        b.push("debug");
+        TEST_SPEED = b.comment("Run the whole server this many times faster (automated tests only; leave at 1)")
+                .defineInRange("testSpeed", 1, 1, 50);
         b.pop();
         b.push("founding");
         NATURAL_FOUNDING = b.comment("New villages appear as small camps near players (vanilla villages are not generated)")

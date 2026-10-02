@@ -4,7 +4,9 @@ import time
 
 from harness import TestServer
 
-CFG = {'construction': {'buildInterval': 10}, 'founding': {'naturalFounding': False}}
+import os
+SPEED = int(os.environ.get('LV_SPEED', '1'))
+CFG = {'construction': {'buildInterval': 10}, 'founding': {'naturalFounding': False}, 'debug': {'testSpeed': SPEED}}
 
 
 def at(s, c):
@@ -13,7 +15,7 @@ def at(s, c):
 
 with TestServer(CFG, log_name='test_founding.log') as s:
     s.cmd('forceload add -96 -96 96 96')
-    for rule in ['doMobSpawning false', 'randomTickSpeed 3', 'doDaylightCycle false']:
+    for rule in ['doMobSpawning false', 'randomTickSpeed 3']:
         s.cmd('gamerule ' + rule)
     for x in range(-60, 61, 9):
         for z in (-50, -38, 38, 50):
@@ -27,7 +29,7 @@ with TestServer(CFG, log_name='test_founding.log') as s:
     for minute in range(int(__import__('sys').argv[1]) if len(__import__('sys').argv) > 1 else 12):
         time.sleep(60)
         info = at(s, 'info')
-        print(f'--- {minute + 1} min')
+        print(f'--- {minute + 1} min (game {(minute + 1) * SPEED} min), time', s.cmd('time query daytime', check=False).strip())
         print(info)
         print(at(s, 'buildings'))
         print(at(s, 'workers'))

@@ -36,6 +36,25 @@ public final class VillageEvents {
     private VillageEvents() {
     }
 
+    private static boolean extraTicks;
+
+    /** Test speed-up: after each real tick, run the rest of the server's ticks straight away. */
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        int speed = com.khmh.livingvillages.config.LVConfig.TEST_SPEED.get();
+        if (event.phase != TickEvent.Phase.END || speed <= 1 || extraTicks) {
+            return;
+        }
+        extraTicks = true;
+        try {
+            for (int i = 1; i < speed; i++) {
+                event.getServer().tickServer(() -> false);
+            }
+        } finally {
+            extraTicks = false;
+        }
+    }
+
     @SubscribeEvent
     public static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) {
@@ -70,7 +89,9 @@ public final class VillageEvents {
     private static void checkAlarm(ServerLevel level, Village v) {
         boolean raid = level.getRaidAt(v.center()) != null;
         int monsters = level.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class,
-                new AABB(v.center()).inflate(v.radius()), m -> m.isAlive()).size();
+                // Only what is about the houses: not the cave spiders and zombies in the caves underneath.
+                new AABB(v.center()).inflate(v.radius(), 0, v.radius()).expandTowards(0, 16, 0).expandTowards(0, -8, 0),
+                m -> m.isAlive() && level.canSeeSky(m.blockPosition())).size();
         boolean alarm = raid || monsters >= 3;
         if (alarm && !v.alarm()) {
             var state = level.getBlockState(v.center());
