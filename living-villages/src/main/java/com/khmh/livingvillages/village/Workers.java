@@ -191,11 +191,14 @@ public final class Workers {
         if (w.getPersistentData().getBoolean("lvPermanent")) {
             return false;
         }
-        // Standing about with nothing to do: free to go at once, whatever the time in the job.
-        if (w.status().startsWith("pick") || w.status().startsWith("none") || w.status().startsWith("idle")) {
+        long inJob = level.getGameTime() - w.getPersistentData().getLong("lvJobSince");
+        // Standing about with nothing to do: free to go, once he has had a fair minute to find his feet in the job
+        // (a man just moved over has not started yet, which is not the same as having nothing to do).
+        if (inJob >= 1800 && (w.status().startsWith("pick") || w.status().startsWith("none")
+                || w.status().startsWith("idle"))) {
             return true;
         }
-        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
+        return inJob >= 9600;
     }
 
     /** A gatherer on his way back with a load: he finishes the trip first. */
