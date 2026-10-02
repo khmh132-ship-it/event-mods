@@ -261,11 +261,27 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         }
     }
 
+    private final Unstuck unstuck = new Unstuck(this);
+
+    /** A jump straight up, for putting a block underfoot. */
+    void hop() {
+        getNavigation().stop();
+        jumpFromGround();
+    }
+
+    @Override
+    protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
+        return new WorkerNavigation(this, level);
+    }
+
     @Override
     public void aiStep() {
         super.aiStep();
         if (level().isClientSide) {
             return;
+        }
+        if (level() instanceof net.minecraft.server.level.ServerLevel sl && getNavigation() instanceof WorkerNavigation nav) {
+            unstuck.tick(sl, nav.wanted, nav.wantedAt);
         }
         if (tickCount % 1200 == 0 && food > 0 && !isSleeping()) {
             food--; // about a meal every ten minutes of work

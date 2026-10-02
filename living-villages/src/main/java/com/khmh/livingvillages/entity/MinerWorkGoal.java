@@ -345,12 +345,18 @@ public class MinerWorkGoal extends Goal {
     }
 
     private boolean walkedOut;
+    private boolean needTool;
     private double bestDist = Double.MAX_VALUE;
     private int lastProgress;
 
     /** Timber and torches for the supports, from the stores; asked for if there are none. */
     private void supply(ServerLevel level, Village village) {
         worker.setStatus("getting timber and torches");
+        Tooling.Status tool = tooling.tick(level, village);
+        if (tool == Tooling.Status.BUSY) {
+            worker.setStatus("getting a pickaxe");
+            return;
+        }
         if (fetching.active()) {
             if (fetching.tick() || timer > 1200) {
                 fetching.reset();
@@ -416,6 +422,13 @@ public class MinerWorkGoal extends Goal {
     }
 
     private void work(ServerLevel level, Village village) {
+        if (needTool) {
+            needTool = false;
+            supplied = false;
+            resetDig();
+            go(State.UNLOAD);
+            return;
+        }
         var inv = worker.getInventory();
         boolean bare = inv.countItem(Items.OAK_FENCE) < 4 && inv.countItem(Items.TORCH) == 0
                 && inv.countItem(Items.COAL) == 0;
@@ -566,7 +579,8 @@ public class MinerWorkGoal extends Goal {
         worker.getLookControl().setLookAt(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5);
         if (!tooling.canHarvest(state)) {
             resetDig();
-            return false; // no pickaxe good enough: waits for one (it has been asked for)
+            needTool = true; // no pickaxe good enough (it broke, say): up to the stores for one, not standing about
+            return false;
         }
         if (!block.equals(digging)) {
             resetDig();
@@ -877,13 +891,7 @@ public class MinerWorkGoal extends Goal {
             go(State.DESCEND);
             return false;
         }
-        if (timer % 20 == 0) {
-            if ((worker.getNavigation().isDone() || timer - lastProgress > 400) && ++stuck > 30) {
-                // Hopelessly stuck (a gravel fall, a dead end): scramble over to the spot.
-                worker.teleportTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
-                stuck = 0;
-            }
-        }
+        // Stuck (a gravel fall, a dead end): he digs or climbs his way out himself (see Unstuck), no teleporting.
         return false;
     }
 
