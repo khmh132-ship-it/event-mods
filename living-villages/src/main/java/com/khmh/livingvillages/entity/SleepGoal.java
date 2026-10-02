@@ -21,7 +21,8 @@ public class SleepGoal extends Goal {
     @Override
     public boolean canUse() {
         // Guards keep watch; everybody else sleeps at night, and hides in bed while the bell rings an alarm.
-        return worker.job() != WorkerJob.GUARD
+        // Starving, he goes to eat first (and not to bed on an empty stomach).
+        return worker.job() != WorkerJob.GUARD && !(worker.isStarving() && !worker.isSleeping())
                 && worker.village().map(v -> worker.level().isNight() || v.alarm()).orElse(false);
     }
 

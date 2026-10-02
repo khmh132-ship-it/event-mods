@@ -70,9 +70,13 @@ class Unloading {
             opened = -1;
         }
         timer++;
-        double reach = target.equals(village.center()) ? 9 : 6.25;
+        boolean bell = target.equals(village.center());
+        // The bell stands on whatever ground there is: after a while anywhere near it will do.
+        double reach = bell ? (timer > GIVE_UP_TICKS ? 144 : 16) : 6.25;
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > reach) {
-            if (timer > GIVE_UP_TICKS) {
+            if (bell && timer > GIVE_UP_TICKS * 4) {
+                worker.teleportTo(target.getX() + 0.5, target.getY() + 1, target.getZ() + 0.5); // cannot get there
+            } else if (!bell && timer > GIVE_UP_TICKS) {
                 skip.add(target);
                 target = null;
             } else if (timer % 20 == 1) {
@@ -165,7 +169,7 @@ class Unloading {
                     box.maxY() - 1, box.maxZ() - 1)) {
                 if (!level.getBlockState(p).isAir() || !level.getBlockState(p.above()).isAir()
                         || !level.getBlockState(p.below()).isSolidRender(level, p.below())
-                        || p.closerThan(b.entrance(), 2.5) || !underRoof(level, p)) {
+                        || p.closerThan(b.entrance(), 2.5) || !underRoof(level, p) || skip.contains(p)) {
                     continue;
                 }
                 int walls = 0;

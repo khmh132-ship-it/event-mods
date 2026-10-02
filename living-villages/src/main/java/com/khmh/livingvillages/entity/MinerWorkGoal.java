@@ -345,6 +345,8 @@ public class MinerWorkGoal extends Goal {
     }
 
     private boolean walkedOut;
+    private double bestDist = Double.MAX_VALUE;
+    private int lastProgress;
 
     /** Timber and torches for the supports, from the stores; asked for if there are none. */
     private void supply(ServerLevel level, Village village) {
@@ -845,12 +847,36 @@ public class MinerWorkGoal extends Goal {
             return true;
         }
         if (!target.equals(walkTarget) || worker.getNavigation().isDone() || timer % 40 == 0) {
+            if (!target.equals(walkTarget)) {
+                bestDist = Double.MAX_VALUE;
+                lastProgress = timer;
+            }
             walkTarget = target;
             BlockPos via = waypoint(level, village, target);
             worker.getNavigation().moveTo(via.getX() + 0.5, via.getY(), via.getZ() + 0.5, 0.6);
         }
+        double d = worker.distanceToSqr(target.getCenter());
+        if (d < bestDist - 1) {
+            bestDist = d;
+            lastProgress = timer;
+        }
+        if (timer - lastProgress > 600 && mine() == null && state == State.DESCEND) {
+            // Cannot reach the top of the quarry: give that spot up and pick another.
+            CompoundTag data = data(village);
+            data.putBoolean("laid", false);
+            data.put("segs", new ListTag());
+            ListTag tried = data.getList("tried", Tag.TAG_LONG);
+            tried.add(net.minecraft.nbt.LongTag.valueOf(target.asLong()));
+            data.put("tried", tried);
+            for (String k : new String[]{"x", "y", "z"}) {
+                data.remove(k);
+            }
+            village.markDirty();
+            go(State.DESCEND);
+            return false;
+        }
         if (timer % 20 == 0) {
-            if (worker.getNavigation().isDone() && ++stuck > 30) {
+            if ((worker.getNavigation().isDone() || timer - lastProgress > 400) && ++stuck > 30) {
                 // Hopelessly stuck (a gravel fall, a dead end): scramble over to the spot.
                 worker.teleportTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
                 stuck = 0;
@@ -1023,6 +1049,8 @@ public class MinerWorkGoal extends Goal {
     private void go(State next) {
         state = next;
         timer = 0;
+        bestDist = Double.MAX_VALUE;
+        lastProgress = 0;
         stuck = 0;
         walkTarget = null;
     }

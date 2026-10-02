@@ -93,7 +93,9 @@ public final class Workers {
         boolean fields = v.buildings().stream().anyMatch(b -> b.isComplete()
                 && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
                 && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));
-        needed.put(WorkerJob.BUTCHER, foodLow && game);
+        // A hunter who finds nothing he can get at is no use as one.
+        boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && w.status().startsWith("none"));
+        needed.put(WorkerJob.BUTCHER, foodLow && game && !idleHunter);
         needed.put(WorkerJob.FARMER, fields && com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v));
         if (foodLow) {
             priority.add(WorkerJob.FARMER);

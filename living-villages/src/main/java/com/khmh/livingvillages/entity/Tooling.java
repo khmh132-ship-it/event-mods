@@ -25,6 +25,22 @@ class Tooling {
     private final VillageWorker worker;
     private final Fetching fetching;
     private long lastRequest = Long.MIN_VALUE / 2;
+    private long lastLogTrip = Long.MIN_VALUE / 2;
+
+    /** The wooden version of this job's tool, or null if the job has none. */
+    private Item woodenTool() {
+        Item basic = worker.job().basicTool();
+        if (basic == null) {
+            return null;
+        }
+        String path = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(basic).getPath();
+        if (!path.startsWith("stone_") && !path.startsWith("wooden_")) {
+            return null;
+        }
+        Item w = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
+                new net.minecraft.resources.ResourceLocation(path.replace("stone_", "wooden_")));
+        return w == null || w == net.minecraft.world.item.Items.AIR ? null : w;
+    }
 
     Tooling(VillageWorker worker) {
         this.worker = worker;
@@ -70,6 +86,30 @@ class Tooling {
         if (inStock != null) {
             fetching.start(Map.of(inStock, 1));
             return Status.BUSY;
+        }
+        // Nobody to make one: two logs make planks and sticks, and those a wooden tool, as a player starts out.
+        Item ownMake = woodenTool();
+        if (ownMake != null) {
+            SimpleContainer pocket = worker.getInventory();
+            for (int i = 0; i < pocket.getContainerSize(); i++) {
+                ItemStack s = pocket.getItem(i);
+                if (s.is(net.minecraft.tags.ItemTags.LOGS) && s.getCount() >= 2) {
+                    s.shrink(2);
+                    pocket.setChanged();
+                    worker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ownMake));
+                    worker.swing(InteractionHand.MAIN_HAND);
+                    return Status.READY;
+                }
+            }
+            if (!fetching.active() && level.getGameTime() - lastLogTrip > 1200) {
+                for (Map.Entry<Item, Integer> e : village.stock(level).totals().entrySet()) {
+                    if (e.getValue() >= 2 && new ItemStack(e.getKey()).is(net.minecraft.tags.ItemTags.LOGS)) {
+                        lastLogTrip = level.getGameTime();
+                        fetching.start(Map.of(e.getKey(), 2));
+                        return Status.BUSY;
+                    }
+                }
+            }
         }
         long now = level.getGameTime();
         if (now - lastRequest > 600) {
