@@ -162,8 +162,10 @@ class Unloading {
                 return s.getItem();
             }
         }
-        return village.storage().count(net.minecraft.world.item.Items.OAK_LOG) >= 2
-                ? net.minecraft.world.item.Items.OAK_LOG : null;
+        // Logs of any tree lying at the bell (a spruce wood has no oak).
+        return village.storage().totals().entrySet().stream()
+                .filter(e -> e.getValue() >= 2 && new ItemStack(e.getKey()).is(net.minecraft.tags.ItemTags.LOGS))
+                .map(java.util.Map.Entry::getKey).findFirst().orElse(null);
     }
 
     /** A free corner on the floor of a finished house (or any building), out of the doorway. */

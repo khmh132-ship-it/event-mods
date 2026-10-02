@@ -490,7 +490,9 @@ public class BuilderWorkGoal extends Goal {
                     return s.getItem();
                 }
             }
-            return stock.count(Items.OAK_PLANKS) > 0 ? Items.OAK_PLANKS : null;
+            return stock.totals().entrySet().stream()
+                    .filter(e -> e.getValue() > 0 && new ItemStack(e.getKey()).is(ItemTags.PLANKS))
+                    .map(java.util.Map.Entry::getKey).findFirst().orElse(null); // any wood's planks
         }
         if (kinds.contains(CostKey.Stone.INSTANCE)) {
             return worker.getInventory().countItem(Items.COBBLESTONE) > 0 || stock.count(Items.COBBLESTONE) > 0
