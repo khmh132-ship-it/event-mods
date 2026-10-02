@@ -108,6 +108,16 @@ public final class VillageEvents {
         v.setAlarm(alarm);
     }
 
+    /** Plain villagers (children, the unemployed) walk like our workers: a block up without hopping, round water. */
+    @SubscribeEvent
+    public static void onJoin(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof Villager v) {
+            v.setMaxUpStep(1.0F);
+            v.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.WATER, 8.0F);
+            v.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.WATER_BORDER, 2.0F);
+        }
+    }
+
     @SubscribeEvent
     public static void onChunkLoad(net.minecraftforge.event.level.ChunkEvent.Load event) {
         if (event.isNewChunk() && event.getLevel() instanceof ServerLevel level) {

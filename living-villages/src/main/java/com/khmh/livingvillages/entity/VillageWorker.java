@@ -64,7 +64,12 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         setCanPickUpLoot(true);
         if (getNavigation() instanceof GroundPathNavigation nav) {
             nav.setCanOpenDoors(true);
+            nav.setCanPassDoors(true);
         }
+        // Up a block like a player on stairs, no hopping; and around water rather than through it.
+        setMaxUpStep(1.0F);
+        setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.WATER, 8.0F);
+        setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.WATER_BORDER, 2.0F);
     }
 
     @Override

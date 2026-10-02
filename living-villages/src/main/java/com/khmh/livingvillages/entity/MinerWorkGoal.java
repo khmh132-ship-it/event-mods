@@ -613,7 +613,7 @@ public class MinerWorkGoal extends Goal {
     /** Swings at a block until it breaks; true once broken. */
     private boolean breakBlock(ServerLevel level, BlockPos block, BlockState state) {
         worker.getLookControl().setLookAt(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5);
-        if (!tooling.canHarvest(state)) {
+        if (!tooling.canHarvest(state) && !tooling.makeStoneTool()) {
             resetDig();
             needTool = true; // no pickaxe good enough (it broke, say): up to the stores for one, not standing about
             return false;
@@ -915,12 +915,8 @@ public class MinerWorkGoal extends Goal {
             walkTarget = null;
             return;
         }
-        if (walk(level, village, spot, 3.5) || ++stuck > 300) {
-            if (stuck > 300) {
-                lights.poll(); // cannot get there
-            }
-            stuck = 0;
-        }
+        // Lit from the edge of his own tunnel, never by climbing down into the cave (he might not get out).
+        lights.poll();
     }
 
     // ---------------------------------------------------------------- danger and moving about

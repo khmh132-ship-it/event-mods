@@ -51,6 +51,42 @@ class Tooling {
         fetching.reset();
     }
 
+    /**
+     * A wooden tool not good enough (iron ore under a wooden pickaxe): three cobblestone and two sticks (or planks
+     * for them) from his pockets make the stone one, in hand, as a player starting out would. True if he did.
+     */
+    boolean makeStoneTool() {
+        ItemStack hand = worker.getMainHandItem();
+        Item stone = Gear.inMaterial(hand.getItem(), "stone_");
+        if (stone == null || Gear.score(new ItemStack(stone)) <= Gear.score(hand)) {
+            return false;
+        }
+        SimpleContainer inv = worker.getInventory();
+        Item rock = inv.countItem(net.minecraft.world.item.Items.COBBLESTONE) >= 3 ? net.minecraft.world.item.Items.COBBLESTONE
+                : inv.countItem(net.minecraft.world.item.Items.COBBLED_DEEPSLATE) >= 3 ? net.minecraft.world.item.Items.COBBLED_DEEPSLATE : null;
+        if (rock == null) {
+            return false;
+        }
+        if (inv.countItem(net.minecraft.world.item.Items.STICK) < 2) {
+            Item planks = null;
+            for (int i = 0; i < inv.getContainerSize(); i++) {
+                if (inv.getItem(i).is(net.minecraft.tags.ItemTags.PLANKS) && inv.getItem(i).getCount() >= 2) {
+                    planks = inv.getItem(i).getItem();
+                }
+            }
+            if (planks == null) {
+                return false;
+            }
+            inv.removeItemType(planks, 2);
+            worker.carry(net.minecraft.world.item.Items.STICK, 4);
+        }
+        inv.removeItemType(rock, 3);
+        inv.removeItemType(net.minecraft.world.item.Items.STICK, 2);
+        worker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(stone));
+        worker.swing(InteractionHand.MAIN_HAND);
+        return true;
+    }
+
     private long lastUpgrade = Long.MIN_VALUE / 2;
 
     /**

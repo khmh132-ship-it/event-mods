@@ -30,6 +30,9 @@ final class Unstuck {
     private final VillageWorker worker;
     private Vec3 lastPos = Vec3.ZERO;
     private int still;
+    private int actions;
+    @Nullable
+    private Vec3 lastWanted;
     @Nullable
     private BlockPos pillar;
     @Nullable
@@ -46,11 +49,22 @@ final class Unstuck {
             finishPillar(level);
             return;
         }
+        // Miners dig their own way (and stand still a lot while they do): this is for everybody else.
         if (wanted == null || level.getGameTime() - wantedAt > 60 || worker.isSleeping()
-                || worker.position().distanceTo(wanted) < 2.0) {
+                || worker.position().distanceTo(wanted) < 2.0
+                // only when truly trapped: no path at all, or one that stops short (a pit, a bank)
+                || !(worker.getNavigation() instanceof WorkerNavigation nav && nav.noWay())) {
             still = 0;
+            actions = 0;
             resetBreak(level);
             return;
+        }
+        if (!wanted.equals(lastWanted)) {
+            lastWanted = wanted;
+            actions = 0;
+        }
+        if (actions >= 12) {
+            return; // tried enough on the way to this spot: no digging the whole hillside away
         }
         if (worker.tickCount % 20 == 0) {
             // Bobbing in water is no progress: only ground covered counts.
@@ -58,7 +72,7 @@ final class Unstuck {
             still = dx * dx + dz * dz < 0.16 ? still + 1 : 0;
             lastPos = worker.position();
         }
-        if (still < 5) { // five seconds without getting anywhere
+        if (still < 4) { // a few seconds trapped
             return;
         }
         BlockPos feet = worker.blockPosition();
@@ -86,7 +100,8 @@ final class Unstuck {
         // Out of water up a bank, too: the block goes where he swims.
         boolean footing = worker.onGround() || worker.isInWater();
         boolean upwardOrBank = upward || worker.isInWater() && wanted.y > worker.getY() + 0.5;
-        if ((upwardOrBank || still > 10) && footing && level.getBlockState(feet.above(2)).isAir()
+        double flat = Math.sqrt(dx * dx + dz * dz);
+        if (upwardOrBank && flat < 8 && footing && level.getBlockState(feet.above(2)).isAir()
                 && (level.getBlockState(feet).isAir() || level.getBlockState(feet).canBeReplaced())) {
             ItemStack fill = fill();
             if (fill != null && fill.getItem() instanceof BlockItem bi) {
@@ -98,6 +113,7 @@ final class Unstuck {
                 worker.getInventory().setChanged();
                 worker.swing(InteractionHand.MAIN_HAND);
                 still = 3;
+                actions++;
             }
         }
     }
@@ -136,6 +152,7 @@ final class Unstuck {
             level.destroyBlock(p, true, worker);
             resetBreak(level);
             still = 3; // try walking again before the next block
+            actions++;
         }
     }
 
@@ -149,6 +166,14 @@ final class Unstuck {
 
     /** Natural ground, leaves, snow: yes. Anything of a village building, or unbreakable: no. */
     private boolean breakable(ServerLevel level, BlockPos p, BlockState s) {
+        if (p.getY() < worker.blockPosition().getY()) {
+            return false; // never digging down
+        }
+        for (Direction d : Direction.values()) {
+            if (!level.getFluidState(p.relative(d)).isEmpty()) {
+                return false; // nor opening a way for water or lava
+            }
+        }
         if (s.getDestroySpeed(level, p) < 0 || s.getDestroySpeed(level, p) > 20 || !s.getFluidState().isEmpty()) {
             return false;
         }
