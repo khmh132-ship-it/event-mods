@@ -419,7 +419,9 @@ public class MinerWorkGoal extends Goal {
         var inv = worker.getInventory();
         boolean bare = inv.countItem(Items.OAK_FENCE) < 4 && inv.countItem(Items.TORCH) == 0
                 && inv.countItem(Items.COAL) == 0;
-        if (worker.carried() >= LOAD || worker.inventoryFull() || bare && worker.carried() >= 64) {
+        // From a quarry it is a long way up: he brings stone up in smaller loads so the village sees some.
+        int load = mine() != null ? LOAD : 128;
+        if (worker.carried() >= load || worker.inventoryFull() || bare && worker.carried() >= 64) {
             if (bare) {
                 supplied = false;
             }

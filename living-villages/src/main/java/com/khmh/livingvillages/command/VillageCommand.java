@@ -67,7 +67,7 @@ public final class VillageCommand {
                                 var st = level.getBlockState(p);
                                 if (st.is(Blocks.OAK_FENCE) || st.is(Blocks.OAK_PLANKS) || st.is(Blocks.WALL_TORCH)
                                         || st.is(Blocks.TORCH) || st.is(Blocks.COBBLESTONE) || st.is(Blocks.IRON_ORE)
-                                        || st.is(Blocks.COAL_ORE) || st.isAir()) {
+                                        || st.is(Blocks.COAL_ORE) || st.is(Blocks.FARMLAND) || st.is(Blocks.WHEAT) || st.is(Blocks.WATER)) {
                                     n.merge(net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(st.getBlock()).getPath(), 1, Integer::sum);
                                 }
                             }
@@ -154,6 +154,7 @@ public final class VillageCommand {
         say(ctx, String.format("Village %s at %d %d %d, radius %d, level %d, population %d, beds %d",
                 shortId(v), c.getX(), c.getY(), c.getZ(), v.radius(), v.level(), v.population(), v.beds()));
         say(ctx, "Professions: " + v.professions());
+        say(ctx, "Jobs wanted (priority order): " + v.data().getString("exchange"));
         long done = v.buildings().stream().filter(Building::isComplete).count();
         say(ctx, String.format("Buildings: %d finished, %d under construction%s", done,
                 v.buildings().size() - done, v.waitingFor() == null ? "" : ", saving up for " + v.waitingFor()));

@@ -129,6 +129,11 @@ public final class Workers {
         if (!foodLow) {
             priority.add(WorkerJob.BUTCHER);
         }
+        StringBuilder board = new StringBuilder();
+        for (WorkerJob j : priority) {
+            board.append(j.name().toLowerCase()).append(needed.getOrDefault(j, false) ? "+ " : "- ");
+        }
+        v.data().putString("exchange", board.toString().trim() + (foodLow ? " (food low)" : ""));
         for (int i = 0; i < priority.size(); i++) {
             WorkerJob job = priority.get(i);
             if (!villageWide(level, v, villagers, workers, job, needed.get(job))) {

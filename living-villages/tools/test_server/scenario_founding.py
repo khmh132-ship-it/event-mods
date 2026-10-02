@@ -28,6 +28,7 @@ with TestServer(CFG, log_name='test_founding.log') as s:
     print(at(s, 'found'))
     for minute in range(int(__import__('sys').argv[1]) if len(__import__('sys').argv) > 1 else 12):
         time.sleep(60)
+        s.cmd('fill -24 62 -24 24 67 24 wheat[age=7] replace wheat', check=False)  # no random ticks without players
         info = at(s, 'info')
         print(f'--- {minute + 1} min (game {(minute + 1) * SPEED} min), time', s.cmd('time query daytime', check=False).strip())
         print(info)
