@@ -140,6 +140,9 @@ public final class Construction {
         if (MaterialCost.of(state).isEmpty()) {
             return null;
         }
+        if (state.getBlock() instanceof net.minecraft.world.level.block.BedBlock) {
+            return Items.WHITE_BED; // any bed will do; the colour is the template's
+        }
         Item item = state.getBlock().asItem();
         return item == Items.AIR ? null : item;
     }
