@@ -89,7 +89,8 @@ public final class Workers {
         v.data().putBoolean("woodInHand", woodInHand);
         // Food: a hunter while the stores are thin and there is game about, a farmer once there are fields.
         int food = v.stock(level).totals().entrySet().stream()
-                .filter(e -> e.getKey().isEdible()).mapToInt(Map.Entry::getValue).sum();
+                .filter(e -> e.getKey().isEdible()).mapToInt(Map.Entry::getValue).sum()
+                + v.stock(level).count(net.minecraft.world.item.Items.WHEAT) / 3; // bread to be
         boolean foodLow = food < Math.max(2, v.population()) * 6;
         boolean game = !level.getEntitiesOfClass(net.minecraft.world.entity.animal.Animal.class,
                 new net.minecraft.world.phys.AABB(v.center()).inflate(v.radius() + 16), a -> a.isAlive() && !a.isBaby()
