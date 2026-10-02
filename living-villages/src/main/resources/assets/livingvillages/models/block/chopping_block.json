@@ -88,7 +88,13 @@
       ],
       "faces": {
         "east": {
-          "texture": "#axe"
+          "texture": "#axe",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "west": {
           "texture": "#axe",

@@ -6,7 +6,7 @@
     "side": "minecraft:block/spruce_planks",
     "leg": "minecraft:block/stripped_spruce_log",
     "ingot": "minecraft:item/iron_ingot",
-    "stick": "minecraft:item/stick"
+    "stick": "minecraft:item/shears"
   },
   "elements": [
     {
@@ -238,7 +238,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#ingot"
+          "texture": "#ingot",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         }
       }
     },
@@ -255,7 +261,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#stick"
+          "texture": "#stick",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         }
       }
     }
