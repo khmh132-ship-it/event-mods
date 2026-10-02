@@ -16,9 +16,9 @@ class WorkerNavigation extends GroundPathNavigation {
         setMaxVisitedNodesMultiplier(4.0F); // looks harder for a way round before giving up
     }
 
-    /** People with work to do walk briskly. */
+    /** An ordinary walking pace, about that of a plain villager; the goals' own speeds only say who hurries. */
     private static double brisk(double speed) {
-        return Math.min(1.0, speed * 1.3);
+        return speed * 0.85;
     }
 
     @Override
