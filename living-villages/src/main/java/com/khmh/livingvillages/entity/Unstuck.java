@@ -53,7 +53,9 @@ final class Unstuck {
             return;
         }
         if (worker.tickCount % 20 == 0) {
-            still = worker.position().distanceTo(lastPos) < 0.4 ? still + 1 : 0;
+            // Bobbing in water is no progress: only ground covered counts.
+            double dx = worker.getX() - lastPos.x, dz = worker.getZ() - lastPos.z;
+            still = dx * dx + dz * dz < 0.16 ? still + 1 : 0;
             lastPos = worker.position();
         }
         if (still < 5) { // five seconds without getting anywhere
@@ -81,7 +83,11 @@ final class Unstuck {
             }
         }
         // Climb: jump and put a block underfoot.
-        if ((upward || still > 10) && worker.onGround() && level.getBlockState(feet.above(2)).isAir()) {
+        // Out of water up a bank, too: the block goes where he swims.
+        boolean footing = worker.onGround() || worker.isInWater();
+        boolean upwardOrBank = upward || worker.isInWater() && wanted.y > worker.getY() + 0.5;
+        if ((upwardOrBank || still > 10) && footing && level.getBlockState(feet.above(2)).isAir()
+                && (level.getBlockState(feet).isAir() || level.getBlockState(feet).canBeReplaced())) {
             ItemStack fill = fill();
             if (fill != null && fill.getItem() instanceof BlockItem bi) {
                 // Jump-and-place in one go: up a block, the block underfoot.
@@ -162,7 +168,7 @@ final class Unstuck {
         var inv = worker.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
-            if (!s.isEmpty() && FILL.contains(s.getItem())) {
+            if (!s.isEmpty() && (FILL.contains(s.getItem()) || s.is(net.minecraft.tags.ItemTags.LOGS))) {
                 return s;
             }
         }
