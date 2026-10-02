@@ -73,7 +73,13 @@ public final class Workers {
         // A builder standing about waiting for materials is better off fetching them himself.
         boolean stalled = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUILDER
                 && w.status().contains("waiting for materials"));
-        needed.put(WorkerJob.BUILDER, building && !stalled);
+        // ...and once he has gone for them, he keeps at it a good while before coming back to wait again.
+        if (stalled) {
+            v.data().putLong("builderStall", level.getGameTime());
+        }
+        boolean recentlyStalled = level.getGameTime() - v.data().getLong("builderStall") < 6000
+                && v.data().contains("builderStall");
+        needed.put(WorkerJob.BUILDER, building && !stalled && !recentlyStalled);
         needed.put(WorkerJob.APPRENTICE, orders);
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
