@@ -30,6 +30,16 @@ public final class Workers {
     }
 
     static void hire(ServerLevel level, Village v, List<Villager> villagers, List<VillageWorker> workers) {
+        // How long each has been standing about: a moment between two tasks is not idleness.
+        for (VillageWorker w : workers) {
+            if (idleNow(w)) {
+                if (!w.getPersistentData().contains("lvIdleSince")) {
+                    w.getPersistentData().putLong("lvIdleSince", level.getGameTime());
+                }
+            } else {
+                w.getPersistentData().remove("lvIdleSince");
+            }
+        }
         // Vanilla professionals come under the village first: they keep their looks and do their job for real.
         for (Villager farmer : List.copyOf(villagers)) {
             if (!farmer.isAlive() || farmer.isBaby()) {
@@ -84,7 +94,7 @@ public final class Workers {
         needed.put(WorkerJob.BUILDER, building && !stalled && !recentlyStalled);
         // An apprentice with nothing he can make is no use as one.
         boolean idleApprentice = workers.stream().anyMatch(w -> w.job() == WorkerJob.APPRENTICE
-                && w.status().startsWith("pick"));
+                && idleFor(level, w) >= 1200);
         needed.put(WorkerJob.APPRENTICE, orders && !idleApprentice);
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
@@ -106,7 +116,7 @@ public final class Workers {
                 && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
                 && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));
         // A hunter who finds nothing he can get at is no use as one.
-        boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && w.status().startsWith("none"));
+        boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && idleFor(level, w) >= 1200);
         needed.put(WorkerJob.BUTCHER, foodLow && game && !idleHunter);
         needed.put(WorkerJob.FARMER, fields && com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v));
         if (foodLow) {
@@ -192,13 +202,19 @@ public final class Workers {
             return false;
         }
         long inJob = level.getGameTime() - w.getPersistentData().getLong("lvJobSince");
-        // Standing about with nothing to do: free to go, once he has had a fair minute to find his feet in the job
-        // (a man just moved over has not started yet, which is not the same as having nothing to do).
-        if (inJob >= 1800 && (w.status().startsWith("pick") || w.status().startsWith("none")
-                || w.status().startsWith("idle"))) {
-            return true;
-        }
-        return inJob >= 9600;
+        // Nothing to do for a good minute on end, and a fair while in the job: free to go sooner.
+        return inJob >= 9600 || inJob >= 2400 && idleFor(level, w) >= 1200;
+    }
+
+    private static boolean idleNow(VillageWorker w) {
+        String s = w.status();
+        return s.startsWith("pick") || s.startsWith("none") || s.startsWith("idle");
+    }
+
+    /** Ticks he has been idle without a break (0 if he is busy). */
+    private static long idleFor(ServerLevel level, VillageWorker w) {
+        return w.getPersistentData().contains("lvIdleSince")
+                ? level.getGameTime() - w.getPersistentData().getLong("lvIdleSince") : 0;
     }
 
     /** A gatherer on his way back with a load: he finishes the trip first. */
@@ -213,13 +229,13 @@ public final class Workers {
 
     /**
      * Moves a worker from a less pressing village-wide job (one not needed at all first) over to {@code job}.
-     * At most once every two minutes per village, so people do not flap between jobs.
+     * At most once every four minutes per village, so people do not flap between jobs.
      */
     private static boolean reassign(ServerLevel level, Village v, List<VillageWorker> workers, WorkerJob job,
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 2400) {
+        if (now - v.data().getLong("lastReassign") < 4800) {
             return false;
         }
         VillageWorker donor = null;
