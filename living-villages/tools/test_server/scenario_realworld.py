@@ -22,6 +22,6 @@ with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True,
       for m in re.finditer(r'bell (-?\d+) (-?\d+) (-?\d+)', s.cmd('village list', check=False)):
         x, y, z = m.groups()
         print('--', minute, x, y, z)
-        print(s.cmd(f'execute positioned {x} {y} {z} run village info', check=False).split('Stock')[0])
+        print(s.cmd(f'execute positioned {x} {y} {z} run village info', check=False).split("\n\n")[0])
         print(s.cmd(f'execute positioned {x} {y} {z} run village requests', check=False))
         print(s.cmd(f'execute positioned {x} {y} {z} run village workers', check=False))
