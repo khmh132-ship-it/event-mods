@@ -196,14 +196,17 @@ public final class Workers {
 
     }
 
-    /** Eight minutes at least in a job before being moved again: walking about between jobs is no work. */
+    /** Ten minutes at least in a job before being moved again: walking about between jobs is no work. */
     private static boolean settled(ServerLevel level, VillageWorker w) {
         if (w.getPersistentData().getBoolean("lvPermanent")) {
             return false;
         }
         long inJob = level.getGameTime() - w.getPersistentData().getLong("lvJobSince");
         // Nothing to do for a good minute on end, and a fair while in the job: free to go sooner.
-        return inJob >= 9600 || inJob >= 2400 && idleFor(level, w) >= 1200;
+        if (w.isSleeping()) {
+            return false; // nobody is woken to be told he has a new trade; it can wait till morning
+        }
+        return inJob >= 12000 || inJob >= 2400 && idleFor(level, w) >= 1200;
     }
 
     private static boolean idleNow(VillageWorker w) {
@@ -259,6 +262,8 @@ public final class Workers {
             return false;
         }
         WorkerJob from = donor.job();
+        String why = "after " + (now - donor.getPersistentData().getLong("lvJobSince")) / 20 + "s, idle "
+                + idleFor(level, donor) / 20 + "s, '" + donor.status() + "', " + v.data().getString("exchange");
         v.data().remove("worker_" + from.name().toLowerCase());
         donor.workplace().ifPresent(b -> b.setWorkerId(null));
         Building home = v.buildings().stream()
@@ -272,8 +277,8 @@ public final class Workers {
         v.data().putUUID("worker_" + job.name().toLowerCase(), donor.getUUID());
         v.data().putLong("lastReassign", now);
         v.markDirty();
-        LivingVillages.LOGGER.info("Village {}: a {} turns {}", v.id().toString().substring(0, 8),
-                from.name().toLowerCase(), job.name().toLowerCase());
+        LivingVillages.LOGGER.info("Village {}: a {} turns {} ({})", v.id().toString().substring(0, 8),
+                from.name().toLowerCase(), job.name().toLowerCase(), why);
         return true;
     }
 
