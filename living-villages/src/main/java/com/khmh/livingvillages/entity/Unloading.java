@@ -108,6 +108,7 @@ class Unloading {
             return true;
         }
         if (opened < 0) {
+            compostSurplus(level, village);
             ContainerLid.open(level, target);
             opened = timer;
             return false;
@@ -268,6 +269,34 @@ class Unloading {
         }
         inv.setChanged();
         return all;
+    }
+
+    /** Plenty in store already: the rest goes on the compost heap instead of filling chest after chest. */
+    private static final java.util.Map<net.minecraft.world.item.Item, Integer> PLENTY = java.util.Map.of(
+            net.minecraft.world.item.Items.WHEAT_SEEDS, 128,
+            net.minecraft.world.item.Items.BEETROOT_SEEDS, 64,
+            net.minecraft.world.item.Items.PUMPKIN_SEEDS, 32,
+            net.minecraft.world.item.Items.MELON_SEEDS, 32,
+            net.minecraft.world.item.Items.ROTTEN_FLESH, 0,
+            net.minecraft.world.item.Items.POISONOUS_POTATO, 0,
+            net.minecraft.world.item.Items.SPIDER_EYE, 16);
+    private static final int PLENTY_SAPLINGS = 48;
+
+    private void compostSurplus(ServerLevel level, Village village) {
+        var stock = village.stock(level);
+        SimpleContainer inv = worker.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.isEmpty() || keep.containsKey(s.getItem())) {
+                continue;
+            }
+            Integer cap = s.is(net.minecraft.tags.ItemTags.SAPLINGS) ? Integer.valueOf(PLENTY_SAPLINGS)
+                    : PLENTY.get(s.getItem());
+            if (cap != null && stock.count(s.getItem()) >= cap) {
+                inv.setItem(i, ItemStack.EMPTY);
+            }
+        }
+        inv.setChanged();
     }
 
     private void putInBuffer(Village village) {
