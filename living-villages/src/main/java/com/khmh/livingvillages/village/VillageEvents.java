@@ -143,6 +143,14 @@ public final class VillageEvents {
     private static void discover(ServerLevel level, VillageManager manager) {
         for (ServerPlayer player : level.players()) {
             discoverAround(level, manager, player.blockPosition(), DISCOVERY_RADIUS);
+            // A village somebody has been to is one the loader keeps going while they are away.
+            for (Village v : manager.all()) {
+                if (!v.data().getBoolean("visited")
+                        && v.center().distSqr(player.blockPosition()) < (double) (v.radius() + 32) * (v.radius() + 32)) {
+                    v.data().putBoolean("visited", true);
+                    v.markDirty();
+                }
+            }
         }
     }
 

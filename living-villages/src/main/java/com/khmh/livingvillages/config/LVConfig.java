@@ -11,6 +11,7 @@ public final class LVConfig {
     public static final ForgeConfigSpec.BooleanValue KEEP_LOADED;
     public static final ForgeConfigSpec.IntValue MAX_LOADED_VILLAGES;
     public static final ForgeConfigSpec.IntValue LOADED_CHUNK_RADIUS;
+    public static final ForgeConfigSpec.BooleanValue LOAD_VISITED_ONLY;
     public static final ForgeConfigSpec.IntValue FOUNDING_SPACING;
     public static final ForgeConfigSpec.IntValue PRODUCTION_INTERVAL;
     public static final ForgeConfigSpec.DoubleValue PRODUCTION_MULTIPLIER;
@@ -48,6 +49,9 @@ public final class LVConfig {
                 .defineInRange("maxLoadedVillages", 8, 0, 256);
         LOADED_CHUNK_RADIUS = b.comment("Largest radius, in chunks, kept loaded around a village's bell")
                 .defineInRange("loadedChunkRadius", 5, 1, 16);
+        LOAD_VISITED_ONLY = b.comment("Only villages a player has been to are kept loaded; the rest grow in the background",
+                        "simulation until someone comes by (keeps exploring cheap on servers)")
+                .define("loadVisitedOnly", true);
         b.pop();
         b.push("founding");
         NATURAL_FOUNDING = b.comment("New villages appear as small camps near players (vanilla villages are not generated)")

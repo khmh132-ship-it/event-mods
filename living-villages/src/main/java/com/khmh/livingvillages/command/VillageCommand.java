@@ -87,6 +87,7 @@ public final class VillageCommand {
                     BlockPos at = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                             BlockPos.containing(ctx.getSource().getPosition()));
                     Village v = com.khmh.livingvillages.village.Founding.found(level, VillageManager.get(level), at);
+                    v.data().putBoolean("visited", true); // founded by hand: somebody is plainly there
                     say(ctx, "Camp founded: " + shortId(v));
                     return 1;
                 }))

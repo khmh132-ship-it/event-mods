@@ -46,7 +46,9 @@ public final class VillageLoader {
         int max = LVConfig.MAX_LOADED_VILLAGES.get();
         int cap = LVConfig.LOADED_CHUNK_RADIUS.get();
         // The biggest first; one already held keeps its place against one merely as big (no swapping on ties).
+        boolean visitedOnly = LVConfig.LOAD_VISITED_ONLY.get();
         List<Village> chosen = on ? manager.all().stream()
+                .filter(v -> !visitedOnly || v.data().getBoolean("visited"))
                 .sorted(Comparator.comparingInt((Village v) -> v.population() * 2 + (FORCED.containsKey(v.id()) ? 1 : 0))
                         .reversed()).limit(max).toList() : List.of();
         int budget = NEW_PER_SCAN; // chunks newly taken on per scan: a few at a time, never a heap at once
