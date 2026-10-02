@@ -4,7 +4,7 @@
     "particle": "minecraft:block/oak_log",
     "bark": "minecraft:block/oak_log",
     "rings": "minecraft:block/oak_log_top",
-    "axe": "minecraft:item/iron_axe"
+    "axe": "livingvillages:block/chopping_axe"
   },
   "elements": [
     {
@@ -78,42 +78,33 @@
     {
       "from": [
         8,
-        6,
-        0
+        7,
+        2
       ],
       "to": [
         8,
-        22,
-        16
+        23,
+        18
       ],
       "faces": {
         "east": {
           "texture": "#axe",
           "uv": [
-            0,
-            0,
             16,
+            0,
+            0,
             16
           ]
         },
         "west": {
           "texture": "#axe",
           "uv": [
+            0,
+            0,
             16,
-            0,
-            0,
             16
           ]
         }
-      },
-      "rotation": {
-        "origin": [
-          8,
-          8,
-          8
-        ],
-        "axis": "x",
-        "angle": -22.5
       }
     }
   ],
