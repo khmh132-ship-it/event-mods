@@ -229,6 +229,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
 
     /** Walks to the warehouse and puts everything into the chests; true once done. */
     boolean unloadTick() {
+        unloading.keep(java.util.Map.of()); // a former job's keepings do not stick
         return unloading.tick();
     }
 
