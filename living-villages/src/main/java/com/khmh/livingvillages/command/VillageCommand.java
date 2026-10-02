@@ -68,7 +68,8 @@ public final class VillageCommand {
                                 if (st.is(Blocks.OAK_FENCE) || st.is(Blocks.OAK_PLANKS) || st.is(Blocks.OAK_LOG) || st.is(Blocks.OAK_STAIRS) || st.is(Blocks.OAK_SLAB) || st.is(Blocks.CHEST) || st.is(Blocks.WALL_TORCH)
                                         || st.is(Blocks.TORCH) || st.is(Blocks.COBBLESTONE) || st.is(Blocks.IRON_ORE)
                                         || st.is(Blocks.COAL_ORE) || st.is(Blocks.FARMLAND) || st.is(Blocks.WHEAT) || st.is(Blocks.WATER)) {
-                                    n.merge(net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(st.getBlock()).getPath(), 1, Integer::sum);
+                                    n.merge(net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(st.getBlock()).getPath()
+                                            + (st.is(Blocks.WHEAT) ? st.getValue(net.minecraft.world.level.block.CropBlock.AGE) : ""), 1, Integer::sum);
                                 }
                             }
                             say(ctx, n.toString());

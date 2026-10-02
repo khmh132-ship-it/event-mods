@@ -145,6 +145,13 @@ public final class Workers {
         if (!foodLow) {
             priority.add(WorkerJob.BUTCHER);
         }
+        // A job whose last holder stood idle and was moved off is not handed out again for five minutes.
+        for (WorkerJob j : priority) {
+            String key = "idle_" + j.name().toLowerCase();
+            if (v.data().contains(key) && level.getGameTime() - v.data().getLong(key) < 6000) {
+                needed.put(j, false);
+            }
+        }
         StringBuilder board = new StringBuilder();
         for (WorkerJob j : priority) {
             board.append(j.name().toLowerCase()).append(needed.getOrDefault(j, false) ? "+ " : "- ");
@@ -262,6 +269,10 @@ public final class Workers {
             return false;
         }
         WorkerJob from = donor.job();
+        if (idleFor(level, donor) >= 1200) {
+            // Moved off for want of anything to do: that job is not wanted again for a while.
+            v.data().putLong("idle_" + from.name().toLowerCase(), now);
+        }
         String why = "after " + (now - donor.getPersistentData().getLong("lvJobSince")) / 20 + "s, idle "
                 + idleFor(level, donor) / 20 + "s, '" + donor.status() + "', " + v.data().getString("exchange");
         v.data().remove("worker_" + from.name().toLowerCase());

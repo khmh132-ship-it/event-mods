@@ -132,6 +132,10 @@ public class AnimalWorkGoal extends Goal {
     }
 
     private void decide(ServerLevel level, Village village) {
+        if (level.getGameTime() - unreachableSince > 6000) { // they wander: worth another try after a while
+            unreachable.clear();
+            unreachableSince = level.getGameTime();
+        }
         List<BoundingBox> pens = pens(village);
         List<Animal> around = level.getEntitiesOfClass(Animal.class, new AABB(village.center()).inflate(RANGE, 24, RANGE),
                 a -> a.isAlive() && !unreachable.contains(a.getUUID()) && (a instanceof Sheep || a instanceof Cow || a instanceof Pig
@@ -328,6 +332,7 @@ public class AnimalWorkGoal extends Goal {
     }
 
     private final java.util.Set<java.util.UUID> unreachable = new java.util.HashSet<>();
+    private long unreachableSince;
 
     private boolean approach(BlockPos target, double reach) {
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY(), target.getZ() + 0.5) <= reach * reach) {
