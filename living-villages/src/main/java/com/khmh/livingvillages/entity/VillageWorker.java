@@ -301,6 +301,9 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         if (tickCount % 1200 == 0 && food > 0 && !isSleeping()) {
             food--; // about a meal every ten minutes of work
         }
+        if (tickCount % 40 == 0 && level() instanceof ServerLevel sl) {
+            village().ifPresent(v -> com.khmh.livingvillages.village.VillageLoader.follow(sl, this, v));
+        }
         if (job() == WorkerJob.BUILDER && tickCount % 20 == 0) {
             village().ifPresent(v -> v.noteBuilder(level().getGameTime()));
         }
@@ -320,6 +323,14 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
                 village().ifPresent(v -> setWorkplace(v, workplace().orElse(null)));
             }
         }
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (level() instanceof ServerLevel sl && reason.shouldDestroy()) {
+            com.khmh.livingvillages.village.VillageLoader.release(sl, this);
+        }
+        super.remove(reason);
     }
 
     /** Turns back into a plain villager. */

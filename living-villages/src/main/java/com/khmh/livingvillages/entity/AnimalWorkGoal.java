@@ -36,7 +36,7 @@ import java.util.Map;
  * stock), and smokes the meat in a smoker. Everything dropped is picked up and taken to the warehouse.
  */
 public class AnimalWorkGoal extends Goal {
-    private static final int RANGE = 64; // a hunter goes looking a good way round
+    private static final int RANGE = 64; // a hunter goes looking a good way round the village (not round himself: he would wander off for good)
     private static final int KEEP_IN_PEN = 4;
     private static final int LOAD = 32;
     /** A player's reach: enough to shear or feed an animal over a fence. */
@@ -133,7 +133,7 @@ public class AnimalWorkGoal extends Goal {
 
     private void decide(ServerLevel level, Village village) {
         List<BoundingBox> pens = pens(village);
-        List<Animal> around = level.getEntitiesOfClass(Animal.class, new AABB(worker.blockPosition()).inflate(RANGE),
+        List<Animal> around = level.getEntitiesOfClass(Animal.class, new AABB(village.center()).inflate(RANGE, 24, RANGE),
                 a -> a.isAlive() && !unreachable.contains(a.getUUID()) && (a instanceof Sheep || a instanceof Cow || a instanceof Pig
                         || a instanceof Chicken || a instanceof Rabbit));
         if (worker.carried() >= LOAD || worker.inventoryFull()) {
@@ -276,7 +276,9 @@ public class AnimalWorkGoal extends Goal {
     }
 
     private void cull(ServerLevel level) {
-        if (animal == null || !animal.isAlive() || timer > 600) {
+        boolean strayed = worker.village().map(v -> animal != null
+                && animal.blockPosition().distSqr(v.center()) > (double) (RANGE + 16) * (RANGE + 16)).orElse(false);
+        if (animal == null || !animal.isAlive() || timer > 600 || strayed) { // (not off after it into the wilds)
             if (animal != null && animal.isAlive()) {
                 unreachable.add(animal.getUUID()); // up a cliff, across water: try another one
             }

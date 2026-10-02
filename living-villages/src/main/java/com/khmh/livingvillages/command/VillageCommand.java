@@ -79,6 +79,9 @@ public final class VillageCommand {
                     ServerLevel level = ctx.getSource().getLevel();
                     Village v = com.khmh.livingvillages.village.Founding.tryAround(level, VillageManager.get(level),
                             BlockPos.containing(ctx.getSource().getPosition()));
+                    if (v != null) {
+                        v.data().putBoolean("visited", true);
+                    }
                     say(ctx, v == null ? "No camp (village too near, or no suitable ground)" : "Camp at " + v.center().toShortString());
                     return v == null ? 0 : 1;
                 }))

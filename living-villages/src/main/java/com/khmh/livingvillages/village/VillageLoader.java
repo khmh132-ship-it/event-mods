@@ -33,6 +33,8 @@ public final class VillageLoader {
     public static void registerValidation() {
         ForgeChunkManager.setForcedChunkLoadingCallback(LivingVillages.MODID, (level, helper) -> {
             VillageManager manager = VillageManager.get(level);
+            // Tickets that followed workers about: they are taken out afresh as the workers move.
+            helper.getEntityTickets().keySet().forEach(helper::removeAllTickets);
             helper.getBlockTickets().forEach((owner, tickets) -> {
                 if (manager.byBell(owner).isEmpty()) {
                     helper.removeAllTickets(owner);
@@ -103,5 +105,53 @@ public final class VillageLoader {
 
     public static void clear() {
         FORCED.clear();
+        AWAY.clear();
+    }
+
+    /** Workers out past their village's loaded ground (a hunter after game, a miner deep in his tunnel) -> held chunk. */
+    private static final Map<UUID, Long> AWAY = new HashMap<>();
+
+    /**
+     * Called by a worker now and then: out past the village's loaded ground, the chunks round him are held too,
+     * or he would stop dead the moment he walked off it with nobody about, and stay that way for good.
+     */
+    public static void follow(ServerLevel level, net.minecraft.world.entity.Entity worker, Village v) {
+        Long held = AWAY.get(worker.getUUID());
+        ChunkPos at = new ChunkPos(worker.blockPosition());
+        var forced = FORCED.get(v.id());
+        // Near the edge already counts: one step over it and he could no longer ask.
+        boolean away = false;
+        for (int dx = -1; dx <= 1 && worker.isAlive() && forced != null && !away; dx++) {
+            for (int dz = -1; dz <= 1 && !away; dz++) {
+                away = !forced.getValue().contains(ChunkPos.asLong(at.x + dx, at.z + dz));
+            }
+        }
+        if (away && held != null && held == at.toLong()) {
+            return;
+        }
+        if (held != null) {
+            hold(level, worker, new ChunkPos(held), false);
+            AWAY.remove(worker.getUUID());
+        }
+        if (away) {
+            hold(level, worker, at, true);
+            AWAY.put(worker.getUUID(), at.toLong());
+        }
+    }
+
+    /** A worker who died or retired: whatever was held round him is let go. */
+    public static void release(ServerLevel level, net.minecraft.world.entity.Entity worker) {
+        Long held = AWAY.remove(worker.getUUID());
+        if (held != null) {
+            hold(level, worker, new ChunkPos(held), false);
+        }
+    }
+
+    private static void hold(ServerLevel level, net.minecraft.world.entity.Entity worker, ChunkPos c, boolean add) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                ForgeChunkManager.forceChunk(level, LivingVillages.MODID, worker, c.x + dx, c.z + dz, add, true);
+            }
+        }
     }
 }
