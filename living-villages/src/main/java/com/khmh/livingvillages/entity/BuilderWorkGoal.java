@@ -46,7 +46,7 @@ public class BuilderWorkGoal extends Goal {
     private static final int GIVE_UP_TICKS = 400;
     private static final int LOOKAHEAD = 64;
     /** How long he waits for a requested item before making do. */
-    private static final int SUBSTITUTE_TICKS = 2400;
+    private static final int SUBSTITUTE_TICKS = 1200;
 
     private final VillageWorker worker;
     private final Fetching fetching;

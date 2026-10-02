@@ -180,9 +180,9 @@ public final class Workers {
 
     }
 
-    /** Three minutes at least in a job before being moved again: walking about between jobs is no work. */
+    /** Eight minutes at least in a job before being moved again: walking about between jobs is no work. */
     private static boolean settled(ServerLevel level, VillageWorker w) {
-        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 3600;
+        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 9600;
     }
 
     /** A gatherer on his way back with a load: he finishes the trip first. */
@@ -203,7 +203,7 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 1200) {
+        if (now - v.data().getLong("lastReassign") < 2400) {
             return false;
         }
         VillageWorker donor = null;
