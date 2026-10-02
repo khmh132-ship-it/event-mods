@@ -40,7 +40,28 @@ public final class Stockpile implements Stock {
     }
 
     /** Chests and barrels that make up the store, nearest to the bell first. */
+    /** Where a village's chests are, looked up at most once every two seconds: the search goes block by block. */
+    private static final java.util.Map<java.util.UUID, java.util.Map.Entry<Long, List<BlockPos>>> FOUND =
+            new java.util.HashMap<>();
+
     public static List<BlockPos> containers(ServerLevel level, Village village) {
+        long now = level.getGameTime();
+        var known = FOUND.get(village.id());
+        if (known != null && now - known.getKey() < 40 && now >= known.getKey()) {
+            return known.getValue();
+        }
+        List<BlockPos> out = search(level, village);
+        out = List.copyOf(out);
+        FOUND.put(village.id(), java.util.Map.entry(now, out));
+        return out;
+    }
+
+    /** A chest was just put in or taken away: look again next time. */
+    public static void forget(Village village) {
+        FOUND.remove(village.id());
+    }
+
+    private static List<BlockPos> search(ServerLevel level, Village village) {
         List<Building> stores = new ArrayList<>();
         for (Building b : village.buildings()) {
             if (b.isComplete() && "warehouse".equals(b.type() == null ? null : b.type().group())) {

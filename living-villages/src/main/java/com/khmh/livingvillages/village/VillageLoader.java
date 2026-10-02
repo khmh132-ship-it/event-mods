@@ -24,6 +24,8 @@ public final class VillageLoader {
     /** village -> (bell, forced chunks) */
     private static final Map<UUID, Map.Entry<BlockPos, Set<Long>>> FORCED = new HashMap<>();
 
+    private static final int NEW_PER_SCAN = 6;
+
     private VillageLoader() {
     }
 
@@ -43,8 +45,11 @@ public final class VillageLoader {
         boolean on = LVConfig.KEEP_LOADED.get();
         int max = LVConfig.MAX_LOADED_VILLAGES.get();
         int cap = LVConfig.LOADED_CHUNK_RADIUS.get();
+        // The biggest first; one already held keeps its place against one merely as big (no swapping on ties).
         List<Village> chosen = on ? manager.all().stream()
-                .sorted(Comparator.comparingInt(Village::population).reversed()).limit(max).toList() : List.of();
+                .sorted(Comparator.comparingInt((Village v) -> v.population() * 2 + (FORCED.containsKey(v.id()) ? 1 : 0))
+                        .reversed()).limit(max).toList() : List.of();
+        int budget = NEW_PER_SCAN; // chunks newly taken on per scan: a few at a time, never a heap at once
         Set<UUID> keep = new HashSet<>();
         for (Village v : chosen) {
             keep.add(v.id());
@@ -57,10 +62,21 @@ public final class VillageLoader {
                 }
             }
             var had = FORCED.computeIfAbsent(v.id(), k -> Map.entry(v.center(), new HashSet<>()));
-            for (long l : want) {
-                if (!had.getValue().contains(l)) {
+            Set<Long> held = new HashSet<>();
+            // Nearest the bell first, so a village coming under the loader gets its heart going before its edges.
+            List<Long> order = want.stream().sorted(Comparator.comparingInt((Long l) ->
+                    Math.max(Math.abs(ChunkPos.getX(l) - c.x), Math.abs(ChunkPos.getZ(l) - c.z)))).toList();
+            for (long l : order) {
+                if (had.getValue().contains(l)) {
+                    held.add(l);
+                } else if (budget > 0 || level.hasChunk(ChunkPos.getX(l), ChunkPos.getZ(l))) {
+                    // (one in memory already costs nothing to hold on to)
+                    if (!level.hasChunk(ChunkPos.getX(l), ChunkPos.getZ(l))) {
+                        budget--;
+                    }
                     ForgeChunkManager.forceChunk(level, LivingVillages.MODID, v.center(), ChunkPos.getX(l),
                             ChunkPos.getZ(l), true, true);
+                    held.add(l);
                 }
             }
             for (long l : had.getValue()) {
@@ -70,7 +86,7 @@ public final class VillageLoader {
                 }
             }
             had.getValue().clear();
-            had.getValue().addAll(want);
+            had.getValue().addAll(held);
         }
         for (UUID id : Set.copyOf(FORCED.keySet())) {
             if (!keep.contains(id)) {

@@ -222,6 +222,7 @@ class Unloading {
             village.storage().take(wood, need);
         }
         level.setBlock(at, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
+        com.khmh.livingvillages.stock.Stockpile.forget(village);
         worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         com.khmh.livingvillages.LivingVillages.LOGGER.info("Village {}: a chest was put in at {}",
                 village.id().toString().substring(0, 8), at);

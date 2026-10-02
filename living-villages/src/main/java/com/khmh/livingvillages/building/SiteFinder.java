@@ -138,6 +138,10 @@ public final class SiteFinder {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int x = box.minX() - 1; x <= box.maxX() + 1; x++) {
             for (int z = box.minZ() - 1; z <= box.maxZ() + 1; z++) {
+                // Never pull in a chunk that is not loaded: that would hold up the whole server while it loads.
+                if (!level.hasChunkAt(pos.set(x, 0, z))) {
+                    return null;
+                }
                 int top = groundUnderTrees(level, pos.set(x, 0, z));
                 if (!isNatural(level.getBlockState(pos.set(x, top, z)))) {
                     return null;
