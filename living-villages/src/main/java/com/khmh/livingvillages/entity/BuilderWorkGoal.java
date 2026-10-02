@@ -154,16 +154,40 @@ public class BuilderWorkGoal extends Goal {
                 village.withdrawRequest(need, "build:" + target.id());
                 return;
             }
+            // Oak this, oak that: when the village's wood is spruce or birch, the same thing in that wood will do.
+            BlockState other = otherWood(level, village, next.state(), need);
+            if (other != null) {
+                Item otherItem = other.getBlock().asItem();
+                village.withdrawRequest(need, "build:" + target.id()); // no point asking for oak any more
+                if (worker.getInventory().countItem(otherItem) > 0) {
+                    substitute = other;
+                    need = otherItem;
+                    waitingSince = -1;
+                    // fall through to placing
+                } else if (village.stock(level).count(otherItem) > 0) {
+                    fetching.start(Map.of(otherItem, Math.min(16, village.stock(level).count(otherItem))));
+                    return;
+                } else {
+                    village.request(otherItem, Construction.lookahead(level, target, LOOKAHEAD).getOrDefault(need, 1),
+                            "build:" + target.id(), now);
+                }
+            }
+            if (substitute != null) {
+                // got a stand-in of another wood: no waiting
+            } else {
             // Not in the warehouse: ask for it and wait; after a long wait make do with something similar.
             Map<Item, Integer> look = Construction.lookahead(level, target, LOOKAHEAD);
-            village.request(need, look.getOrDefault(need, 1), "build:" + target.id(), now);
+            if (other == null) {
+                village.request(need, look.getOrDefault(need, 1), "build:" + target.id(), now);
+            }
             if (waitingSince < 0) {
                 waitingSince = now;
             }
             if (now - waitingSince < SUBSTITUTE_TICKS) {
                 // Nobody to make it: he puts the trowel down and makes it himself, as a player would.
                 if (village.professions().getOrDefault("apprentice", 0) == 0 && com.khmh.livingvillages.economy.CraftPlanner
-                        .plan(level, village.stock(level).totals(), need, 1).isPresent()) {
+                        .plan(level, village.stock(level).totals(), other != null ? other.getBlock().asItem() : need, 1)
+                        .isPresent()) {
                     yieldUntil = now + 100;
                     return;
                 }
@@ -181,6 +205,7 @@ public class BuilderWorkGoal extends Goal {
             } else {
                 skip = true;
                 need = null;
+            }
             }
         } else {
             waitingSince = -1;
@@ -318,6 +343,62 @@ public class BuilderWorkGoal extends Goal {
         }
         prepBlock = null;
         village.markDirty();
+    }
+
+    private static final String[] WOODS = {"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry"};
+
+    /**
+     * The same block in the wood the village actually has (spruce stairs for oak stairs, say), turned and set the
+     * same way; null if the block is not wooden or the village has no other wood it could be made of.
+     */
+    @Nullable
+    private BlockState otherWood(ServerLevel level, Village village, BlockState wanted, Item need) {
+        String path = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(need).getPath();
+        String from = null;
+        for (String w : WOODS) {
+            // oak_stairs, stripped_oak_log... (dark_oak beats oak when both fit)
+            if ((path.startsWith(w + "_") || path.contains("_" + w + "_")) && (from == null || w.length() > from.length())) {
+                from = w;
+            }
+        }
+        if (from == null) {
+            return null;
+        }
+        var stock = village.stock(level);
+        String best = null;
+        int bestHave = 0;
+        for (String w : WOODS) {
+            if (w.equals(from)) {
+                continue;
+            }
+            Item log = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(w + "_log"));
+            Item planks = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(w + "_planks"));
+            int have = (log == null ? 0 : stock.count(log) * 4 + worker.getInventory().countItem(log) * 4)
+                    + (planks == null ? 0 : stock.count(planks) + worker.getInventory().countItem(planks));
+            if (have > bestHave) {
+                bestHave = have;
+                best = w;
+            }
+        }
+        if (best == null) {
+            return null;
+        }
+        Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(
+                new net.minecraft.resources.ResourceLocation(path.startsWith(from + "_")
+                        ? best + path.substring(from.length()) : path.replace("_" + from + "_", "_" + best + "_")));
+        if (block == null || block == Blocks.AIR) {
+            return null;
+        }
+        BlockState out = block.defaultBlockState();
+        for (var prop : wanted.getProperties()) {
+            out = copy(out, wanted, prop);
+        }
+        return out;
+    }
+
+    private static <T extends Comparable<T>> BlockState copy(BlockState to, BlockState from,
+                                                             net.minecraft.world.level.block.state.properties.Property<T> prop) {
+        return to.hasProperty(prop) ? to.setValue(prop, from.getValue(prop)) : to;
     }
 
     /** The tool in his pockets (or hand) that breaks this block fastest; empty for bare hands. */

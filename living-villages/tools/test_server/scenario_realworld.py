@@ -4,7 +4,9 @@ import time
 
 from harness import TestServer
 
-CFG = {'founding': {'naturalFounding': False}}
+import os
+SPEED = int(os.environ.get('LV_SPEED', '1'))
+CFG = {'founding': {'naturalFounding': False}, 'debug': {'testSpeed': SPEED}}
 
 with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True, seed='4242') as s:
     print('locate:', s.cmd('locate structure #minecraft:village', check=False)[:200])
@@ -21,4 +23,5 @@ with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True,
         x, y, z = m.groups()
         print('--', minute, x, y, z)
         print(s.cmd(f'execute positioned {x} {y} {z} run village info', check=False).split('Stock')[0])
+        print(s.cmd(f'execute positioned {x} {y} {z} run village requests', check=False))
         print(s.cmd(f'execute positioned {x} {y} {z} run village workers', check=False))
