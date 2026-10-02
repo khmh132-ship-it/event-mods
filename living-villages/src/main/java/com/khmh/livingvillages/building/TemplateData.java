@@ -49,16 +49,29 @@ public final class TemplateData {
     private final List<Entry> blocks;
     private final BlockPos entrance;
     private final Map<CostKey, Integer> cost;
+    private final int baseOffset;
 
-    private TemplateData(Vec3i size, List<Entry> blocks, BlockPos entrance) {
+    private TemplateData(Vec3i size, List<Entry> blocks, BlockPos entrance, int baseOffset) {
         this.size = size;
         this.blocks = List.copyOf(blocks);
         this.entrance = entrance;
+        this.baseOffset = baseOffset;
         this.cost = MaterialCost.total(this.blocks);
     }
 
     public Vec3i size() {
         return size;
+    }
+
+    /**
+     * Template y 0 goes this far above the ground surface block. Vanilla pieces sit as the village generator puts
+     * them: the building_entrance jigsaw one above the street, so a piece with that jigsaw at y=0 stands on the
+     * ground (a step up to the door) and one with it at y=1 or 2 has that many layers of foundation sunk in. A
+     * building of ours stands with its bottom layer on the ground; one dug into the ground (the mine) has its
+     * ground layer level with the surface.
+     */
+    public int baseOffset() {
+        return baseOffset;
     }
 
     public List<Entry> blocks() {
@@ -110,6 +123,7 @@ public final class TemplateData {
 
         List<Entry> entries = new ArrayList<>();
         BlockPos streetEntrance = null;
+        int entranceJigsawY = 0;
         ListTag blocksTag = tag.getList("blocks", Tag.TAG_COMPOUND);
         for (int i = 0; i < blocksTag.size(); i++) {
             CompoundTag b = blocksTag.getCompound(i);
@@ -119,6 +133,10 @@ public final class TemplateData {
             CompoundTag nbt = b.contains("nbt", Tag.TAG_COMPOUND) ? b.getCompound("nbt") : null;
 
             if (state.is(Blocks.JIGSAW)) {
+                if (nbt != null && (nbt.getString("name").endsWith("building_entrance")
+                        || nbt.getString("target").endsWith("building_entrance"))) {
+                    entranceJigsawY = pos.getY();
+                }
                 if (nbt != null && nbt.getString("pool").endsWith("streets") && streetEntrance == null) {
                     Direction front = state.getValue(JigsawBlock.ORIENTATION).front();
                     streetEntrance = pos.relative(front);
@@ -143,7 +161,8 @@ public final class TemplateData {
         }
 
         BlockPos entrance = streetEntrance != null ? streetEntrance : doorEntrance(entries, size, type.groundLayer());
-        return new TemplateData(size, order(entries), entrance);
+        int offset = type.vanilla() ? 1 - entranceJigsawY : type.groundLayer() > 0 ? -type.groundLayer() : 1;
+        return new TemplateData(size, order(entries), entrance, offset);
     }
 
     private static BlockState parseState(HolderLookup<Block> lookup, String s) {

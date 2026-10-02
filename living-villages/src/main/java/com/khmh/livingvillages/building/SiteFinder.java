@@ -82,7 +82,7 @@ public final class SiteFinder {
             if (ground == null) {
                 continue;
             }
-            BlockPos origin = new BlockPos(ox, Placement.originY(type, ground), oz);
+            BlockPos origin = new BlockPos(ox, Placement.originY(data, ground), oz);
             BoundingBox box = Placement.box(origin, rot, data.size());
             BlockPos entrance = Placement.toWorld(origin, rot, data.entrance());
             return Optional.of(new Site(origin, rot, ground, box, entrance));

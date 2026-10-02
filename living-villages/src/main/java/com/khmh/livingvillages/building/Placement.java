@@ -28,7 +28,7 @@ public final class Placement {
     }
 
     /** Template y of the building origin when the ground surface is at {@code groundY}. */
-    public static int originY(BuildingType type, int groundY) {
-        return type.vanilla() ? groundY + 1 : groundY - type.groundLayer();
+    public static int originY(TemplateData data, int groundY) {
+        return groundY + data.baseOffset();
     }
 }
