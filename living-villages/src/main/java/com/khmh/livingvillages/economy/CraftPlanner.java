@@ -225,6 +225,16 @@ public final class CraftPlanner {
         villager(out, Items.GRAVEL, 1, Ingredient.of(Items.COBBLESTONE), Ingredient.of(Items.COBBLESTONE));
         villager(out, Items.SAND, 1, Ingredient.of(Items.GRAVEL));
         villager(out, Items.FLINT, 1, Ingredient.of(Items.GRAVEL), Ingredient.of(Items.GRAVEL));
+        // Stripping a log is axe work, not crafting; villagers count it as a craft.
+        for (String wood : List.of("oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry")) {
+            Item log = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(wood + "_log"));
+            Item stripped = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
+                    new net.minecraft.resources.ResourceLocation("stripped_" + wood + "_log"));
+            if (log != null && stripped != null && log != Items.AIR && stripped != Items.AIR) {
+                out.computeIfAbsent(stripped, k -> new ArrayList<>()).add(new Candidate(Station.HAND, 1,
+                        List.of(Ingredient.of(log))));
+            }
+        }
         // A bed without wool: a straw or hide mattress on a plank frame.
         Ingredient planks = Ingredient.of(net.minecraft.tags.ItemTags.PLANKS);
         villager(out, Items.WHITE_BED, 1, Ingredient.of(Items.WHEAT), Ingredient.of(Items.WHEAT),

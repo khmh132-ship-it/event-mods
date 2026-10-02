@@ -58,6 +58,8 @@ public class BuilderWorkGoal extends Goal {
     private int repath;
     private int blockedBySelf;
     private long waitingSince = -1;
+    /** Until when he leaves building to make something he needs (see {@link CrafterWorkGoal}). */
+    private long yieldUntil;
     private boolean unloading;
 
     public BuilderWorkGoal(VillageWorker worker) {
@@ -68,7 +70,7 @@ public class BuilderWorkGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (worker.job() != WorkerJob.BUILDER) {
+        if (worker.job() != WorkerJob.BUILDER || worker.level().getGameTime() < yieldUntil) {
             return false;
         }
         target = worker.village().flatMap(v -> v.buildings().stream().filter(b -> !b.isComplete()).findFirst())
@@ -79,7 +81,7 @@ public class BuilderWorkGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        if (worker.job() != WorkerJob.BUILDER) {
+        if (worker.job() != WorkerJob.BUILDER || worker.level().getGameTime() < yieldUntil) {
             return false;
         }
         return unloading ? worker.carried() > 0 : target != null && !target.isComplete();
@@ -90,7 +92,7 @@ public class BuilderWorkGoal extends Goal {
         lastNext = null;
         cooldown = 0;
         repath = 0;
-        waitingSince = -1;
+        // waitingSince survives a break (eating, making something): the wait for a stand-in keeps counting.
     }
 
     @Override
@@ -151,6 +153,12 @@ public class BuilderWorkGoal extends Goal {
                 waitingSince = now;
             }
             if (now - waitingSince < SUBSTITUTE_TICKS) {
+                // Nobody to make it: he puts the trowel down and makes it himself, as a player would.
+                if (village.professions().getOrDefault("apprentice", 0) == 0 && com.khmh.livingvillages.economy.CraftPlanner
+                        .plan(level, village.stock(level).totals(), need, 1).isPresent()) {
+                    yieldUntil = now + 100;
+                    return;
+                }
                 idleNear(pos);
                 return;
             }

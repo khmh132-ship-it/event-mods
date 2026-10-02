@@ -61,8 +61,9 @@ public class CrafterWorkGoal extends Goal {
             return false;
         }
         cooldown = 20;
-        return worker.village().map(v -> v.requests().stream().anyMatch(this::workable)).orElse(false)
-                || worker.carried() > 0;
+        boolean work = worker.village().map(v -> v.requests().stream().anyMatch(this::workable)).orElse(false);
+        // A builder's pockets are full of building materials: that is no reason to start crafting.
+        return work || worker.carried() > 0 && worker.job() != WorkerJob.BUILDER;
     }
 
     @Override
@@ -94,7 +95,15 @@ public class CrafterWorkGoal extends Goal {
 
     private boolean workable(Request r) {
         Village village = worker.village().orElse(null);
-        if (village == null || !Trades.isMine(worker.job(), r.item(), village)) {
+        if (village == null) {
+            return false;
+        }
+        if (worker.job() == WorkerJob.BUILDER) {
+            // A builder makes only what his own site needs, and only while the village has no apprentice.
+            if (!r.requester().startsWith("build:") || village.professions().getOrDefault("apprentice", 0) > 0) {
+                return false;
+            }
+        } else if (!Trades.isMine(worker.job(), r.item(), village)) {
             return false;
         }
         return r.remaining() > 0 && (r.claimedBy() == null || r.claimedBy().equals(worker.getUUID()))
@@ -138,7 +147,7 @@ public class CrafterWorkGoal extends Goal {
             }
         }
         // Nothing to work at? Set up a crafting table (and later a furnace) by the bell first.
-        if (worker.job() == WorkerJob.APPRENTICE
+        if ((worker.job() == WorkerJob.APPRENTICE || worker.job() == WorkerJob.BUILDER)
                 && Stations.find(level, village, CraftPlanner.Station.TABLE, worker.blockPosition()) == null) {
             if (begin(level, stock, Items.CRAFTING_TABLE, 1, null)) {
                 return;

@@ -179,6 +179,11 @@ public final class Workers {
 
     }
 
+    /** Three minutes at least in a job before being moved again: walking about between jobs is no work. */
+    private static boolean settled(ServerLevel level, VillageWorker w) {
+        return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 3600;
+    }
+
     private static boolean hasJob(ServerLevel level, Village v, List<VillageWorker> workers, WorkerJob job) {
         return workers.stream().anyMatch(w -> w.job() == job) || v.data().hasUUID("worker_" + job.name().toLowerCase());
     }
@@ -191,20 +196,20 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 2400) {
+        if (now - v.data().getLong("lastReassign") < 1200) {
             return false;
         }
         VillageWorker donor = null;
         // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
         for (WorkerJob from : all) {
             if (from != job && donor == null && !needed.getOrDefault(from, false)) {
-                donor = workers.stream().filter(w -> w.job() == from && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
+                donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
             }
         }
         for (int i = lower.size() - 1; i >= 0 && donor == null; i--) {
             WorkerJob from = lower.get(i);
             // Not in the middle of a trip: he finishes it (and unloads) first.
-            donor = workers.stream().filter(w -> w.job() == from && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
+            donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
         }
         if (donor == null) {
             return false;
@@ -216,6 +221,7 @@ public final class Workers {
                 .filter(b -> b.isComplete() && b.workerId() == null && job.workplace().equals(b.typeId()))
                 .findFirst().orElse(null);
         donor.assign(job, v, home);
+        donor.getPersistentData().putLong("lvJobSince", level.getGameTime());
         if (home != null) {
             home.setWorkerId(donor.getUUID());
         }

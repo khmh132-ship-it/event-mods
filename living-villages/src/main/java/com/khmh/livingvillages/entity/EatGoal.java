@@ -37,12 +37,16 @@ public class EatGoal extends Goal {
             return false;
         }
         cooldown = 40;
-        return worker.isStarving() || foodSlot() >= 0 || hasFoodInStock();
+        if (foodSlot() < 0 && !hasFoodInStock()) {
+            askForBread();
+            return false; // nothing to eat anywhere: better get on with work (an apprentice may bake it)
+        }
+        return true;
     }
 
     @Override
     public boolean canContinueToUse() {
-        return worker.isHungry() && (fetching.active() || foodSlot() >= 0 || worker.isStarving());
+        return worker.isHungry() && (fetching.active() || foodSlot() >= 0);
     }
 
     @Override
@@ -109,6 +113,14 @@ public class EatGoal extends Goal {
             }
         }
         return -1;
+    }
+
+    private void askForBread() {
+        Village village = worker.village().orElse(null);
+        if (village != null && worker.level() instanceof ServerLevel level && level.getGameTime() - lastRequest > 1200) {
+            village.request(Items.BREAD, 4, "food", level.getGameTime());
+            lastRequest = level.getGameTime();
+        }
     }
 
     private boolean hasFoodInStock() {

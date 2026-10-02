@@ -34,7 +34,7 @@ public enum WorkerJob {
 
     /** Jobs that make things to order (see {@link com.khmh.livingvillages.economy.Trades}). */
     public boolean crafts() {
-        return this == APPRENTICE || this == MASON || this == TOOLSMITH || this == WEAPONSMITH || this == ARMORER
+        return this == APPRENTICE || this == BUILDER || this == MASON || this == TOOLSMITH || this == WEAPONSMITH || this == ARMORER
                 || this == FLETCHER || this == LEATHERWORKER || this == CARPENTER || this == LIBRARIAN;
     }
 
