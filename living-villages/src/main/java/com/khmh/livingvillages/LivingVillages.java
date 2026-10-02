@@ -28,6 +28,7 @@ public class LivingVillages {
         LVBlocks.TABS.register(modBus);
         modBus.addListener(LVEntities::attributes);
         MinecraftForge.EVENT_BUS.register(VillageEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.khmh.livingvillages.village.QuestBoard.class);
         MinecraftForge.EVENT_BUS.addListener(VillageCommand::register);
     }
 }

@@ -161,8 +161,47 @@ public final class TemplateData {
         }
 
         BlockPos entrance = streetEntrance != null ? streetEntrance : doorEntrance(entries, size, type.groundLayer());
-        int offset = type.vanilla() ? 1 - entranceJigsawY : type.groundLayer() > 0 ? -type.groundLayer() : 1;
+        // One rule for vanilla pieces and ours: by the door and what is in front of it. A vanilla piece without a
+        // low door (a pen, a farm, a tall house) goes by its street jigsaw, as the village generator places it.
+        Integer byDoor = lowDoor(entries) ? customOffset(entries, size) : null;
+        int offset = type.groundLayer() > 0 ? -type.groundLayer()
+                : byDoor != null ? byDoor : type.vanilla() ? 1 - entranceJigsawY : 0;
         return new TemplateData(size, order(entries), entrance, offset);
+    }
+
+    /**
+     * Our own buildings: the door's threshold goes one above the ground, so one walks straight in; but a house
+     * with a step (stairs) in front of its door stands on the ground with its floor, and the step is the way up.
+     */
+    private static boolean lowDoor(List<Entry> entries) {
+        return entries.stream().anyMatch(e -> e.state().getBlock() instanceof DoorBlock
+                && e.state().getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER && e.pos().getY() <= 2);
+    }
+
+    private static int customOffset(List<Entry> entries, Vec3i size) {
+        Entry door = entries.stream()
+                .filter(e -> e.state().getBlock() instanceof DoorBlock
+                        && e.state().getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER)
+                .min(Comparator.comparingInt(e -> e.pos().getY()))
+                .orElse(null);
+        if (door == null || door.pos().getY() > 2) {
+            return 0; // no door near the ground (a wall, a pad, an open shed): the bottom layer replaces the ground
+        }
+        BlockPos d = door.pos();
+        int west = d.getX(), east = size.getX() - 1 - d.getX(), north = d.getZ(), south = size.getZ() - 1 - d.getZ();
+        int min = Math.min(Math.min(west, east), Math.min(north, south));
+        Direction out = min == south ? Direction.SOUTH : min == north ? Direction.NORTH : min == west ? Direction.WEST
+                : Direction.EAST;
+        boolean step = false;
+        for (Entry e : entries) {
+            BlockPos p = e.pos();
+            for (int k = 1; k <= 2; k++) {
+                if (p.equals(d.relative(out, k).below()) && e.state().getBlock() instanceof net.minecraft.world.level.block.StairBlock) {
+                    step = true;
+                }
+            }
+        }
+        return (step ? 1 : 0) + 1 - d.getY();
     }
 
     private static BlockState parseState(HolderLookup<Block> lookup, String s) {

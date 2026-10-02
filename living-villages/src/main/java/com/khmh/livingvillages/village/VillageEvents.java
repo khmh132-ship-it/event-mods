@@ -76,6 +76,9 @@ public final class VillageEvents {
             boolean loaded = level.hasChunkAt(v.center());
             if (loaded) {
                 checkAlarm(level, v);
+                if (now % 100 == 0) {
+                    QuestBoard.refresh(level, v);
+                }
             }
             Production.tick(v, now, loaded);
             Construction.tick(level, v, now);
@@ -100,6 +103,13 @@ public final class VillageEvents {
             }
         }
         v.setAlarm(alarm);
+    }
+
+    @SubscribeEvent
+    public static void onChunkLoad(net.minecraftforge.event.level.ChunkEvent.Load event) {
+        if (event.isNewChunk() && event.getLevel() instanceof ServerLevel level) {
+            Founding.onNewChunk(level, event.getChunk().getPos());
+        }
     }
 
     @SubscribeEvent

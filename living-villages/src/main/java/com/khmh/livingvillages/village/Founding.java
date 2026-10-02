@@ -42,32 +42,72 @@ public final class Founding {
     private Founding() {
     }
 
-    /** Every so often each player gets a camp somewhere around him if there is no village near. */
-    static void tick(ServerLevel level, VillageManager manager) {
+    /** Chunks where vanilla would have started a village, waiting for their surroundings to load. */
+    private static final java.util.Set<Long> PENDING = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * A newly generated chunk that vanilla would have made a village start: a camp goes there instead, once the
+     * land around it has loaded. Same places and spacing as vanilla villages, in the same kinds of country.
+     */
+    public static void onNewChunk(ServerLevel level, net.minecraft.world.level.ChunkPos chunk) {
         if (!LVConfig.NATURAL_FOUNDING.get() || level.dimension() != Level.OVERWORLD) {
             return;
         }
-        for (ServerPlayer player : level.players()) {
-            if (tryAround(level, manager, player.blockPosition()) != null) {
-                return;
+        var sets = level.registryAccess().registryOrThrow(Registries.STRUCTURE_SET);
+        var villages = sets.getHolder(net.minecraft.world.level.levelgen.structure.BuiltinStructureSets.VILLAGES);
+        if (villages.isEmpty()) {
+            return;
+        }
+        var placement = villages.get().value().placement();
+        if (placement.isStructureChunk(level.getChunkSource().getGeneratorState(), chunk.x, chunk.z)) {
+            PENDING.add(chunk.toLong());
+            LivingVillages.LOGGER.debug("Village start chunk {} noted", chunk);
+        }
+    }
+
+    static void tick(ServerLevel level, VillageManager manager) {
+        if (PENDING.isEmpty() || level.dimension() != Level.OVERWORLD) {
+            return;
+        }
+        for (Long key : java.util.List.copyOf(PENDING)) {
+            net.minecraft.world.level.ChunkPos c = new net.minecraft.world.level.ChunkPos(key);
+            BlockPos centre = c.getMiddleBlockPosition(64);
+            if (!level.hasChunksAt(centre.offset(-40, 0, -40), centre.offset(40, 0, 40))) {
+                continue; // wait for the surroundings
+            }
+            PENDING.remove(key);
+            LivingVillages.LOGGER.debug("Village start chunk {} loaded; biome {}", c,
+                    level.getBiome(centre).unwrapKey().map(k -> k.location().toString()).orElse("?"));
+            if (nearest(manager, centre) < LVConfig.FOUNDING_SPACING.get() / 2.0) {
+                continue;
+            }
+            // The spot itself or close by, on open ground of a village biome.
+            for (int r = 0; r <= 24; r += 8) {
+                BlockPos spot = null;
+                for (int a = 0; a < 8 && spot == null; a++) {
+                    double ang = a * Math.PI / 4;
+                    spot = suitable(level, centre.offset((int) (Math.cos(ang) * r), 0, (int) (Math.sin(ang) * r)));
+                    if (r == 0) {
+                        break;
+                    }
+                }
+                if (spot != null) {
+                    found(level, manager, spot);
+                    break;
+                }
             }
         }
     }
 
-    /** One go at putting a camp somewhere 48-128 blocks from {@code around}; the new village or null. */
+    /** Debug: a camp somewhere 48-128 blocks from {@code around}, the way natural ones used to be found. */
     @Nullable
     public static Village tryAround(ServerLevel level, VillageManager manager, BlockPos around) {
-        int spacing = LVConfig.FOUNDING_SPACING.get();
-        if (nearest(manager, around) < spacing) {
-            return null;
-        }
         RandomSource random = level.getRandom();
         for (int attempt = 0; attempt < 24; attempt++) {
             double angle = random.nextDouble() * Math.PI * 2;
             int dist = 48 + random.nextInt(80);
-            BlockPos col = around.offset((int) (Math.cos(angle) * dist), 0, (int) (Math.sin(angle) * dist));
-            BlockPos spot = suitable(level, col);
-            if (spot != null && nearest(manager, spot) >= spacing) {
+            BlockPos spot = suitable(level, around.offset((int) (Math.cos(angle) * dist), 0, (int) (Math.sin(angle) * dist)));
+            if (spot != null && nearest(manager, spot) >= LVConfig.FOUNDING_SPACING.get()) {
                 return found(level, manager, spot);
             }
         }
@@ -82,12 +122,8 @@ public final class Founding {
     /** Dry, fairly flat natural ground in a founding biome with the area around it loaded. */
     @Nullable
     private static BlockPos suitable(ServerLevel level, BlockPos col) {
-        for (int dx = -32; dx <= 32; dx += 16) {
-            for (int dz = -32; dz <= 32; dz += 16) {
-                if (!level.hasChunkAt(col.offset(dx, 0, dz))) {
-                    return null;
-                }
-            }
+        if (!level.hasChunksAt(col.offset(-32, 0, -32), col.offset(32, 0, 32))) {
+            return null;
         }
         BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, col);
         if (!level.getBiome(top).is(BIOMES)) {
@@ -138,6 +174,15 @@ public final class Founding {
                 b.data().putBoolean("free", true);
                 Construction.finish(level, v, b);
             }
+        }
+        // The quest board stands by the bell from the first day.
+        BuildingType board = BuildingTypes.get("quest_board");
+        if (board != null) {
+            TemplateData.get(level, board).flatMap(d -> SiteFinder.find(level, v, board, d)).ifPresent(site -> {
+                var b = v.addBuilding(board, site, level.getGameTime());
+                b.data().putBoolean("free", true);
+                Construction.finish(level, v, b);
+            });
         }
         for (int i = 0; i < 2; i++) {
             Villager villager = EntityType.VILLAGER.create(level);

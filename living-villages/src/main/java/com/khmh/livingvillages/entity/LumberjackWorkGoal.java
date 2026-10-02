@@ -211,7 +211,12 @@ public class LumberjackWorkGoal extends Goal {
 
     /** Nearest trunk base of a natural tree (logs on dirt with leaves on top) outside all village buildings. */
     private BlockPos findTree(Level level, Village village, BlockPos home) {
-        // Near the hut first, then further and further out, as a player would go looking for woods.
+        // Trees standing in the village itself come down first: they are in everyone's way.
+        BlockPos inVillage = findTree(level, village, village.center(), Math.min(32, village.radius() * 2 / 3));
+        if (inVillage != null) {
+            return inVillage;
+        }
+        // Then near the hut, then further and further out, as a player would go looking for woods.
         for (int r = SEARCH_RADIUS; r <= SEARCH_RADIUS * 4; r += SEARCH_RADIUS) {
             BlockPos found = findTree(level, village, home, r);
             if (found != null) {
