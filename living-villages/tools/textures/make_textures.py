@@ -329,9 +329,8 @@ def main():
     os.makedirs(OUT_BLOCK, exist_ok=True)
     for i, (name, fn) in enumerate(OUTFITS.items()):
         fn(100 + i).save(os.path.join(OUT_ENTITY, f'{name}.png'))
-    for name, fn in BLOCKS.items():
-        fn().save(os.path.join(OUT_BLOCK, f'{name}.png'))
-    print('wrote', len(OUTFITS), 'outfits and', len(BLOCKS), 'block textures')
+    # Job blocks keep their models' vanilla textures; block functions above are kept as sketches only.
+    print('wrote', len(OUTFITS), 'outfits')
 
 
 if __name__ == '__main__':
