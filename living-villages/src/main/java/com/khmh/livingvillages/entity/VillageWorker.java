@@ -97,6 +97,12 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new CartographerGoal(this));
         goalSelector.addGoal(2, new StorekeeperGoal(this));
         goalSelector.addGoal(2, new CarrierGoal(this));
+        // Everyone but a guard runs from what would kill him, as plain villagers do; back to work once it is gone.
+        goalSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.AvoidEntityGoal<>(this,
+                net.minecraft.world.entity.monster.Monster.class, 8.0F, 0.6, 0.75,
+                m -> job() != WorkerJob.GUARD && !(m instanceof net.minecraft.world.entity.monster.EnderMan)
+                        && !(m instanceof net.minecraft.world.entity.monster.ZombifiedPiglin)
+                        && hasLineOfSight(m)));
         goalSelector.addGoal(1, new GuardGoals.Melee(this));
         goalSelector.addGoal(2, new GuardGoals.Patrol(this));
         targetSelector.addGoal(1, new GuardGoals.Retaliate(this));
