@@ -37,7 +37,7 @@ public class EatGoal extends Goal {
             return false;
         }
         cooldown = 40;
-        if (foodSlot() < 0 && !hasFoodInStock()) {
+        if (foodSlot() < 0 && worker.getInventory().countItem(Items.WHEAT) < 3 && !hasFoodInStock()) {
             askForBread();
             return false; // nothing to eat anywhere: better get on with work (an apprentice may bake it)
         }
@@ -46,7 +46,8 @@ public class EatGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return worker.isHungry() && (fetching.active() || foodSlot() >= 0);
+        return worker.isHungry() && (fetching.active() || foodSlot() >= 0
+                || worker.getInventory().countItem(Items.WHEAT) >= 3);
     }
 
     @Override
@@ -64,8 +65,23 @@ public class EatGoal extends Goal {
         return true;
     }
 
+    /** Three wheat make a loaf: with nobody to bake, a hungry villager does it himself. */
+    private boolean bake() {
+        SimpleContainer inv = worker.getInventory();
+        if (inv.countItem(Items.WHEAT) < 3) {
+            return false;
+        }
+        inv.removeItemType(Items.WHEAT, 3);
+        worker.carry(Items.BREAD, 1);
+        worker.swing(InteractionHand.MAIN_HAND);
+        return true;
+    }
+
     @Override
     public void tick() {
+        if (foodSlot() < 0) {
+            bake();
+        }
         int slot = foodSlot();
         if (slot >= 0) {
             eat(slot);
@@ -84,6 +100,10 @@ public class EatGoal extends Goal {
                 fetching.start(Map.of(e.getKey(), Math.min(4, e.getValue())));
                 return;
             }
+        }
+        if (village.stock(level).count(Items.WHEAT) >= 3) {
+            fetching.start(Map.of(Items.WHEAT, Math.min(9, village.stock(level).count(Items.WHEAT))));
+            return;
         }
         long now = level.getGameTime();
         if (now - lastRequest > 1200) {
@@ -125,6 +145,7 @@ public class EatGoal extends Goal {
 
     private boolean hasFoodInStock() {
         return worker.village().map(v -> worker.level() instanceof ServerLevel l && v.stock(l).totals().entrySet()
-                .stream().anyMatch(e -> e.getValue() > 0 && e.getKey().isEdible())).orElse(false);
+                .stream().anyMatch(e -> e.getValue() > 0 && e.getKey().isEdible()
+                || e.getKey() == Items.WHEAT && e.getValue() >= 3)).orElse(false);
     }
 }

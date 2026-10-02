@@ -29,6 +29,10 @@ with TestServer(CFG, log_name='test_founding.log') as s:
     for minute in range(int(__import__('sys').argv[1]) if len(__import__('sys').argv) > 1 else 12):
         time.sleep(60)
         s.cmd('fill -24 62 -24 24 67 24 wheat[age=7] replace wheat', check=False)  # no random ticks without players
+        import math, random  # saplings do not grow without players either: new trees come up in the woods
+        for _ in range(3 * SPEED // 2 + 1):
+            a, r = random.random() * 6.283, random.randint(34, 70)
+            s.cmd(f'place feature minecraft:oak {int(math.cos(a) * r)} 64 {int(math.sin(a) * r)}', check=False)
         info = at(s, 'info')
         print(f'--- {minute + 1} min (game {(minute + 1) * SPEED} min), time', s.cmd('time query daytime', check=False).strip())
         print(info)
