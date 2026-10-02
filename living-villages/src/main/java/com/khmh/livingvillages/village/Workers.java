@@ -185,6 +185,12 @@ public final class Workers {
         return level.getGameTime() - w.getPersistentData().getLong("lvJobSince") >= 3600;
     }
 
+    /** A gatherer on his way back with a load: he finishes the trip first. */
+    private static boolean midTrip(VillageWorker w) {
+        return (w.job() == WorkerJob.LUMBERJACK || w.job() == WorkerJob.FARMER || w.job() == WorkerJob.BUTCHER)
+                && w.carried() > 16;
+    }
+
     private static boolean hasJob(ServerLevel level, Village v, List<VillageWorker> workers, WorkerJob job) {
         return workers.stream().anyMatch(w -> w.job() == job) || v.data().hasUUID("worker_" + job.name().toLowerCase());
     }
@@ -204,13 +210,13 @@ public final class Workers {
         // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
         for (WorkerJob from : all) {
             if (from != job && donor == null && !needed.getOrDefault(from, false)) {
-                donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
+                donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)).findFirst().orElse(null);
             }
         }
         for (int i = lower.size() - 1; i >= 0 && donor == null; i--) {
             WorkerJob from = lower.get(i);
             // Not in the middle of a trip: he finishes it (and unloads) first.
-            donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && (w.carried() <= 16 || from == WorkerJob.MINER)).findFirst().orElse(null);
+            donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)).findFirst().orElse(null);
         }
         if (donor == null) {
             return false;
