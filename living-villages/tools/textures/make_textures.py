@@ -254,61 +254,50 @@ def tex16(seed):
 
 
 def chopping_block_top():
-    img = vanilla('block/oak_log_top')
-    c = tex16(1); c.img.paste(img)
-    for x0, y0, dx, dy, n in ((2, 5, 1, 0, 9), (4, 10, 1, -1, 6), (9, 3, 0, 1, 7)):   # axe cuts
-        for i in range(n):
-            x, y = x0 + dx * i, y0 + dy * i
-            if 0 <= x < 16 and 0 <= y < 16:
-                c.put(x, y, shade(c.px[x, y], 0.45))
-                if 0 <= y + 1 < 16 and dx:
-                    c.put(x, y + 1, shade(c.px[x, y + 1], 1.25))
-    for _ in range(6):
-        x, y = c.rnd.randrange(16), c.rnd.randrange(16)
-        c.put(x, y, (196, 160, 104))                                   # chips
+    c = tex16(1); c.img.paste(vanilla('block/oak_log_top'))
+    # two clean axe cuts across the rings: a dark groove with a light, freshly cut lip under it
+    for y0 in (6, 10):
+        for x in range(3, 13):
+            y = y0 + (x - 3) // 5
+            c.put(x, y, shade(c.px[x, y], 0.5))
+            c.put(x, y + 1, shade(c.px[x, y + 1], 1.2))
     return c.img
 
 
 def miners_bench_top():
-    base = vanilla('block/smooth_stone')
-    c = tex16(2); c.img.paste(base)
-    for x in range(16):                                                # a dark slate working surface
+    c = tex16(2); c.img.paste(vanilla('block/smooth_stone'))
+    for x in range(16):
         for y in range(16):
-            c.put(x, y, shade(c.px[x, y], 0.62))
-    for x, y, col in ((3, 3, (216, 160, 120)), (4, 3, (190, 140, 100)), (11, 4, (40, 40, 40)), (12, 4, (60, 60, 60)),
-                      (12, 11, (240, 210, 80)), (5, 12, (110, 220, 220)), (6, 12, (90, 190, 190))):
-        c.put(x, y, col)                                               # bits of ore: iron, coal, gold, diamond
-    for i in range(10):                                                # chisel scratches
-        c.put(2 + i, 8 + (i % 2), shade(c.px[2 + i, 8 + (i % 2)], 1.35))
-    for x in range(16):                                                # oak trim round the edge
+            c.put(x, y, shade(c.px[x, y], 0.78))
+    for x in range(16):                                                # oak rim round the edge
         for y in (0, 15):
-            c.put(x, y, (110, 84, 52)); c.put(y, x, (110, 84, 52))
+            c.put(x, y, (124, 96, 58)); c.put(y, x, (124, 96, 58))
+    for x in range(1, 15):
+        c.put(x, 1, (96, 74, 44)); c.put(1, x, (96, 74, 44))
     return c.img
 
 
 def miners_bench_side():
     c = tex16(3); c.img.paste(vanilla('block/cobblestone'))
-    for x in range(16):
-        c.put(x, 0, (110, 84, 52)); c.put(x, 1, (88, 66, 40))
-    for x in (2, 13):                                                  # hanging tools: a pick and a shovel
-        c.vline(x, 4, 12, (120, 82, 46))
-    c.hline(1, 4, 4, (170, 170, 178)); c.put(13, 12, (170, 170, 178)); c.put(13, 13, (170, 170, 178))
+    for x in range(16):                                                # the oak rim of the top, seen from the side
+        c.put(x, 0, (124, 96, 58)); c.put(x, 1, (96, 74, 44))
     return c.img
 
 
 def builders_table_top():
     c = tex16(4); c.img.paste(vanilla('block/oak_planks'))
-    for x in range(3, 14):                                             # a blueprint
-        for y in range(2, 13):
-            c.put(x, y, shade((54, 96, 168), 1 + c.rnd.uniform(-0.05, 0.05)))
-    white = (224, 232, 245)
-    c.hline(5, 12, 9, white); c.vline(5, 6, 10, white); c.vline(11, 6, 10, white)   # a little house
-    for i in range(4):
-        c.put(5 + i, 6 - i, white); c.put(11 - i, 6 - i, white)
-    c.vline(8, 7, 10, white)
-    for x in range(3, 14, 2):
-        c.put(x, 12, white)                                            # a dimension line
-    c.hline(1, 15, 14, (228, 196, 92)); c.put(14, 14, (40, 40, 40))  # a folding rule
+    for x in range(2, 14):                                             # a blueprint sheet with a pale border
+        for y in range(2, 12):
+            edge = x in (2, 13) or y in (2, 11)
+            c.put(x, y, (200, 214, 236) if edge else shade((48, 88, 160), 1 + c.rnd.uniform(-0.04, 0.04)))
+    w = (232, 240, 252)
+    # a house: walls, a door, a window and a pitched roof
+    c.vline(5, 7, 11, w); c.vline(10, 7, 11, w); c.hline(5, 11, 10, w)
+    for i in range(3):
+        c.put(5 + i, 7 - i, w); c.put(10 - i, 7 - i, w)
+    c.put(8, 4, w)
+    c.vline(7, 8, 10, w); c.vline(8, 8, 10, w)                       # door
+    c.put(9, 8, w)                                                     # window
     return c.img
 
 
@@ -327,8 +316,6 @@ def storekeeper_desk_top():
 
 def apprentice_workbench_top():
     c = tex16(6); c.img.paste(vanilla('block/crafting_table_top'))
-    c.hline(10, 15, 2, (170, 170, 178)); c.vline(12, 3, 6, (120, 82, 46))      # a hammer
-    c.hline(2, 6, 13, (200, 200, 206)); c.put(1, 13, (120, 82, 46))            # a file
     return c.img
 
 

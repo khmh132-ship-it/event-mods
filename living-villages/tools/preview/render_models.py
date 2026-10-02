@@ -105,10 +105,17 @@ def render(model, yrot):
             br = tuple(tr[i] + v[i] for i in range(3))
             center = [(tl[i] + br[i]) / 2 for i in range(3)]
             flat = any(f[i] == t[i] for i in range(3))
-            visible = True
-            # Painter's order; flat decals (items lying on or hanging in front of a surface) go last.
-            quads.append((sum(center) + (100 if flat else 0), face, tl, tr, bl, br, resolve(tex, spec['texture']),
-                          spec.get('uv', default_uv(face, f, t)), visible))
+            # The camera looks from (+x, +y, +z): faces turned away are not drawn (flat decals always are), the
+            # rest go back to front by their centre's depth along the view.
+            view = (1.0, 1.15, 1.0)
+            facing = sum(n[i] * view[i] for i in range(3))
+            if not flat and facing >= -1e-6:
+                continue
+            # back to front by the face's farthest corner (a big table top under small things on it goes first)
+            d = lambda q: q[0] + q[2] + 1.15 * q[1]
+            depth = min(d(tl), d(tr), d(bl), d(br)) + 0.001 * d(center)
+            quads.append((depth + (0.01 if flat else 0), face, tl, tr, bl, br, resolve(tex, spec['texture']),
+                          spec.get('uv', default_uv(face, f, t)), True))
     img = Image.new('RGBA', (32 * SCALE, 32 * SCALE), (0, 0, 0, 0))
 
     def proj(p):

@@ -1,115 +1,150 @@
 {
-  "parent": "minecraft:block/block",
-  "textures": {
-    "particle": "minecraft:block/oak_log",
-    "bark": "minecraft:block/oak_log",
-    "rings": "minecraft:block/oak_log_top",
-    "axe": "minecraft:item/iron_axe",
-    "top": "livingvillages:block/chopping_block_top"
-  },
-  "elements": [
-    {
-      "from": [
-        2,
-        0,
-        2
-      ],
-      "to": [
-        14,
-        10,
-        14
-      ],
-      "faces": {
-        "north": {
-          "texture": "#bark",
-          "uv": [
-            2,
-            6,
-            14,
-            16
-          ]
-        },
-        "south": {
-          "texture": "#bark",
-          "uv": [
-            2,
-            6,
-            14,
-            16
-          ]
-        },
-        "east": {
-          "texture": "#bark",
-          "uv": [
-            2,
-            6,
-            14,
-            16
-          ]
-        },
-        "west": {
-          "texture": "#bark",
-          "uv": [
-            2,
-            6,
-            14,
-            16
-          ]
-        },
-        "up": {
-          "texture": "#top",
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ]
-        },
-        "down": {
-          "texture": "#rings",
-          "uv": [
-            2,
-            2,
-            14,
-            14
-          ]
-        }
-      }
+ "parent": "block/block",
+ "textures": {
+  "bark": "minecraft:block/oak_log",
+  "top": "livingvillages:block/chopping_block_top",
+  "rings": "minecraft:block/oak_log_top",
+  "handle": "minecraft:block/stripped_oak_log",
+  "metal": "minecraft:block/iron_block",
+  "particle": "minecraft:block/oak_log"
+ },
+ "elements": [
+  {
+   "from": [
+    2,
+    0,
+    2
+   ],
+   "to": [
+    14,
+    10,
+    14
+   ],
+   "faces": {
+    "north": {
+     "texture": "#bark"
     },
-    {
-      "from": [
-        8,
-        6,
-        0
-      ],
-      "to": [
-        8,
-        22,
-        16
-      ],
-      "faces": {
-        "east": {
-          "texture": "#axe"
-        },
-        "west": {
-          "texture": "#axe",
-          "uv": [
-            16,
-            0,
-            0,
-            16
-          ]
-        }
-      },
-      "rotation": {
-        "origin": [
-          8,
-          8,
-          8
-        ],
-        "axis": "x",
-        "angle": -22.5
-      }
+    "south": {
+     "texture": "#bark"
+    },
+    "east": {
+     "texture": "#bark"
+    },
+    "west": {
+     "texture": "#bark"
+    },
+    "up": {
+     "texture": "#top"
+    },
+    "down": {
+     "texture": "#rings"
     }
-  ]
+   }
+  },
+  {
+   "from": [
+    7.5,
+    8,
+    4
+   ],
+   "to": [
+    8.5,
+    12,
+    9
+   ],
+   "faces": {
+    "north": {
+     "texture": "#metal"
+    },
+    "south": {
+     "texture": "#metal"
+    },
+    "east": {
+     "texture": "#metal"
+    },
+    "west": {
+     "texture": "#metal"
+    },
+    "up": {
+     "texture": "#metal"
+    },
+    "down": {
+     "texture": "#metal"
+    }
+   }
+  },
+  {
+   "from": [
+    7.4,
+    11,
+    5.5
+   ],
+   "to": [
+    8.6,
+    12.5,
+    7.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#metal"
+    },
+    "south": {
+     "texture": "#metal"
+    },
+    "east": {
+     "texture": "#metal"
+    },
+    "west": {
+     "texture": "#metal"
+    },
+    "up": {
+     "texture": "#metal"
+    },
+    "down": {
+     "texture": "#metal"
+    }
+   }
+  },
+  {
+   "from": [
+    7.5,
+    12,
+    6
+   ],
+   "to": [
+    8.5,
+    22,
+    7
+   ],
+   "faces": {
+    "north": {
+     "texture": "#handle"
+    },
+    "south": {
+     "texture": "#handle"
+    },
+    "east": {
+     "texture": "#handle"
+    },
+    "west": {
+     "texture": "#handle"
+    },
+    "up": {
+     "texture": "#handle"
+    },
+    "down": {
+     "texture": "#handle"
+    }
+   },
+   "rotation": {
+    "origin": [
+     8,
+     12,
+     6.5
+    ],
+    "axis": "x",
+    "angle": 22.5
+   }
+  }
+ ]
 }
