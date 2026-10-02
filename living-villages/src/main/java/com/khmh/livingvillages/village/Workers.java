@@ -245,10 +245,15 @@ public final class Workers {
                 donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)).findFirst().orElse(null);
             }
         }
+        // Taking someone off work that is wanted too only robs Peter to pay Paul: a camp of two or three has to
+        // juggle, a bigger village keeps people at their jobs for a good day before moving them.
+        boolean juggle = v.population() <= 3;
         for (int i = lower.size() - 1; i >= 0 && donor == null; i--) {
             WorkerJob from = lower.get(i);
             // Not in the middle of a trip: he finishes it (and unloads) first.
-            donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)).findFirst().orElse(null);
+            donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)
+                    && (juggle || idleFor(level, w) >= 1200
+                    || now - w.getPersistentData().getLong("lvJobSince") >= 24000)).findFirst().orElse(null);
         }
         if (donor == null) {
             return false;
@@ -348,6 +353,7 @@ public final class Workers {
         worker.moveTo(candidate.getX(), candidate.getY(), candidate.getZ(), candidate.getYRot(), 0);
         worker.setCustomName(candidate.getCustomName());
         worker.assign(job, v, workplace);
+        worker.getPersistentData().putLong("lvJobSince", level.getGameTime());
         Villager.POI_MEMORIES.keySet().forEach(candidate::releasePoi); // free its bed and job site
         candidate.discard();
         level.addFreshEntity(worker);
