@@ -446,6 +446,20 @@ public class MinerWorkGoal extends Goal {
         ListTag segs = segments(data);
         int index = current(segs);
         if (index < 0) {
+            if (mine() == null && data.getInt("tries") < 8) {
+                // The quarry ran into water, lava or someone's cellar: start one somewhere else.
+                ListTag tried = data.getList("tried", Tag.TAG_LONG);
+                tried.add(net.minecraft.nbt.LongTag.valueOf(new BlockPos(data.getInt("x"), data.getInt("y"),
+                        data.getInt("z")).asLong()));
+                data.put("tried", tried);
+                data.putInt("tries", data.getInt("tries") + 1);
+                for (String k : new String[]{"x", "y", "z", "segs", "laid"}) {
+                    data.remove(k);
+                }
+                village.markDirty();
+                go(State.DESCEND);
+                return;
+            }
             worker.setStatus("the mine is worked out");
             return;
         }
@@ -895,7 +909,8 @@ public class MinerWorkGoal extends Goal {
                 || state.is(Blocks.COBBLESTONE) || state.is(Blocks.MOSSY_COBBLESTONE)
                 || state.is(Blocks.DIRT_PATH) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.MOSS_BLOCK)
                 || state.is(Blocks.GLOW_LICHEN) || state.is(BlockTags.TERRACOTTA)
-                || state.is(Blocks.COBBLED_DEEPSLATE);
+                || state.is(Blocks.COBBLED_DEEPSLATE) || state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES)
+                || state.is(Blocks.SNOW) || state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE);
     }
 
     private static Direction towards(BlockPos from, BlockPos to) {
@@ -952,7 +967,15 @@ public class MinerWorkGoal extends Goal {
                 BlockPos ground = top.below();
                 boolean clear = village.buildings().stream().noneMatch(b -> b.box().inflatedBy(QUARRY_DROP + 2)
                         .isInside(ground));
-                if (clear && SiteFinder.isNatural(level.getBlockState(ground))) {
+                ListTag tried = q.getList("tried", Tag.TAG_LONG);
+                boolean fresh = true;
+                for (int i = 0; i < tried.size(); i++) {
+                    if (BlockPos.of(((net.minecraft.nbt.LongTag) tried.get(i)).getAsLong()).closerThan(top, 10)) {
+                        fresh = false;
+                    }
+                }
+                if (clear && fresh && SiteFinder.isNatural(level.getBlockState(ground))
+                        && level.getFluidState(top).isEmpty()) {
                     q.putInt("x", top.getX());
                     q.putInt("y", top.getY());
                     q.putInt("z", top.getZ());

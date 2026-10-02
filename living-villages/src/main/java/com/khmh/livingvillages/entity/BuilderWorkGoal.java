@@ -135,6 +135,10 @@ public class BuilderWorkGoal extends Goal {
         BlockState substitute = null;
         boolean skip = false;
         Item need = next == null ? null : next.item();
+        if (need != null && worker.getInventory().countItem(need) == 0 && new ItemStack(need).is(ItemTags.PLANKS)
+                && handPlanks(level, village, need)) {
+            return; // planks out of his own logs, in hand, like a player
+        }
         if (need != null && worker.getInventory().countItem(need) == 0) {
             if (startFetch(level, village, need)) {
                 village.withdrawRequest(need, "build:" + target.id());
@@ -216,6 +220,34 @@ public class BuilderWorkGoal extends Goal {
     }
 
     /** Fetches what the warehouse has of the next blocks' needs; false if it has none of {@code need}. */
+    /**
+     * Saws planks from a log he carries (one log, four planks); with no logs on him but logs in store and no
+     * planks there, he goes for a load of logs. True if he did something about it.
+     */
+    private boolean handPlanks(ServerLevel level, Village village, Item planks) {
+        var inv = worker.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(ItemTags.LOGS)) {
+                s.shrink(1);
+                inv.setChanged();
+                worker.carry(planks, 4);
+                worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                return true;
+            }
+        }
+        Stockpile stock = village.stock(level);
+        if (stock.count(planks) == 0) {
+            for (var e : stock.totals().entrySet()) {
+                if (e.getValue() > 0 && new ItemStack(e.getKey()).is(ItemTags.LOGS)) {
+                    fetching.start(Map.of(e.getKey(), Math.min(16, e.getValue())));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean startFetch(ServerLevel level, Village village, Item need) {
         Stockpile stock = village.stock(level);
         if (stock.count(need) <= 0) {

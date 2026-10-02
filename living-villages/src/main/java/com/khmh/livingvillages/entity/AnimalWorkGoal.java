@@ -36,7 +36,7 @@ import java.util.Map;
  * stock), and smokes the meat in a smoker. Everything dropped is picked up and taken to the warehouse.
  */
 public class AnimalWorkGoal extends Goal {
-    private static final int RANGE = 32;
+    private static final int RANGE = 64; // a hunter goes looking a good way round
     private static final int KEEP_IN_PEN = 4;
     private static final int LOAD = 32;
     /** A player's reach: enough to shear or feed an animal over a fence. */
@@ -133,7 +133,7 @@ public class AnimalWorkGoal extends Goal {
     private void decide(ServerLevel level, Village village) {
         List<BoundingBox> pens = pens(village);
         List<Animal> around = level.getEntitiesOfClass(Animal.class, new AABB(worker.blockPosition()).inflate(RANGE),
-                a -> a.isAlive() && (a instanceof Sheep || a instanceof Cow || a instanceof Pig
+                a -> a.isAlive() && !unreachable.contains(a.getUUID()) && (a instanceof Sheep || a instanceof Cow || a instanceof Pig
                         || a instanceof Chicken || a instanceof Rabbit));
         if (worker.carried() >= LOAD || worker.inventoryFull()) {
             task = !shepherd() && RAW_MEAT.stream().anyMatch(m -> worker.getInventory().countItem(m) > 0)
@@ -276,10 +276,13 @@ public class AnimalWorkGoal extends Goal {
 
     private void cull(ServerLevel level) {
         if (animal == null || !animal.isAlive() || timer > 600) {
+            if (animal != null && animal.isAlive()) {
+                unreachable.add(animal.getUUID()); // up a cliff, across water: try another one
+            }
             task = Task.NONE;
             return;
         }
-        if (approach(animal.blockPosition(), 2.2) && timer % 15 == 0) {
+        if (approach(animal.blockPosition(), 3.0) && timer % 15 == 0) {
             float damage = 2.0F + (worker.getMainHandItem().isEmpty() ? 0 : 3.0F);
             animal.hurt(level.damageSources().mobAttack(worker), damage);
             worker.swing(InteractionHand.MAIN_HAND);
@@ -320,6 +323,8 @@ public class AnimalWorkGoal extends Goal {
         }
         return best;
     }
+
+    private final java.util.Set<java.util.UUID> unreachable = new java.util.HashSet<>();
 
     private boolean approach(BlockPos target, double reach) {
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY(), target.getZ() + 0.5) <= reach * reach) {

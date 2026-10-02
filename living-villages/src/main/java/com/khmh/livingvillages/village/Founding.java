@@ -47,24 +47,31 @@ public final class Founding {
         if (!LVConfig.NATURAL_FOUNDING.get() || level.dimension() != Level.OVERWORLD) {
             return;
         }
-        int spacing = LVConfig.FOUNDING_SPACING.get();
-        RandomSource random = level.getRandom();
         for (ServerPlayer player : level.players()) {
-            if (nearest(manager, player.blockPosition()) < spacing) {
-                continue;
-            }
-            for (int attempt = 0; attempt < 8; attempt++) {
-                double angle = random.nextDouble() * Math.PI * 2;
-                int dist = 48 + random.nextInt(80);
-                BlockPos col = player.blockPosition().offset((int) (Math.cos(angle) * dist), 0,
-                        (int) (Math.sin(angle) * dist));
-                BlockPos spot = suitable(level, col);
-                if (spot != null && nearest(manager, spot) >= spacing) {
-                    found(level, manager, spot);
-                    return;
-                }
+            if (tryAround(level, manager, player.blockPosition()) != null) {
+                return;
             }
         }
+    }
+
+    /** One go at putting a camp somewhere 48-128 blocks from {@code around}; the new village or null. */
+    @Nullable
+    public static Village tryAround(ServerLevel level, VillageManager manager, BlockPos around) {
+        int spacing = LVConfig.FOUNDING_SPACING.get();
+        if (nearest(manager, around) < spacing) {
+            return null;
+        }
+        RandomSource random = level.getRandom();
+        for (int attempt = 0; attempt < 24; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2;
+            int dist = 48 + random.nextInt(80);
+            BlockPos col = around.offset((int) (Math.cos(angle) * dist), 0, (int) (Math.sin(angle) * dist));
+            BlockPos spot = suitable(level, col);
+            if (spot != null && nearest(manager, spot) >= spacing) {
+                return found(level, manager, spot);
+            }
+        }
+        return null;
     }
 
     private static double nearest(VillageManager manager, BlockPos pos) {
@@ -102,7 +109,7 @@ public final class Founding {
                 max = Math.max(max, p.getY());
             }
         }
-        return max - min <= 2 ? top : null;
+        return max - min <= 4 ? top : null;
     }
 
     /** Puts down the camp at the given surface spot: bell, houses, two villagers, empty stores. */

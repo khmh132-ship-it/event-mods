@@ -74,6 +74,14 @@ public final class VillageCommand {
                             say(ctx, n.toString());
                             return 1;
                         })))
+                .then(Commands.literal("autofound").executes(ctx -> {
+                    // Debug: what the natural founding would do around here, right now.
+                    ServerLevel level = ctx.getSource().getLevel();
+                    Village v = com.khmh.livingvillages.village.Founding.tryAround(level, VillageManager.get(level),
+                            BlockPos.containing(ctx.getSource().getPosition()));
+                    say(ctx, v == null ? "No camp (village too near, or no suitable ground)" : "Camp at " + v.center().toShortString());
+                    return v == null ? 0 : 1;
+                }))
                 .then(Commands.literal("found").executes(ctx -> {
                     ServerLevel level = ctx.getSource().getLevel();
                     BlockPos at = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,

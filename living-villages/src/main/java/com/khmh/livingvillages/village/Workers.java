@@ -70,18 +70,26 @@ public final class Workers {
         // that matters less right now (a camp of two: one builds, the other fetches wood or makes what is asked).
         List<WorkerJob> priority = new java.util.ArrayList<>();
         java.util.Map<WorkerJob, Boolean> needed = new java.util.EnumMap<>(WorkerJob.class);
-        needed.put(WorkerJob.BUILDER, building);
+        // A builder standing about waiting for materials is better off fetching them himself.
+        boolean stalled = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUILDER
+                && w.status().contains("waiting for materials"));
+        needed.put(WorkerJob.BUILDER, building && !stalled);
         needed.put(WorkerJob.APPRENTICE, orders);
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
-        boolean woodInHand = CostKey.Wood.INSTANCE.available(v.stock(level)) >= 32;
+        // Hysteresis, so the second pair of hands does not flip between axe and workbench every minute.
+        int wood = CostKey.Wood.INSTANCE.available(v.stock(level));
+        boolean woodInHand = wood >= 64 || wood >= 16 && v.data().getBoolean("woodInHand");
+        v.data().putBoolean("woodInHand", woodInHand);
         // Food: a hunter while the stores are thin and there is game about, a farmer once there are fields.
         int food = v.stock(level).totals().entrySet().stream()
                 .filter(e -> e.getKey().isEdible()).mapToInt(Map.Entry::getValue).sum();
         boolean foodLow = food < Math.max(2, v.population()) * 6;
         boolean game = !level.getEntitiesOfClass(net.minecraft.world.entity.animal.Animal.class,
-                new net.minecraft.world.phys.AABB(v.center()).inflate(v.radius()), a -> a.isAlive() && !a.isBaby()
-                        && !(a instanceof net.minecraft.world.entity.animal.horse.AbstractHorse)).isEmpty();
+                new net.minecraft.world.phys.AABB(v.center()).inflate(v.radius() + 16), a -> a.isAlive() && !a.isBaby()
+                        && (a instanceof net.minecraft.world.entity.animal.Cow || a instanceof net.minecraft.world.entity.animal.Pig
+                        || a instanceof net.minecraft.world.entity.animal.Chicken || a instanceof net.minecraft.world.entity.animal.Sheep
+                        || a instanceof net.minecraft.world.entity.animal.Rabbit)).isEmpty();
         boolean fields = v.buildings().stream().anyMatch(b -> b.isComplete()
                 && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
                 && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));

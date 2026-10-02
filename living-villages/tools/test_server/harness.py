@@ -25,7 +25,8 @@ FLAT = {'layers': [{'block': 'minecraft:bedrock', 'height': 1}, {'block': 'minec
 
 
 class TestServer:
-    def __init__(self, config=None, log_name='test_server.log', flat=True, seed='livingvillages', fresh=True, difficulty='peaceful'):
+    def __init__(self, config=None, log_name='test_server.log', flat=True, seed='livingvillages', fresh=True, difficulty='peaceful', structures=False):
+        self.structures = structures
         self.difficulty = difficulty
         self.fresh = fresh
         self.config = config or {}
@@ -54,7 +55,7 @@ class TestServer:
                 'level-type=minecraft\\:flat' if self.flat else 'level-type=minecraft\\:normal',
                 'generator-settings=' + (gen if self.flat else '{}'),
                 'gamemode=creative', f'difficulty={self.difficulty}', 'spawn-monsters=false', 'spawn-animals=true',
-                'spawn-npcs=true', 'generate-structures=false', 'online-mode=false', 'max-tick-time=-1',
+                'spawn-npcs=true', f'generate-structures={str(self.structures).lower()}', 'online-mode=false', 'max-tick-time=-1',
                 'enable-rcon=true', f'rcon.port={PORT}', f'rcon.password={PASSWORD}', 'spawn-protection=0',
                 'view-distance=4', 'simulation-distance=4', '']))
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
