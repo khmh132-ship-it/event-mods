@@ -21,7 +21,8 @@ def texture(ref):
     ns, path = ref.split(':') if ':' in ref else ('minecraft', ref)
     key = f'{ns}:{path}'
     if key not in _tex:
-        data = jar.read(f'assets/{ns}/textures/{path}.png')
+        local = os.path.join(ASSETS, ns, 'textures', path + '.png')
+        data = open(local, 'rb').read() if os.path.exists(local) else jar.read(f'assets/{ns}/textures/{path}.png')
         img = Image.open(io.BytesIO(data)).convert('RGBA')
         _tex[key] = img.crop((0, 0, img.width, img.width))  # first frame of animations
     return _tex[key]

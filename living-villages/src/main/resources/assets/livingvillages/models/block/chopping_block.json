@@ -4,7 +4,8 @@
     "particle": "minecraft:block/oak_log",
     "bark": "minecraft:block/oak_log",
     "rings": "minecraft:block/oak_log_top",
-    "axe": "minecraft:item/iron_axe"
+    "axe": "minecraft:item/iron_axe",
+    "top": "livingvillages:block/chopping_block_top"
   },
   "elements": [
     {
@@ -56,12 +57,12 @@
           ]
         },
         "up": {
-          "texture": "#rings",
+          "texture": "#top",
           "uv": [
-            2,
-            2,
-            14,
-            14
+            0,
+            0,
+            16,
+            16
           ]
         },
         "down": {

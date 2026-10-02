@@ -4,8 +4,8 @@
     "particle": "minecraft:block/dark_oak_planks",
     "wood": "minecraft:block/dark_oak_planks",
     "leg": "minecraft:block/spruce_log",
-    "book": "minecraft:item/writable_book",
-    "quill": "minecraft:item/feather"
+    "quill": "minecraft:item/feather",
+    "top": "livingvillages:block/storekeeper_desk_top"
   },
   "elements": [
     {
@@ -33,7 +33,13 @@
           "texture": "#wood"
         },
         "up": {
-          "texture": "#wood"
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#wood"
@@ -65,7 +71,13 @@
           "texture": "#wood"
         },
         "up": {
-          "texture": "#wood"
+          "texture": "#wood",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#wood"
@@ -197,23 +209,6 @@
         },
         "down": {
           "texture": "#leg"
-        }
-      }
-    },
-    {
-      "from": [
-        3,
-        13.02,
-        3
-      ],
-      "to": [
-        11,
-        13.02,
-        11
-      ],
-      "faces": {
-        "up": {
-          "texture": "#book"
         }
       }
     },

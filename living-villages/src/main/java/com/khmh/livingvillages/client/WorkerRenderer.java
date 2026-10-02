@@ -13,6 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Draws workers as plains villagers wearing the clothes of a matching vanilla profession. */
 public class WorkerRenderer extends MobRenderer<VillageWorker, VillagerModel<VillageWorker>> {
+    /** The village's own trades wear their own clothes; the vanilla ones keep the vanilla outfits. */
+    private static final java.util.Set<String> OWN_OUTFITS = java.util.Set.of("BUILDER", "LUMBERJACK", "MINER",
+            "APPRENTICE", "GUARD", "CARPENTER", "STOREKEEPER", "CARRIER");
+
     private static final ResourceLocation SKIN = new ResourceLocation("textures/entity/villager/villager.png");
 
     public WorkerRenderer(EntityRendererProvider.Context ctx) {
@@ -45,8 +49,9 @@ public class WorkerRenderer extends MobRenderer<VillageWorker, VillagerModel<Vil
                 return;
             }
             renderColoredCutoutModel(getParentModel(), TYPE, pose, buffers, light, worker, 1, 1, 1);
-            ResourceLocation outfit = new ResourceLocation("textures/entity/villager/profession/"
-                    + worker.job().outfit() + ".png");
+            ResourceLocation outfit = OWN_OUTFITS.contains(worker.job().name())
+                    ? new ResourceLocation("livingvillages", "textures/entity/worker/" + worker.job().name().toLowerCase() + ".png")
+                    : new ResourceLocation("textures/entity/villager/profession/" + worker.job().outfit() + ".png");
             renderColoredCutoutModel(getParentModel(), outfit, pose, buffers, light, worker, 1, 1, 1);
         }
     }

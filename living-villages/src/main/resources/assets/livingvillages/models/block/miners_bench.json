@@ -2,8 +2,8 @@
   "parent": "minecraft:block/block",
   "textures": {
     "particle": "minecraft:block/cobblestone",
-    "side": "minecraft:block/cobblestone",
-    "top": "minecraft:block/smooth_stone",
+    "side": "livingvillages:block/miners_bench_side",
+    "top": "livingvillages:block/miners_bench_top",
     "pick": "minecraft:item/iron_pickaxe"
   },
   "elements": [
@@ -56,7 +56,13 @@
           ]
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#side"

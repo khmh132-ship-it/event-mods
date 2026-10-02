@@ -4,8 +4,8 @@
     "particle": "minecraft:block/oak_planks",
     "planks": "minecraft:block/oak_planks",
     "leg": "minecraft:block/stripped_oak_log",
-    "map": "minecraft:item/map",
-    "tool": "minecraft:item/iron_shovel"
+    "tool": "minecraft:item/iron_shovel",
+    "top": "livingvillages:block/builders_table_top"
   },
   "elements": [
     {
@@ -33,7 +33,13 @@
           "texture": "#planks"
         },
         "up": {
-          "texture": "#planks"
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#planks"
@@ -197,23 +203,6 @@
         },
         "down": {
           "texture": "#planks"
-        }
-      }
-    },
-    {
-      "from": [
-        1,
-        16.02,
-        2
-      ],
-      "to": [
-        10,
-        16.02,
-        11
-      ],
-      "faces": {
-        "up": {
-          "texture": "#map"
         }
       }
     },

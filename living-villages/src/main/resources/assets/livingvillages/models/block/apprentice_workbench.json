@@ -2,7 +2,7 @@
   "parent": "minecraft:block/block",
   "textures": {
     "particle": "minecraft:block/crafting_table_top",
-    "top": "minecraft:block/crafting_table_top",
+    "top": "livingvillages:block/apprentice_workbench_top",
     "side": "minecraft:block/spruce_planks",
     "leg": "minecraft:block/stripped_spruce_log",
     "ingot": "minecraft:item/iron_ingot",
@@ -58,7 +58,13 @@
           ]
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#side"
