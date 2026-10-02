@@ -117,14 +117,18 @@ public final class CraftPlanner {
             int times = (need + c.outCount() - 1) / c.outCount();
             Map<Item, Integer> inputs = new LinkedHashMap<>();
             for (Ingredient ing : c.ingredients()) {
-                Item pick = choose(level, ing, depth, visiting);
-                if (pick == null) {
-                    return false;
+                // Every option of the ingredient in turn (coal, else charcoal burnt from logs...).
+                boolean got = false;
+                for (Item option : options(level, ing, visiting)) {
+                    State trial = copy();
+                    if (trial.obtain(level, option, times, depth + 1, visiting)) {
+                        adopt(trial);
+                        inputs.merge(option, times, Integer::sum);
+                        got = true;
+                        break;
+                    }
                 }
-                inputs.merge(pick, times, Integer::sum);
-            }
-            for (Map.Entry<Item, Integer> e : inputs.entrySet()) {
-                if (!obtain(level, e.getKey(), e.getValue(), depth + 1, visiting)) {
+                if (!got) {
                     return false;
                 }
             }
@@ -145,26 +149,24 @@ public final class CraftPlanner {
             return true;
         }
 
-        /** The option of an ingredient we have most of; otherwise the first one we could make. */
-        private Item choose(ServerLevel level, Ingredient ing, int depth, Set<Item> visiting) {
-            Item best = null;
-            int bestHave = 0;
+        /** An ingredient's options: those we have, most first, then those we could make. */
+        private List<Item> options(ServerLevel level, Ingredient ing, Set<Item> visiting) {
+            List<Item> have = new ArrayList<>();
+            List<Item> makeable = new ArrayList<>();
             for (ItemStack s : ing.getItems()) {
-                int have = avail.getOrDefault(s.getItem(), 0);
-                if (have > bestHave) {
-                    bestHave = have;
-                    best = s.getItem();
+                Item item = s.getItem();
+                if (have.contains(item) || makeable.contains(item)) {
+                    continue;
+                }
+                if (avail.getOrDefault(item, 0) > 0) {
+                    have.add(item);
+                } else if (!visiting.contains(item) && !recipesFor(level, item).isEmpty()) {
+                    makeable.add(item);
                 }
             }
-            if (best != null) {
-                return best;
-            }
-            for (ItemStack s : ing.getItems()) {
-                if (!visiting.contains(s.getItem()) && !recipesFor(level, s.getItem()).isEmpty()) {
-                    return s.getItem();
-                }
-            }
-            return null;
+            have.sort(Comparator.comparingInt((Item i) -> avail.getOrDefault(i, 0)).reversed());
+            have.addAll(makeable.subList(0, Math.min(4, makeable.size())));
+            return have;
         }
 
         /** Coal or charcoal if there is any, otherwise wood (planks burn for 1.5 items each). */
@@ -223,6 +225,12 @@ public final class CraftPlanner {
         villager(out, Items.GRAVEL, 1, Ingredient.of(Items.COBBLESTONE), Ingredient.of(Items.COBBLESTONE));
         villager(out, Items.SAND, 1, Ingredient.of(Items.GRAVEL));
         villager(out, Items.FLINT, 1, Ingredient.of(Items.GRAVEL), Ingredient.of(Items.GRAVEL));
+        // A bed without wool: a straw or hide mattress on a plank frame.
+        Ingredient planks = Ingredient.of(net.minecraft.tags.ItemTags.PLANKS);
+        villager(out, Items.WHITE_BED, 1, Ingredient.of(Items.WHEAT), Ingredient.of(Items.WHEAT),
+                Ingredient.of(Items.WHEAT), planks, planks, planks);
+        villager(out, Items.WHITE_BED, 1, Ingredient.of(Items.LEATHER), Ingredient.of(Items.LEATHER),
+                Ingredient.of(Items.LEATHER), planks, planks, planks);
     }
 
     private static void villager(Map<Item, List<Candidate>> out, Item result, int count, Ingredient... ingredients) {
