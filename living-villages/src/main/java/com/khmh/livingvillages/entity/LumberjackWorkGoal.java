@@ -149,7 +149,9 @@ public class LumberjackWorkGoal extends Goal {
                     village.reportWorking(hut.id(), now);
                 }
                 if (logs.isEmpty()) {
-                    replant(level, tree, lastLog);
+                    if (replant(level, tree, lastLog)) {
+                        com.khmh.livingvillages.village.Growth.noteSapling(village, tree);
+                    }
                     go(worker.carried() >= LOAD ? State.RETURN : State.SEEK);
                     return;
                 }
@@ -303,9 +305,9 @@ public class LumberjackWorkGoal extends Goal {
     }
 
     /** Plants a sapling of the felled species (oak if there is none) where the trunk stood. */
-    private static void replant(Level level, BlockPos base, String logItem) {
+    private static boolean replant(Level level, BlockPos base, String logItem) {
         if (!level.getBlockState(base).isAir() || !level.getBlockState(base.below()).is(BlockTags.DIRT)) {
-            return;
+            return false;
         }
         Block sapling = Blocks.OAK_SAPLING;
         ResourceLocation log = ResourceLocation.tryParse(logItem);
@@ -318,5 +320,6 @@ public class LumberjackWorkGoal extends Goal {
             }
         }
         level.setBlock(base, sapling.defaultBlockState(), Block.UPDATE_ALL);
+        return true;
     }
 }

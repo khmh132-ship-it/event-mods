@@ -87,6 +87,7 @@ public final class VillageEvents {
             Construction.tick(level, v, now);
             if (loaded) {
                 GrowthPlanner.tick(level, v, now);
+                Growth.tick(level, v, now);
             }
         }
     }

@@ -89,6 +89,10 @@ public class FarmerWorkGoal extends Goal {
             fetching.tick();
             return;
         }
+        if (forage != null) {
+            forageTick(level);
+            return;
+        }
         if (--scan <= 0) {
             todo = findWork(level, village);
             scan = SCAN_EVERY;
@@ -135,6 +139,55 @@ public class FarmerWorkGoal extends Goal {
         }
     }
 
+    private BlockPos forage;
+    private int forageTimer;
+
+    /** Walks to a tuft of grass and pulls it up (seeds drop now and then, as for a player). */
+    private void forageTick(ServerLevel level) {
+        worker.setStatus("pulling grass for seeds");
+        if (++forageTimer > 400 || !isGrass(level.getBlockState(forage))) {
+            forage = KEEP.keySet().stream().anyMatch(s -> worker.getInventory().countItem(s) >= 4) || forageTimer > 400
+                    ? null : grassNear(level);
+            forageTimer = 0;
+            return;
+        }
+        if (worker.distanceToSqr(forage.getX() + 0.5, forage.getY(), forage.getZ() + 0.5) > 6.0) {
+            if (forageTimer % 20 == 1) {
+                worker.getNavigation().moveTo(forage.getX() + 0.5, forage.getY(), forage.getZ() + 0.5, 0.6);
+            }
+            return;
+        }
+        worker.getNavigation().stop();
+        worker.getLookControl().setLookAt(forage.getX() + 0.5, forage.getY() + 0.3, forage.getZ() + 0.5);
+        if (forageTimer % 6 != 0) {
+            return;
+        }
+        BlockState grass = level.getBlockState(forage);
+        for (ItemStack drop : Block.getDrops(grass, level, forage, null, worker, ItemStack.EMPTY)) {
+            worker.carry(drop.getItem(), drop.getCount());
+        }
+        level.destroyBlock(forage, false, worker);
+        worker.swing(InteractionHand.MAIN_HAND);
+        forage = KEEP.keySet().stream().anyMatch(s -> worker.getInventory().countItem(s) >= 4) ? null : grassNear(level);
+        forageTimer = 0;
+    }
+
+    private static boolean isGrass(BlockState s) {
+        return s.is(Blocks.GRASS) || s.is(Blocks.TALL_GRASS) || s.is(Blocks.FERN) || s.is(Blocks.LARGE_FERN);
+    }
+
+    private BlockPos grassNear(ServerLevel level) {
+        BlockPos at = worker.blockPosition();
+        BlockPos best = null;
+        for (BlockPos p : BlockPos.betweenClosed(at.offset(-16, -4, -16), at.offset(16, 4, 16))) {
+            if (level.hasChunkAt(p) && isGrass(level.getBlockState(p))
+                    && (best == null || p.distSqr(at) < best.distSqr(at))) {
+                best = p.immutable();
+            }
+        }
+        return best;
+    }
+
     private void replant(ServerLevel level, Village village, BlockPos pos, Item preferred) {
         Item seed = preferred != null && worker.getInventory().countItem(preferred) > 0 ? preferred
                 : KEEP.keySet().stream().filter(s -> worker.getInventory().countItem(s) > 0).findFirst().orElse(null);
@@ -144,6 +197,8 @@ public class FarmerWorkGoal extends Goal {
                     .collect(Collectors.toMap(s -> s, s -> Math.min(16, stock.get(s)), (a, b) -> a, LinkedHashMap::new));
             if (!want.isEmpty()) {
                 fetching.start(want);
+            } else {
+                forage = grassNear(level); // none in store either: off to pull up grass for seeds
             }
             target = null;
             return;
