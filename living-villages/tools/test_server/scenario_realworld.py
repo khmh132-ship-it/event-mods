@@ -17,7 +17,7 @@ with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True,
         time.sleep(15)
         print(i, s.cmd(f'execute positioned {i * 400} 80 0 run village autofound', check=False))
     print(s.cmd('village list', check=False))
-    for minute in range(16):
+    for minute in range(int(__import__("os").environ.get("LV_MINUTES", "16"))):
       time.sleep(60)
       for m in re.finditer(r'bell (-?\d+) (-?\d+) (-?\d+)', s.cmd('village list', check=False)):
         x, y, z = m.groups()
