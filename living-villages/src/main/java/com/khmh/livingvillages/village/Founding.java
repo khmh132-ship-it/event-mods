@@ -162,6 +162,22 @@ public final class Founding {
         return trees >= 4 ? top : null;
     }
 
+    private static int bedsIn(ServerLevel level, Village v) {
+        int n = 0;
+        for (var b : v.buildings()) {
+            for (BlockPos p : BlockPos.betweenClosed(b.box().minX(), b.box().minY(), b.box().minZ(), b.box().maxX(),
+                    b.box().maxY(), b.box().maxZ())) {
+                var st = level.getBlockState(p);
+                if (st.getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                        && st.getValue(net.minecraft.world.level.block.BedBlock.PART)
+                        == net.minecraft.world.level.block.state.properties.BedPart.HEAD) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
     /** Puts down the camp at the given surface spot: bell, houses, two villagers, empty stores. */
     public static Village found(ServerLevel level, VillageManager manager, BlockPos top) {
         BlockPos bell = top;
@@ -172,10 +188,11 @@ public final class Founding {
         manager.add(v);
         manager.setDirty();
         RandomSource random = level.getRandom();
-        // Two small houses: a bed each for the founders and, more often than not, one over for the first child
+        // Small houses until there is a bed each for the founders and one over for the first child (two or three)
         // (with a single bed a camp waited hours on its next house before anyone could be born).
-        int houses = 2;
-        for (int i = 0; i < houses; i++) {
+        int houses = 0;
+        for (int i = 0; i < 3 && (houses < 2 || bedsIn(level, v) < 3); i++) { // a third only if still short of beds
+            houses++;
             BuildingType type = BuildingTypes.get("small_house_" + (1 + random.nextInt(8)));
             if (type == null) {
                 type = BuildingTypes.get("small_house_1");
