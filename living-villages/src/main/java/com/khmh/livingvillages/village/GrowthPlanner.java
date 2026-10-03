@@ -37,9 +37,9 @@ public final class GrowthPlanner {
             new Rule("farm", 1, 1),
             // Beds before anything big: children are the only way a camp gets more hands.
             new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 2),
-            // Mouths to feed: a field for every two of them and one over, whatever the village's level
+            // Mouths to feed: a field for every two of them (rounded up) and one over, whatever the village's level
             // (one field feeds a person and a half, and no food means no children: no level-up either).
-            new Rule("farm", 1, l -> 99, v -> v.countGroup("farm") < v.population() / 2 + 1),
+            new Rule("farm", 1, l -> 99, v -> v.countGroup("farm") < (v.population() + 1) / 2 + 1),
             new Rule("warehouse", 1, l -> 99, v -> v.countGroup("warehouse") == 0 && v.population() >= 5
                     || v.stockFill() >= 0.8),
             new Rule("lumberjack", 1, 1),
