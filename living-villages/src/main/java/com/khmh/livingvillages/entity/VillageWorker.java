@@ -103,6 +103,7 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
                 m -> job() != WorkerJob.GUARD && !(m instanceof net.minecraft.world.entity.monster.EnderMan)
                         && !(m instanceof net.minecraft.world.entity.monster.ZombifiedPiglin)
                         && hasLineOfSight(m)));
+        goalSelector.addGoal(1, new CourtGoal(this));
         goalSelector.addGoal(1, new GuardGoals.Melee(this));
         goalSelector.addGoal(2, new GuardGoals.Patrol(this));
         targetSelector.addGoal(1, new GuardGoals.Retaliate(this));
@@ -332,6 +333,23 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
             com.khmh.livingvillages.village.VillageLoader.release(sl, this);
         }
         super.remove(reason);
+    }
+
+    private java.util.UUID mate;
+    private long mateUntil;
+
+    /** Paired off by the village for a child: walks up to {@code other} till {@code until} (null to stop). */
+    public void courting(@Nullable net.minecraft.world.entity.Entity other, long until) {
+        mate = other == null ? null : other.getUUID();
+        mateUntil = until;
+    }
+
+    @Nullable
+    java.util.UUID mate() {
+        if (mate != null && level().getGameTime() > mateUntil) {
+            mate = null;
+        }
+        return mate;
     }
 
     /** Where he is trying to get to and whether there is a way, for /village workers. */

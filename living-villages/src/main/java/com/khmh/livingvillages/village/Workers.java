@@ -99,7 +99,7 @@ public final class Workers {
         needed.put(WorkerJob.BUILDER, building && !stalled && !recentlyStalled);
         // An apprentice with nothing he can make is no use as one.
         boolean idleApprentice = workers.stream().anyMatch(w -> w.job() == WorkerJob.APPRENTICE
-                && idleFor(level, w) >= 1200);
+                && idleFor(level, w) >= 400);
         needed.put(WorkerJob.APPRENTICE, orders && !idleApprentice);
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
@@ -121,7 +121,7 @@ public final class Workers {
                 && com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()) != null
                 && "farm".equals(com.khmh.livingvillages.building.BuildingTypes.get(b.typeId()).group()));
         // A hunter who finds nothing he can get at is no use as one.
-        boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && idleFor(level, w) >= 1200);
+        boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && idleFor(level, w) >= 400);
         needed.put(WorkerJob.BUTCHER, foodLow && game && !idleHunter);
         // With food short the farmer stays on even between harvests: he picks berries while the wheat grows.
         needed.put(WorkerJob.FARMER, fields && (foodLow || com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v)));
@@ -255,7 +255,7 @@ public final class Workers {
         if (w.isSleeping()) {
             return false; // nobody is woken to be told he has a new trade; it can wait till morning
         }
-        return inJob >= 12000 || inJob >= 2400 && idleFor(level, w) >= 1200;
+        return inJob >= 12000 || inJob >= 1200 && idleFor(level, w) >= 400;
     }
 
     private static boolean idleNow(VillageWorker w) {
@@ -288,9 +288,7 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        if (now - v.data().getLong("lastReassign") < 4800) {
-            return false;
-        }
+        boolean recent = now - v.data().getLong("lastReassign") < 4800;
         VillageWorker donor = null;
         // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
         for (WorkerJob from : all) {
@@ -305,14 +303,15 @@ public final class Workers {
             WorkerJob from = lower.get(i);
             // Not in the middle of a trip: he finishes it (and unloads) first.
             donor = workers.stream().filter(w -> w.job() == from && settled(level, w) && !midTrip(w)
-                    && (juggle || idleFor(level, w) >= 1200
+                    && (juggle || idleFor(level, w) >= 400
                     || now - w.getPersistentData().getLong("lvJobSince") >= 24000)).findFirst().orElse(null);
         }
-        if (donor == null) {
+        // At most every four minutes per village, unless the one to move is standing about with nothing to do.
+        if (donor == null || recent && idleFor(level, donor) < 400) {
             return false;
         }
         WorkerJob from = donor.job();
-        if (idleFor(level, donor) >= 1200) {
+        if (idleFor(level, donor) >= 400) {
             // Moved off for want of anything to do: that job is not wanted again for a while.
             v.data().putLong("idle_" + from.name().toLowerCase(), now);
         }

@@ -72,7 +72,8 @@ public final class GrowthPlanner {
     }
 
     private static void tickIgnoringConfig(ServerLevel level, Village v, long now) {
-        if (now - v.lastPlan() < LVConfig.PLAN_INTERVAL.get()) {
+        // Every few seconds at most: a builder done with one house should not stand about half a minute for the next.
+        if (now - v.lastPlan() < Math.min(100, LVConfig.PLAN_INTERVAL.get())) {
             return;
         }
         v.setLastPlan(now);

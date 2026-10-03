@@ -26,6 +26,10 @@ public class SleepGoal extends Goal {
                 && worker.village().map(v -> bedtime(worker.level()) || v.alarm()).orElse(false);
     }
 
+    public static boolean isNight(net.minecraft.world.level.Level level) {
+        return bedtime(level);
+    }
+
     /** Night by the clock, as vanilla villagers keep it (rain or thunder do not send anyone to bed). */
     static boolean bedtime(net.minecraft.world.level.Level level) {
         long t = level.getDayTime() % 24000L;
