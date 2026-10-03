@@ -299,8 +299,29 @@ public class FarmerWorkGoal extends Goal {
 
     /** Ripe crops and empty farmland within the village. */
     private static List<BlockPos> findWork(ServerLevel level, Village village) {
+        // The village's own fields only: sweeping the whole village block by block grows costly as it grows.
+        List<BlockPos> out = new java.util.ArrayList<>();
+        for (com.khmh.livingvillages.building.Building b : village.buildings()) {
+            var type = com.khmh.livingvillages.building.BuildingTypes.get(b.typeId());
+            if (type == null || !"farm".equals(type.group()) || !b.isComplete()) {
+                continue;
+            }
+            var box = b.box();
+            if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                continue;
+            }
+            for (BlockPos p : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+                if (level.getBlockState(p).is(Blocks.FARMLAND) && needsWork(level, p.above())) {
+                    out.add(p.above().immutable());
+                }
+            }
+        }
+        if (village.countGroup("farm") > 0) {
+            return out;
+        }
+        // An old village whose fields are not buildings of ours: look about for farmland as before.
         BlockPos c = village.center();
-        int r = village.radius();
+        int r = Math.min(48, village.radius());
         return BlockPos.betweenClosedStream(c.getX() - r, c.getY() - 8, c.getZ() - r, c.getX() + r, c.getY() + 8,
                         c.getZ() + r)
                 .filter(p -> level.hasChunkAt(p) && level.getBlockState(p).is(Blocks.FARMLAND))
