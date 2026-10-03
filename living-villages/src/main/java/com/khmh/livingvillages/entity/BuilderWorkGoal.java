@@ -9,6 +9,7 @@ import com.khmh.livingvillages.stock.Stockpile;
 import com.khmh.livingvillages.village.Village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -298,8 +299,14 @@ public class BuilderWorkGoal extends Goal {
             prepWalk = 0;
         }
         double dist = Math.sqrt(worker.distanceToSqr(Vec3.atCenterOf(pos)));
-        // Up close if he can get there; a long arm's length if the way is blocked for a while.
-        if (dist > REACH && !(prepWalk > 200 && dist <= 8)) {
+        double dx = worker.getX() - (pos.getX() + 0.5), dz = worker.getZ() - (pos.getZ() + 0.5);
+        BlockState at = level.getBlockState(pos);
+        // A tree on the site is felled from its foot, as the lumberjack does: the top of a tall spruce is out of
+        // anybody's reach. And whatever he cannot get near for a full minute he deals with from where he stands,
+        // rather than a village waiting on one block for ever.
+        boolean tree = (at.is(BlockTags.LOGS) || at.is(BlockTags.LEAVES)) && dx * dx + dz * dz <= REACH * REACH
+                && worker.getY() <= pos.getY();
+        if (dist > REACH && !tree && !(prepWalk > 200 && dist <= 8) && prepWalk <= 1200) {
             prepWalk++;
             if (--repath <= 0) {
                 worker.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.6);
