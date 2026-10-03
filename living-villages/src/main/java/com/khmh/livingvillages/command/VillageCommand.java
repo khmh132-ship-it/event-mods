@@ -240,7 +240,7 @@ public final class VillageCommand {
             say(ctx, String.format("%s @%s food %d, tool %s: %s |%s", w.job().name().toLowerCase(),
                     w.blockPosition().toShortString(), w.food(),
                     w.getMainHandItem().isEmpty() ? "-" : BuiltInRegistries.ITEM.getKey(w.getMainHandItem().getItem()).getPath(),
-                    w.status(), inv));
+                    w.status() + w.navInfo(), inv));
         }
         return list.size();
     }

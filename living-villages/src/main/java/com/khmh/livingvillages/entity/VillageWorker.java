@@ -334,6 +334,14 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         super.remove(reason);
     }
 
+    /** Where he is trying to get to and whether there is a way, for /village workers. */
+    public String navInfo() {
+        if (getNavigation() instanceof WorkerNavigation nav && nav.wanted != null) {
+            return " -> " + BlockPos.containing(nav.wanted).toShortString() + (nav.noWay() ? " (no way)" : "");
+        }
+        return "";
+    }
+
     /** Turns back into a plain villager. */
     public void retire() {
         if (!(level() instanceof ServerLevel server)) {
