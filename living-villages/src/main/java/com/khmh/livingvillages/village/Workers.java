@@ -204,6 +204,25 @@ public final class Workers {
             return;
         }
 
+        // Spare hands: grown-up children with no trade join the field and wood gangs, so a big village is not
+        // twelve idlers and one lumberjack (a field each for farmers; a lumberjack for every eight people).
+        boolean spare = villagers.stream().anyMatch(x -> x.isAlive() && !x.isBaby()
+                && x.getVillagerData().getProfession() == VillagerProfession.NONE);
+        if (spare) {
+            long fieldCount = v.buildings().stream().filter(b -> b.isComplete() && b.type() != null
+                    && "farm".equals(b.type().group())).count();
+            long farmers = workers.stream().filter(w -> w.job() == WorkerJob.FARMER).count();
+            if (farmers < fieldCount && farmers > 0 && com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v)
+                    && convert(level, v, villagers, WorkerJob.FARMER, null, v.center()) != null) {
+                return;
+            }
+            long lumberjacks = workers.stream().filter(w -> w.job() == WorkerJob.LUMBERJACK).count();
+            if (lumberjacks > 0 && lumberjacks < 1 + v.population() / 8 && woodShort
+                    && convert(level, v, villagers, WorkerJob.LUMBERJACK, null, v.center()) != null) {
+                return;
+            }
+        }
+
         // Guards: one for every six villagers (at least one from four on), two more while the alarm is up.
         int wanted = v.population() < 4 ? 0 : Math.max(1, v.population() / 6) + (v.alarm() ? 2 : 0);
         long guards = workers.stream().filter(w -> w.job() == WorkerJob.GUARD).count();
