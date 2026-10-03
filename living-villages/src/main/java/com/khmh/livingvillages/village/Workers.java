@@ -255,13 +255,13 @@ public final class Workers {
         if (w.isSleeping()) {
             return false; // nobody is woken to be told he has a new trade; it can wait till morning
         }
-        return inJob >= 12000 || inJob >= 1200 && idleFor(level, w) >= 400;
+        return inJob >= 12000 || inJob >= 2400 && idleFor(level, w) >= 400;
     }
 
     private static boolean idleNow(VillageWorker w) {
         String s = w.status();
-        // A builder standing at his site waiting for materials is doing nothing either: better he fetches them.
-        return s.startsWith("pick") || s.startsWith("none") || s.startsWith("idle") || s.contains("waiting for materials");
+        // (a builder waiting for materials is not idle: moved off, he never gets to make do with a stand-in)
+        return s.startsWith("pick") || s.startsWith("none") || s.startsWith("idle");
     }
 
     /** Ticks he has been idle without a break (0 if he is busy). */
