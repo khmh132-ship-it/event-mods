@@ -287,15 +287,19 @@ class Unloading {
     private void compostSurplus(ServerLevel level, Village village) {
         var stock = village.stock(level);
         SimpleContainer inv = worker.getInventory();
+        java.util.Map<net.minecraft.world.item.Item, Integer> keepLeft = new java.util.HashMap<>(keep);
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
-            if (s.isEmpty() || keep.containsKey(s.getItem())) {
+            if (s.isEmpty()) {
                 continue;
             }
             Integer cap = s.is(net.minecraft.tags.ItemTags.SAPLINGS) ? Integer.valueOf(PLENTY_SAPLINGS)
                     : PLENTY.get(s.getItem());
             if (cap != null && stock.count(s.getItem()) >= cap) {
-                inv.setItem(i, ItemStack.EMPTY);
+                // What he keeps for his own work (a farmer's seeds for the next sowing) stays in his pocket.
+                int kept = Math.min(s.getCount(), keepLeft.getOrDefault(s.getItem(), 0));
+                keepLeft.merge(s.getItem(), -kept, Integer::sum);
+                s.setCount(kept);
             }
         }
         inv.setChanged();
