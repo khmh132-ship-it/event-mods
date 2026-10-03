@@ -70,15 +70,16 @@ public final class Workers {
         }
 
 
+        var stock = v.stock(level); // looked at once for the whole scan
         // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
         boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
         boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0 && r.unobtainableSince() < 0
                 && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
         // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
-        boolean woodShort = CostKey.Wood.INSTANCE.available(v.stock(level)) < 512
+        boolean woodShort = CostKey.Wood.INSTANCE.available(stock) < 512
                 || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
         // Likewise stone: a miner digs his own quarry until there is a mine.
-        boolean stoneShort = CostKey.Stone.INSTANCE.available(v.stock(level)) < 128
+        boolean stoneShort = CostKey.Stone.INSTANCE.available(stock) < 128
                 || v.buildings().stream().anyMatch(b -> "mine".equals(b.typeId()) && b.isComplete());
         // Labour exchange: the most pressing jobs first; with too few people a worker is moved over from a job
         // that matters less right now (a camp of two: one builds, the other fetches wood or makes what is asked).
@@ -103,13 +104,13 @@ public final class Workers {
         needed.put(WorkerJob.LUMBERJACK, woodShort);
         needed.put(WorkerJob.MINER, stoneShort);
         // Hysteresis, so the second pair of hands does not flip between axe and workbench every minute.
-        int wood = CostKey.Wood.INSTANCE.available(v.stock(level));
+        int wood = CostKey.Wood.INSTANCE.available(stock);
         boolean woodInHand = wood >= 64 || wood >= 16 && v.data().getBoolean("woodInHand");
         v.data().putBoolean("woodInHand", woodInHand);
         // Food: a hunter while the stores are thin and there is game about, a farmer once there are fields.
-        int food = v.stock(level).totals().entrySet().stream()
+        int food = stock.totals().entrySet().stream()
                 .filter(e -> e.getKey().isEdible()).mapToInt(Map.Entry::getValue).sum()
-                + v.stock(level).count(net.minecraft.world.item.Items.WHEAT) / 3; // bread to be
+                + stock.count(net.minecraft.world.item.Items.WHEAT) / 3; // bread to be
         boolean foodLow = food < Math.max(2, v.population()) * 6;
         boolean game = !level.getEntitiesOfClass(net.minecraft.world.entity.animal.Animal.class,
                 new net.minecraft.world.phys.AABB(v.center()).inflate(v.radius() + 16), a -> a.isAlive() && !a.isBaby()
