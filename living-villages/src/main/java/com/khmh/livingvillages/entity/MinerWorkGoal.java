@@ -436,6 +436,7 @@ public class MinerWorkGoal extends Goal {
         }
         BlockPos hub = hub(level, village);
         if (hub == null) {
+            worker.setStatus("none (no quarry)"); // nowhere to dig: the village may find him other work
             return;
         }
         if (walk(level, village, hub, 2.5)) {

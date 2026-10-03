@@ -85,7 +85,8 @@ public class LumberjackWorkGoal extends Goal {
         Level level = worker.level();
         long now = level.getGameTime();
         timer++;
-        worker.setStatus(state.name().toLowerCase() + " t" + timer);
+        // Looking about with not a tree to be found counts as having nothing to do (the village may move him).
+        worker.setStatus(state == State.SEEK && noTrees ? "none (no trees)" : state.name().toLowerCase() + " t" + timer);
         switch (state) {
             case SEEK -> {
                 if (tooling.tick((net.minecraft.server.level.ServerLevel) level, village) == Tooling.Status.BUSY) {
@@ -100,6 +101,7 @@ public class LumberjackWorkGoal extends Goal {
                         tree = Scouting.nearest(village, "trees", home, sl,
                                 p -> sl.getBlockState(p).is(BlockTags.LOGS) && !unreachable.contains(p.asLong()));
                     }
+                    noTrees = tree == null;
                     if (tree == null) {
                         cooldown = 200;
                         if (worker.carried() > 0) {
@@ -305,6 +307,8 @@ public class LumberjackWorkGoal extends Goal {
     }
 
     /** Plants a sapling of the felled species (oak if there is none) where the trunk stood. */
+    private boolean noTrees;
+
     private static boolean replant(Level level, BlockPos base, String logItem) {
         if (!level.getBlockState(base).isAir() || !level.getBlockState(base.below()).is(BlockTags.DIRT)) {
             return false;
