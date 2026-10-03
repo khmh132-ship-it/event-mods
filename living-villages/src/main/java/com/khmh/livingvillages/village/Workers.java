@@ -258,7 +258,8 @@ public final class Workers {
 
     private static boolean idleNow(VillageWorker w) {
         String s = w.status();
-        return s.startsWith("pick") || s.startsWith("none") || s.startsWith("idle");
+        // A builder standing at his site waiting for materials is doing nothing either: better he fetches them.
+        return s.startsWith("pick") || s.startsWith("none") || s.startsWith("idle") || s.contains("waiting for materials");
     }
 
     /** Ticks he has been idle without a break (0 if he is busy). */
