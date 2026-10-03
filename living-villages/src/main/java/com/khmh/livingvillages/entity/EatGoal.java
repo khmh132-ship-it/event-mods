@@ -79,6 +79,7 @@ public class EatGoal extends Goal {
 
     @Override
     public void tick() {
+        worker.setStatus("getting something to eat");
         if (foodSlot() < 0) {
             bake();
         }

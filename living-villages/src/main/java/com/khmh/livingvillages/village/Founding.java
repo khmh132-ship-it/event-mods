@@ -145,7 +145,21 @@ public final class Founding {
                 max = Math.max(max, p.getY());
             }
         }
-        return max - min <= 4 ? top : null;
+        if (max - min > 4) {
+            return null;
+        }
+        // Wood within reach: a camp on a bare meadow or a mountainside has nothing to build with and starves.
+        int trees = 0;
+        for (int dx = -32; dx <= 32 && trees < 4; dx += 4) {
+            for (int dz = -32; dz <= 32 && trees < 4; dz += 4) {
+                BlockPos p = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, top.offset(dx, 0, dz)).below();
+                BlockState s = level.getBlockState(p);
+                if (s.is(BlockTags.LEAVES) || s.is(BlockTags.LOGS)) {
+                    trees++;
+                }
+            }
+        }
+        return trees >= 4 ? top : null;
     }
 
     /** Puts down the camp at the given surface spot: bell, houses, two villagers, empty stores. */

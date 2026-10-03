@@ -221,7 +221,7 @@ public class LumberjackWorkGoal extends Goal {
             return inVillage;
         }
         // Then near the hut, then further and further out, as a player would go looking for woods.
-        for (int r = SEARCH_RADIUS; r <= SEARCH_RADIUS * 4; r += SEARCH_RADIUS) {
+        for (int r = SEARCH_RADIUS; r <= SEARCH_RADIUS * 6; r += SEARCH_RADIUS) { // (far afield is safe: his chunks follow him)
             BlockPos found = findTree(level, village, home, r);
             if (found != null) {
                 return found;

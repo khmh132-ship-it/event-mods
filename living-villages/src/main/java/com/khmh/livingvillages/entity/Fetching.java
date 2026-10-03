@@ -79,6 +79,9 @@ class Fetching {
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > (atBell ? 9 : 6.25)) {
             if (timer > GIVE_UP_TICKS) {
                 skip.add(target);
+                if (!target.equals(village.center())) {
+                    Stockpile.unreachable(level, target); // nobody else need try it for a while either
+                }
                 target = null;
             } else if (timer % 20 == 1) {
                 worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.6);
@@ -88,6 +91,7 @@ class Fetching {
         if (!target.equals(village.center()) && !Reach.sees(worker, target)) {
             if (timer >= GIVE_UP_TICKS) {
                 skip.add(target); // walled in: some other chest
+                Stockpile.unreachable(level, target);
                 target = null;
             } else if (timer % 20 == 1) { // a wall in between: round to the chest's open side
                 worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.6);
@@ -122,7 +126,8 @@ class Fetching {
         double bestDist = Double.MAX_VALUE;
         List<BlockPos> chests = Stockpile.containers(level, village);
         for (BlockPos p : chests) {
-            if (skip.contains(p) || !(level.getBlockEntity(p) instanceof Container c) || !hasAny(c)) {
+            if (skip.contains(p) || Stockpile.isUnreachable(level, p) || !(level.getBlockEntity(p) instanceof Container c)
+                    || !hasAny(c)) {
                 continue;
             }
             double d = p.distSqr(worker.blockPosition());

@@ -56,6 +56,22 @@ public final class Stockpile implements Stock {
         return out;
     }
 
+    /** Chests somebody could not get at (walled in, no way round): left alone by everyone for a while. */
+    private static final java.util.Map<Long, Long> UNREACHABLE = new java.util.HashMap<>();
+
+    public static void unreachable(ServerLevel level, BlockPos pos) {
+        UNREACHABLE.put(pos.asLong(), level.getGameTime() + 6000);
+    }
+
+    public static boolean isUnreachable(ServerLevel level, BlockPos pos) {
+        Long until = UNREACHABLE.get(pos.asLong());
+        if (until != null && until <= level.getGameTime()) {
+            UNREACHABLE.remove(pos.asLong());
+            return false;
+        }
+        return until != null;
+    }
+
     /** A chest was just put in or taken away: look again next time. */
     public static void forget(Village village) {
         FOUND.remove(village.id());

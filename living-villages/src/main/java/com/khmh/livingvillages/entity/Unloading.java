@@ -77,6 +77,9 @@ class Unloading {
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > reach) {
             if (!bell && timer > GIVE_UP_TICKS) {
                 skip.add(target);
+                if (!target.equals(pendingChest)) {
+                    Stockpile.unreachable(level, target); // nobody else need try it for a while either
+                }
                 target = null;
             } else if (timer % 20 == 1) {
                 worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.6);
@@ -86,6 +89,7 @@ class Unloading {
         if (!target.equals(village.center()) && !Reach.sees(worker, target)) {
             if (timer >= GIVE_UP_TICKS) {
                 skip.add(target); // walled in: some other chest
+                Stockpile.unreachable(level, target);
                 target = null;
             } else if (timer % 20 == 1) { // a wall in between: round to the chest's open side
                 worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.6);
@@ -130,7 +134,7 @@ class Unloading {
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;
         for (BlockPos p : chests) {
-            if (skip.contains(p) || !hasRoom(level, p)) {
+            if (skip.contains(p) || Stockpile.isUnreachable(level, p) || !hasRoom(level, p)) {
                 continue;
             }
             double d = p.distSqr(worker.blockPosition());
