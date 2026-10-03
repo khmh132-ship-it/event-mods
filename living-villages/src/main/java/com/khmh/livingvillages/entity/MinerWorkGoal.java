@@ -1070,15 +1070,22 @@ public class MinerWorkGoal extends Goal {
             return new BlockPos(q.getInt("x"), q.getInt("y"), q.getInt("z"));
         }
         BlockPos c = village.center();
-        int r = Math.max(16, village.radius() - QUARRY_DROP - 8);
+        int r0 = Math.max(16, village.radius() - QUARRY_DROP - 8);
+        // The preferred ring first, then nearer and farther out, so woods or houses in the way do not leave him
+        // without a quarry at all.
+        for (int r : new int[]{r0, r0 - 6, r0 + 6, r0 + 12, r0 - 10, r0 + 18}) {
+        if (r < 12) {
+            continue;
+        }
         for (Direction d : Direction.Plane.HORIZONTAL) {
-            for (int side = -8; side <= 8; side += 4) {
+            for (int side = -12; side <= 12; side += 4) {
                 BlockPos col = c.relative(d, r).relative(d.getClockWise(), side);
                 if (!level.hasChunkAt(col)) {
                     continue;
                 }
-                BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, col);
-                BlockPos ground = top.below();
+                // The ground itself, under any tree standing there (the trunk would be felled first).
+                BlockPos ground = new BlockPos(col.getX(), SiteFinder.groundUnderTrees(level, col), col.getZ());
+                BlockPos top = ground.above();
                 boolean clear = village.buildings().stream().noneMatch(b -> b.box().inflatedBy(QUARRY_DROP + 2)
                         .isInside(ground));
                 ListTag tried = q.getList("tried", Tag.TAG_LONG);
@@ -1097,6 +1104,12 @@ public class MinerWorkGoal extends Goal {
                     return top;
                 }
             }
+        }
+        }
+        // Everything tried: the old spots get another chance (the ground may have changed, a tree come down).
+        if (!q.getList("tried", Tag.TAG_LONG).isEmpty()) {
+            q.remove("tried");
+            village.markDirty();
         }
         return null;
     }

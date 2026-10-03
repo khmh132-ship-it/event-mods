@@ -25,3 +25,5 @@ with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True,
         print(s.cmd(f'execute positioned {x} {y} {z} run village info', check=False).split("\n\n")[0])
         print(s.cmd(f'execute positioned {x} {y} {z} run village requests', check=False))
         print(s.cmd(f'execute positioned {x} {y} {z} run village workers', check=False))
+        if minute % 5 == 4:
+            print('blocks:', s.cmd(f'execute positioned {x} {y} {z} run village count 40', check=False))
