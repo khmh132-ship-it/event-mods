@@ -75,6 +75,28 @@ public final class VillageCommand {
                             say(ctx, n.toString());
                             return 1;
                         })))
+                .then(Commands.literal("look").executes(ctx -> {
+                    // Debug: the blocks round a spot, layer by layer (a letter per block).
+                    ServerLevel level = ctx.getSource().getLevel();
+                    BlockPos c = BlockPos.containing(ctx.getSource().getPosition());
+                    StringBuilder out = new StringBuilder();
+                    java.util.Map<String, Character> key = new java.util.LinkedHashMap<>();
+                    for (int dy = -2; dy <= 2; dy++) {
+                        out.append("y").append(c.getY() + dy).append(":\n");
+                        for (int dz = -4; dz <= 4; dz++) {
+                            for (int dx = -4; dx <= 4; dx++) {
+                                var st = level.getBlockState(c.offset(dx, dy, dz));
+                                String id = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(st.getBlock()).getPath();
+                                char ch = st.isAir() ? '.' : key.computeIfAbsent(id, k -> (char) ('A' + key.size()));
+                                out.append(dx == 0 && dz == 0 ? Character.toLowerCase(ch == '.' ? '@' : ch) : ch);
+                            }
+                            out.append('\n');
+                        }
+                    }
+                    key.forEach((k, ch) -> out.append(ch).append('=').append(k).append(' '));
+                    say(ctx, out.toString());
+                    return 1;
+                }))
                 .then(Commands.literal("autofound").executes(ctx -> {
                     // Debug: what the natural founding would do around here, right now.
                     ServerLevel level = ctx.getSource().getLevel();

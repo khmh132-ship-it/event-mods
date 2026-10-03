@@ -25,5 +25,8 @@ with TestServer(CFG, log_name='test_realworld.log', flat=False, structures=True,
         print(s.cmd(f'execute positioned {x} {y} {z} run village info', check=False).split("\n\n")[0])
         print(s.cmd(f'execute positioned {x} {y} {z} run village requests', check=False))
         print(s.cmd(f'execute positioned {x} {y} {z} run village workers', check=False))
+        for w in re.finditer(r'(\w+) @(-?\d+), (-?\d+), (-?\d+)[^\n]*\(no way\)', s.cmd(f'execute positioned {x} {y} {z} run village workers', check=False)):
+            print('STUCK', w.group(0)[:120])
+            print(s.cmd(f'execute positioned {w.group(2)} {w.group(3)} {w.group(4)} run village look', check=False))
         if minute % 5 == 4:
             print('blocks:', s.cmd(f'execute positioned {x} {y} {z} run village count 40', check=False))
