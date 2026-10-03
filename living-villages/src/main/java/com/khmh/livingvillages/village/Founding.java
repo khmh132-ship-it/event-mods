@@ -172,7 +172,9 @@ public final class Founding {
         manager.add(v);
         manager.setDirty();
         RandomSource random = level.getRandom();
-        int houses = 1 + random.nextInt(2);
+        // Two small houses: a bed each for the founders and, more often than not, one over for the first child
+        // (with a single bed a camp waited hours on its next house before anyone could be born).
+        int houses = 2;
         for (int i = 0; i < houses; i++) {
             BuildingType type = BuildingTypes.get("small_house_" + (1 + random.nextInt(8)));
             if (type == null) {
