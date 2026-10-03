@@ -88,6 +88,15 @@ public final class Stockpile implements Stock {
                 }
             }
         }
+        // Chests stood by the bell (an old vanilla village with no house of ours to keep them in).
+        BlockPos bell = village.center();
+        if (level.hasChunksAt(bell.getX() - 5, bell.getZ() - 5, bell.getX() + 5, bell.getZ() + 5)) {
+            for (BlockPos p : BlockPos.betweenClosed(bell.offset(-5, -2, -5), bell.offset(5, 2, 5))) {
+                if (level.getBlockEntity(p) instanceof ChestBlockEntity && !out.contains(p)) {
+                    out.add(p.immutable());
+                }
+            }
+        }
         out.sort(Comparator.comparingDouble(p -> p.distSqr(village.center())));
         return out;
     }

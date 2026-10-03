@@ -143,6 +143,9 @@ class Unloading {
                 && woodForChest(village) != null) {
             // Nowhere to put things yet: knock a chest together and stand it in a house, like a player would.
             pendingChest = chestSpot(level, village);
+            if (pendingChest == null) {
+                pendingChest = byTheBell(level, village); // no house of ours to put it in (an old vanilla village)
+            }
             if (pendingChest != null) {
                 return pendingChest;
             }
@@ -166,6 +169,25 @@ class Unloading {
         return village.storage().totals().entrySet().stream()
                 .filter(e -> e.getValue() >= 2 && new ItemStack(e.getKey()).is(net.minecraft.tags.ItemTags.LOGS))
                 .map(java.util.Map.Entry::getKey).findFirst().orElse(null);
+    }
+
+    /** A spot on open ground a couple of steps from the bell, off the paths. */
+    private BlockPos byTheBell(ServerLevel level, Village village) {
+        BlockPos bell = village.center();
+        for (int r = 2; r <= 5; r++) {
+            for (BlockPos p : BlockPos.betweenClosed(bell.offset(-r, -2, -r), bell.offset(r, 2, r))) {
+                if (Math.max(Math.abs(p.getX() - bell.getX()), Math.abs(p.getZ() - bell.getZ())) != r || skip.contains(p)) {
+                    continue;
+                }
+                var below = level.getBlockState(p.below());
+                if (level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir()
+                        && below.isSolidRender(level, p.below()) && !below.is(net.minecraft.world.level.block.Blocks.DIRT_PATH)
+                        && !(level.getBlockState(p.below()).getBlock() instanceof net.minecraft.world.level.block.BellBlock)) {
+                    return p.immutable();
+                }
+            }
+        }
+        return null;
     }
 
     /** A free corner on the floor of a finished house (or any building), out of the doorway. */
