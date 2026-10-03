@@ -59,7 +59,8 @@ public final class GrowthPlanner {
             new Rule("stable", 3, 1),
             new Rule("house", 1, l -> 99, v -> v.beds() < v.population() + 4 + 2 * v.level()));
 
-    private static final double START_SHARE = 0.3;
+    // All the wood and stone in hand before the first block goes down: no house standing half-built for half an hour.
+    private static final double START_SHARE = 1.0;
 
     private GrowthPlanner() {
     }
@@ -101,7 +102,7 @@ public final class GrowthPlanner {
                 continue;
             }
             Stockpile stock = v.stock(level);
-            // Materials are gathered and made while it goes up; a good start is enough to begin.
+            // All the bulk is saved up before work starts; what it is made into (stairs, doors) is made as it goes up.
             // Only the bulk (wood, stone) is saved up for; glass, iron and the like are asked for while it goes
             // up, and a builder makes do without them if nobody can get any.
             Map<CostKey, Integer> bulk = new java.util.HashMap<>(data.cost());
