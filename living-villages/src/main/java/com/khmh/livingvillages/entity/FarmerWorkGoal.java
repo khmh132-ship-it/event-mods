@@ -109,6 +109,9 @@ public class FarmerWorkGoal extends Goal {
             }
             if (harvestCarried() > 0) {
                 state = State.RETURN; // fields done: take the harvest in
+            } else {
+                // Everything sown and growing, no berries about: nothing to do, the village may find him work.
+                worker.setStatus("none (fields growing)");
             }
             return;
         }
