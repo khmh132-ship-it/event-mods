@@ -103,6 +103,10 @@ public class FarmerWorkGoal extends Goal {
             timer = 0;
         }
         if (target == null) {
+            // Fields growing and nothing to do on them: berries off the bushes about the village meanwhile.
+            if (berryTick(level, village)) {
+                return;
+            }
             if (harvestCarried() > 0) {
                 state = State.RETURN; // fields done: take the harvest in
             }
@@ -137,6 +141,57 @@ public class FarmerWorkGoal extends Goal {
         } else if (crop.isAir()) {
             replant(level, village, target, null);
         }
+    }
+
+    private BlockPos berries;
+    private int berryTimer;
+    private int berryLook;
+
+    private boolean berryTick(ServerLevel level, Village village) {
+        if (berries == null || !ripe(level.getBlockState(berries)) || ++berryTimer > 400) {
+            berries = null;
+            berryTimer = 0;
+            if (--berryLook > 0 || harvestCarried() >= LOAD) {
+                return false;
+            }
+            berryLook = 200;
+            BlockPos c = village.center();
+            int r = Math.min(40, village.radius());
+            for (BlockPos p : BlockPos.betweenClosed(c.offset(-r, -6, -r), c.offset(r, 6, r))) {
+                if (level.hasChunkAt(p) && ripe(level.getBlockState(p))
+                        && (berries == null || p.distSqr(worker.blockPosition()) < berries.distSqr(worker.blockPosition()))) {
+                    berries = p.immutable();
+                }
+            }
+            if (berries == null) {
+                return false;
+            }
+        }
+        worker.setStatus("picking berries");
+        if (worker.distanceToSqr(berries.getX() + 0.5, berries.getY(), berries.getZ() + 0.5) > 5.0) {
+            if (berryTimer % 20 == 1) {
+                worker.getNavigation().moveTo(berries.getX() + 0.5, berries.getY(), berries.getZ() + 0.5, 0.6);
+            }
+            return true;
+        }
+        worker.getNavigation().stop();
+        worker.getLookControl().setLookAt(berries.getX() + 0.5, berries.getY() + 0.3, berries.getZ() + 0.5);
+        if (berryTimer % 10 == 0) {
+            BlockState bush = level.getBlockState(berries);
+            int age = bush.getValue(net.minecraft.world.level.block.SweetBerryBushBlock.AGE);
+            // As for a player picking them: one or two from a half-grown bush, two or three from a full one.
+            worker.carry(Items.SWEET_BERRIES, 1 + level.random.nextInt(2) + (age == 3 ? 1 : 0));
+            level.setBlock(berries, bush.setValue(net.minecraft.world.level.block.SweetBerryBushBlock.AGE, 1), Block.UPDATE_CLIENTS);
+            level.playSound(null, berries, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, 1.0F);
+            worker.swing(InteractionHand.MAIN_HAND);
+            berries = null;
+            berryLook = 0; // straight on to the next bush
+        }
+        return true;
+    }
+
+    private static boolean ripe(BlockState s) {
+        return s.is(Blocks.SWEET_BERRY_BUSH) && s.getValue(net.minecraft.world.level.block.SweetBerryBushBlock.AGE) >= 2;
     }
 
     private BlockPos forage;
