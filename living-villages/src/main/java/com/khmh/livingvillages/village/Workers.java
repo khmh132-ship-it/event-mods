@@ -145,6 +145,23 @@ public final class Workers {
         if (!foodLow) {
             priority.add(WorkerJob.BUTCHER);
         }
+        // A building held up for stone wants a miner straight after the builder (for wood, a lumberjack): with
+        // two or three people the quarry would otherwise never get a pair of hands, and the house never a roof.
+        boolean stoneHold = false, woodHold = false;
+        for (var r : v.requests()) {
+            if (r.remaining() > 0 && r.requester().startsWith("build:")) {
+                String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(r.item()).getPath();
+                stoneHold |= id.contains("cobblestone") || id.equals("stone") || id.startsWith("stone_")
+                        || id.contains("stone_brick");
+                woodHold |= id.endsWith("_log") || id.endsWith("_planks");
+            }
+        }
+        for (WorkerJob j : stoneHold && woodHold ? List.of(WorkerJob.MINER, WorkerJob.LUMBERJACK)
+                : stoneHold ? List.of(WorkerJob.MINER) : woodHold ? List.of(WorkerJob.LUMBERJACK) : List.<WorkerJob>of()) {
+            priority.remove(j);
+            priority.add(priority.indexOf(WorkerJob.BUILDER) + 1, j);
+            needed.put(j, true);
+        }
         // A job whose last holder stood idle and was moved off is not handed out again for five minutes.
         for (WorkerJob j : priority) {
             String key = "idle_" + j.name().toLowerCase();
