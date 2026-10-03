@@ -40,10 +40,14 @@ public final class Workers {
                 w.getPersistentData().remove("lvIdleSince");
             }
         }
+        reserveFurniture(level, v);
         // Vanilla professionals come under the village first: they keep their looks and do their job for real.
         for (Villager farmer : List.copyOf(villagers)) {
             if (!farmer.isAlive() || farmer.isBaby()) {
                 continue;
+            }
+            if (sittingOnFurniture(level, v, farmer)) {
+                continue; // a barrel of the warehouse is not a fisherman's hut: back to being unemployed
             }
             VillagerProfession p = farmer.getVillagerData().getProfession();
             WorkerJob job = p == VillagerProfession.FARMER ? WorkerJob.FARMER
@@ -342,6 +346,66 @@ public final class Workers {
             home.setWorkerId(worker.getUUID());
             v.markDirty();
         }
+        return true;
+    }
+
+    /**
+     * Job blocks that are part of a building's furniture rather than a workplace (the warehouse's barrels, a
+     * house's lectern...) are held by the village, so grown-up children do not all turn fishermen at the barrels.
+     */
+    private static void reserveFurniture(ServerLevel level, Village v) {
+        long now = level.getGameTime();
+        if (now - v.data().getLong("furnitureAt") < 1200 && v.data().contains("furnitureAt")) {
+            return;
+        }
+        v.data().putLong("furnitureAt", now);
+        var pois = level.getPoiManager();
+        for (Building b : v.buildings()) {
+            if (!b.isComplete() || vanillaWorkplace(b)) {
+                continue;
+            }
+            var box = b.box();
+            if (!level.hasChunksAt(box.minX(), box.minZ(), box.maxX(), box.maxZ())) {
+                continue;
+            }
+            BlockPos mid = box.getCenter();
+            int r = Math.max(box.getXSpan(), Math.max(box.getYSpan(), box.getZSpan())) / 2 + 1;
+            pois.getInSquare(t -> t.is(net.minecraft.tags.PoiTypeTags.ACQUIRABLE_JOB_SITE), mid, r,
+                            net.minecraft.world.entity.ai.village.poi.PoiManager.Occupancy.HAS_SPACE)
+                    .filter(rec -> box.isInside(rec.getPos())).map(rec -> rec.getPos()).toList()
+                    .forEach(pos -> pois.take(t -> true, (t, p) -> p.equals(pos), pos, 1));
+        }
+    }
+
+    /** A building that is the workplace of a vanilla trade (its job block is meant for that trade). */
+    private static boolean vanillaWorkplace(Building b) {
+        WorkerJob job = WorkerJob.forWorkplace(b.typeId());
+        return job != null && java.util.Set.of(WorkerJob.FARMER, WorkerJob.SHEPHERD, WorkerJob.BUTCHER, WorkerJob.MASON,
+                WorkerJob.TOOLSMITH, WorkerJob.WEAPONSMITH, WorkerJob.ARMORER, WorkerJob.FLETCHER,
+                WorkerJob.LEATHERWORKER, WorkerJob.FISHERMAN, WorkerJob.CLERIC, WorkerJob.LIBRARIAN,
+                WorkerJob.CARTOGRAPHER).contains(job);
+    }
+
+    /** A novice who took a job block that is building furniture: made unemployed again (the block kept free). */
+    private static boolean sittingOnFurniture(ServerLevel level, Village v, Villager villager) {
+        if (villager.getVillagerXp() > 0 || villager.getVillagerData().getProfession() == VillagerProfession.NONE
+                || villager.getVillagerData().getProfession() == VillagerProfession.NITWIT) {
+            return false;
+        }
+        var site = villager.getBrain().getMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.JOB_SITE);
+        if (site.isEmpty() || site.get().dimension() != level.dimension()) {
+            return false;
+        }
+        BlockPos pos = site.get().pos();
+        boolean furniture = v.buildings().stream().anyMatch(b -> b.isComplete() && b.box().isInside(pos)
+                && !vanillaWorkplace(b));
+        if (!furniture) {
+            return false;
+        }
+        villager.releasePoi(net.minecraft.world.entity.ai.memory.MemoryModuleType.JOB_SITE);
+        villager.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.POTENTIAL_JOB_SITE);
+        villager.setVillagerData(villager.getVillagerData().setProfession(VillagerProfession.NONE));
+        level.getPoiManager().take(t -> true, (t, p) -> p.equals(pos), pos, 1);
         return true;
     }
 
