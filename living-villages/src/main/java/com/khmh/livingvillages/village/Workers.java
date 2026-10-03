@@ -122,7 +122,8 @@ public final class Workers {
         // A hunter who finds nothing he can get at is no use as one.
         boolean idleHunter = workers.stream().anyMatch(w -> w.job() == WorkerJob.BUTCHER && idleFor(level, w) >= 1200);
         needed.put(WorkerJob.BUTCHER, foodLow && game && !idleHunter);
-        needed.put(WorkerJob.FARMER, fields && com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v));
+        // With food short the farmer stays on even between harvests: he picks berries while the wheat grows.
+        needed.put(WorkerJob.FARMER, fields && (foodLow || com.khmh.livingvillages.entity.FarmerWorkGoal.hasWork(level, v)));
         if (foodLow) {
             priority.add(WorkerJob.FARMER);
             priority.add(WorkerJob.BUTCHER);
