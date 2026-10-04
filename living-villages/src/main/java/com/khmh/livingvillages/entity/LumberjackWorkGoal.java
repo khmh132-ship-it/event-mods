@@ -151,6 +151,7 @@ public class LumberjackWorkGoal extends Goal {
                     village.reportWorking(hut.id(), now);
                 }
                 if (logs.isEmpty()) {
+                    com.khmh.livingvillages.village.Growth.noteFelled(village, tree, now);
                     if (replant(level, tree, lastLog)) {
                         com.khmh.livingvillages.village.Growth.noteSapling(village, tree);
                     }

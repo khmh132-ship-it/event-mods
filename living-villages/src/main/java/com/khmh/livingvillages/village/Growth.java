@@ -35,10 +35,23 @@ public final class Growth {
         }
     }
 
+    /** The lumberjack felled a tree here: its crown falls the way leaves do once the trunk is gone. */
+    public static void noteFelled(Village v, BlockPos base, long now) {
+        var list = v.data().getList("felled", Tag.TAG_COMPOUND);
+        if (list.size() < 32) {
+            var e = new net.minecraft.nbt.CompoundTag();
+            e.putLong("pos", base.asLong());
+            e.putLong("at", now);
+            list.add(e);
+            v.data().put("felled", list);
+        }
+    }
+
     static void tick(ServerLevel level, Village v, long now) {
         if (now % EVERY != 0 || playerNear(level, v.center())) {
             return;
         }
+        decayCrowns(level, v, now);
         int speed = level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
         if (speed <= 0) {
             return;
@@ -77,6 +90,36 @@ public final class Growth {
             }
         }
         v.data().put("saplings", list);
+    }
+
+    /** Leaves left hanging with no trunk decay at about the game's own pace, dropping saplings and apples. */
+    private static void decayCrowns(ServerLevel level, Village v, long now) {
+        var list = v.data().getList("felled", Tag.TAG_COMPOUND);
+        if (list.isEmpty()) {
+            return;
+        }
+        int speed = Math.max(1, level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING));
+        float chance = Math.min(1.0F, EVERY * speed / 4096.0F); // as the game: about a minute a leaf
+        var random = level.getRandom();
+        for (int i = list.size() - 1; i >= 0; i--) {
+            var e = list.getCompound(i);
+            BlockPos base = BlockPos.of(e.getLong("pos"));
+            if (now - e.getLong("at") > 6000 || !level.hasChunkAt(base)) {
+                list.remove(i);
+                continue;
+            }
+            for (BlockPos p : BlockPos.betweenClosed(base.offset(-4, 0, -4), base.offset(4, 16, 4))) {
+                BlockState s = level.getBlockState(p);
+                if (s.getBlock() instanceof net.minecraft.world.level.block.LeavesBlock
+                        && !s.getValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT)
+                        && s.getValue(net.minecraft.world.level.block.LeavesBlock.DISTANCE) >= 7
+                        && random.nextFloat() < chance) {
+                    net.minecraft.world.level.block.Block.dropResources(s, level, p);
+                    level.removeBlock(p, false);
+                }
+            }
+        }
+        v.data().put("felled", list);
     }
 
     /** Within the distance at which the game itself grows plants for a player. */
