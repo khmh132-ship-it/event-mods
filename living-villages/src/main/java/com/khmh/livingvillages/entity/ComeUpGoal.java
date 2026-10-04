@@ -10,7 +10,7 @@ import java.util.EnumSet;
  * villager who fell into a cave) makes his way back up to the bell, instead of idling in the dark for good.
  */
 class ComeUpGoal extends Goal {
-    private static final int BELOW = 10;
+    private static final int BELOW = 5;
 
     private final VillageWorker worker;
     private int timer;
