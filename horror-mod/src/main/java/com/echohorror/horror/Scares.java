@@ -171,6 +171,69 @@ public final class Scares {
             return true;
         });
         add("voice_mimic", 3, 95, 5, 240, c -> VoiceBridge.available(), Scares::voiceMimic);
+        add("own_voice", 3, 70, 3, 600, c -> VoiceBridge.hasClip(c.p.getUUID()), c -> {
+            // your own voice, from right behind you
+            boolean ok = VoiceBridge.play(c.p, c.p.getUUID(), HorrorUtil.behind(c.p, 1.5));
+            if (ok) Sanity.add(c.p, -6);
+            return ok;
+        });
+        add("fake_mob", 1, 100, 5, 150, c -> true, Scares::fakeMob);
+        add("window_face", 2, 100, 6, 300, c -> !c.p.level().canSeeSky(c.p.blockPosition()), Scares::windowFace);
+        add("dig_below", 2, 90, 3, 400, c -> true, c -> {
+            // something is digging right under your feet... and stops when you do
+            Vec3 under = c.p.position().subtract(0, 3, 0);
+            for (int i = 0; i < 9; i++) {
+                final int k = i;
+                Scheduler.schedule(i * 11 + c.r.nextInt(5), () -> {
+                    if (c.p.hasDisconnected()) return;
+                    BlockState st = c.level.getBlockState(c.p.blockPosition().below(2));
+                    HorrorUtil.playTo(c.p, st.isAir() ? SoundEvents.STONE_HIT : st.getSoundType().getHitSound(), under.add(0, -k * 0.2, 0), 0.9f, 0.7f);
+                });
+            }
+            Sanity.add(c.p, -3);
+            return true;
+        });
+        add("tunnel", 3, 85, 2, 1200, c -> Config.WORLD_TAMPERING.get() && c.underground, Scares::tunnel);
+        add("bed_double", 2, 100, 4, 900, c -> c.night && c.p.getRespawnPosition() != null
+                && c.p.getRespawnDimension() == c.level.dimension()
+                && c.p.getRespawnPosition().distSqr(c.p.blockPosition()) < 28 * 28, c -> {
+            BlockPos bed = c.p.getRespawnPosition();
+            Optional<BlockPos> g = HorrorUtil.ground(c.level, bed.getX() + (c.r.nextBoolean() ? 1 : -1), bed.getZ(), bed.getY() + 1, 2, 3);
+            if (g.isEmpty()) return false;
+            PhantomEntity.spawn(c.p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(g.get()), 900)
+                    .skin(c.p.getUUID(), c.p.getGameProfile().getName()).vanishDistance(4).watchLimit(60);
+            return true;
+        });
+        add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
+            c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
+            for (int i = 5; i >= 1; i--) {
+                final int n = i;
+                Scheduler.schedule((10 - n) * 20, () -> {
+                    if (!c.p.hasDisconnected())
+                        c.p.sendSystemMessage(Component.literal("[Сервер] " + n + "...").withStyle(ChatFormatting.LIGHT_PURPLE));
+                });
+            }
+            Scheduler.schedule(200, () -> {
+                if (c.p.hasDisconnected()) return;
+                if (Config.FAKE_SCREENS.get()) Net.fx(c.p, Fx.FAKE_DISCONNECT, 0);
+                else c.p.sendSystemMessage(Component.literal("[Сервер] ...передумал.").withStyle(ChatFormatting.DARK_RED));
+            });
+            return true;
+        });
+        add("friend_death", 3, 60, 2, 1200, c -> Config.FAKE_CHAT.get() && !HorrorUtil.others(c.p).isEmpty(), c -> {
+            ServerPlayer f = randomFace(c);
+            String[] causes = {"death.attack.generic", "death.attack.outOfWorld", "death.attack.magic", "death.fell.accident.generic"};
+            c.p.sendSystemMessage(Component.translatable(causes[c.r.nextInt(causes.length)], f.getGameProfile().getName()));
+            Sanity.add(c.p, -3);
+            return true;
+        });
+        add("corrupt_chat", 3, 55, 3, 300, c -> Config.FAKE_CHAT.get(), c -> {
+            ServerPlayer f = randomFace(c);
+            String base = ChatMemory.randomOf(c.r, f.getUUID()).map(ChatMemory.Line::text).orElse(CREEPY_CHAT[c.r.nextInt(CREEPY_CHAT.length)]);
+            c.p.sendSystemMessage(Component.translatable("chat.type.text", f.getGameProfile().getName(), zalgo(base, c.r)));
+            Sanity.add(c.p, -2);
+            return true;
+        });
 
         // ---- world tampering
         add("door_open", 1, 100, 4, 180, c -> Config.WORLD_TAMPERING.get(), Scares::doorOpen);
@@ -346,6 +409,130 @@ public final class Scares {
             if (test.test(c.level.getBlockState(bp))) out.add(bp.immutable());
         }
         return out;
+    }
+
+    static String zalgo(String text, RandomSource r) {
+        StringBuilder sb = new StringBuilder();
+        for (char ch : text.toCharArray()) {
+            sb.append(ch);
+            if (ch == ' ') continue;
+            int n = r.nextInt(4);
+            for (int i = 0; i < n; i++) sb.append((char) (0x0300 + r.nextInt(0x6F)));
+        }
+        return sb.toString();
+    }
+
+    /** A face pressed to the glass. Only when you are inside. */
+    private static boolean windowFace(Ctx c) {
+        BlockPos eye = BlockPos.containing(c.p.getEyePosition());
+        List<BlockPos> glass = new ArrayList<>();
+        for (BlockPos bp : BlockPos.betweenClosed(eye.offset(-7, -2, -7), eye.offset(7, 2, 7))) {
+            BlockState st = c.level.getBlockState(bp);
+            if (st.is(net.minecraft.tags.BlockTags.IMPERMEABLE) || st.getBlock() instanceof StainedGlassPaneBlock || st.is(Blocks.GLASS_PANE)) glass.add(bp.immutable());
+        }
+        Collections.shuffle(glass);
+        // windows you can see from the corner of your eye first
+        glass.sort(Comparator.comparingInt(g -> HorrorUtil.isLookingAt(c.p, Vec3.atCenterOf(g), 0.35) ? 0 : 1));
+        for (BlockPos g : glass) {
+            Vec3 gc = Vec3.atCenterOf(g);
+            Vec3 dir = gc.subtract(c.p.getEyePosition());
+            if (dir.lengthSqr() < 4) continue;
+            // outward direction: dominant horizontal axis from the player to the glass
+            net.minecraft.core.Direction out = Math.abs(dir.x) > Math.abs(dir.z)
+                    ? (dir.x > 0 ? net.minecraft.core.Direction.EAST : net.minecraft.core.Direction.WEST)
+                    : (dir.z > 0 ? net.minecraft.core.Direction.SOUTH : net.minecraft.core.Direction.NORTH);
+            BlockPos head = g.relative(out);
+            BlockPos feet = head.below();
+            if (!c.level.getBlockState(head).isAir() || !c.level.getBlockState(feet).isAir()) continue;
+            if (!c.level.canSeeSky(head)) continue; // must really be outside
+            if (!HorrorUtil.canSee(c.p, gc)) continue;
+            int kind = c.chapter >= 3 && c.r.nextBoolean() ? PhantomEntity.KIND_FAKE_PLAYER : PhantomEntity.KIND_WATCHER;
+            double drop = kind == PhantomEntity.KIND_WATCHER ? 1.8 : 1.2; // put the face in the glass, not the legs
+            Vec3 pos = new Vec3(head.getX() + 0.5, g.getY() - drop, head.getZ() + 0.5);
+            PhantomEntity e = PhantomEntity.spawn(c.p, kind, PhantomEntity.MODE_STARE, pos, 600).floating().vanishDistance(1.5).watchLimit(12);
+            if (kind == PhantomEntity.KIND_FAKE_PLAYER) {
+                ServerPlayer f = randomFace(c);
+                e.skin(f.getUUID(), null);
+            }
+            if (c.sanity < 40) e.withJumpscare();
+            HorrorUtil.playTo(c.p, SoundEvents.GLASS_HIT, gc, 0.6f, 0.5f);
+            return true;
+        }
+        return false;
+    }
+
+    /** Something dug a fresh tunnel into the cave wall. It ends with a red torch. */
+    private static boolean tunnel(Ctx c) {
+        net.minecraft.core.Direction[] dirs = {net.minecraft.core.Direction.NORTH, net.minecraft.core.Direction.SOUTH,
+                net.minecraft.core.Direction.EAST, net.minecraft.core.Direction.WEST};
+        BlockPos base = c.p.blockPosition();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            net.minecraft.core.Direction d = dirs[c.r.nextInt(4)];
+            // find the wall
+            BlockPos start = null;
+            for (int i = 1; i <= 5; i++) {
+                BlockPos bp = base.relative(d, i);
+                if (isNaturalStone(c.level.getBlockState(bp)) && isNaturalStone(c.level.getBlockState(bp.above()))) {
+                    start = bp;
+                    break;
+                }
+                if (!c.level.getBlockState(bp).isAir()) break;
+            }
+            if (start == null) continue;
+            if (HorrorUtil.isLookingAt(c.p, Vec3.atCenterOf(start), 0.4)) continue;
+            List<BlockPos> carve = new ArrayList<>();
+            BlockPos cur = start;
+            for (int i = 0; i < 7; i++) {
+                if (!isNaturalStone(c.level.getBlockState(cur)) || !isNaturalStone(c.level.getBlockState(cur.above()))) break;
+                carve.add(cur);
+                cur = cur.relative(d);
+            }
+            if (carve.size() < 4) continue;
+            for (int i = 0; i < carve.size(); i++) {
+                BlockPos bp = carve.get(i);
+                final boolean last = i == carve.size() - 1;
+                Scheduler.schedule(i * 6, () -> {
+                    c.level.setBlock(bp, Blocks.AIR.defaultBlockState(), 3);
+                    c.level.setBlock(bp.above(), Blocks.AIR.defaultBlockState(), 3);
+                    if (last) c.level.setBlock(bp, Blocks.REDSTONE_TORCH.defaultBlockState(), 3);
+                    if (!c.p.hasDisconnected()) HorrorUtil.playTo(c.p, SoundEvents.STONE_BREAK, Vec3.atCenterOf(bp), 0.8f, 0.6f);
+                });
+            }
+            Sanity.add(c.p, -4);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isNaturalStone(BlockState st) {
+        return st.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD) || st.is(Blocks.DIRT) || st.is(Blocks.GRAVEL);
+    }
+
+    /** Vanilla danger sounds with nothing behind them. The creeper hiss is the cruellest. */
+    private static boolean fakeMob(Ctx c) {
+        int roll = c.r.nextInt(c.chapter >= 2 ? 7 : 4);
+        Vec3 behind = HorrorUtil.behind(c.p, 1.6).subtract(0, 1, 0);
+        switch (roll) {
+            case 0 -> HorrorUtil.playTo(c.p, SoundEvents.CREEPER_PRIMED, behind, 1f, 0.5f);
+            case 1 -> HorrorUtil.playTo(c.p, SoundEvents.ZOMBIE_AMBIENT, HorrorUtil.behind(c.p, 5), 0.9f, 0.8f);
+            case 2 -> {
+                HorrorUtil.playTo(c.p, SoundEvents.SKELETON_SHOOT, HorrorUtil.behind(c.p, 12), 1f, 1f);
+                Scheduler.schedule(8, () -> HorrorUtil.playTo(c.p, SoundEvents.ARROW_HIT, c.p.position().add(c.r.nextGaussian(), 0.5, c.r.nextGaussian()), 1f, 1f));
+            }
+            case 3 -> HorrorUtil.playTo(c.p, SoundEvents.SPIDER_AMBIENT, HorrorUtil.behind(c.p, 3), 0.8f, 0.7f);
+            case 4 -> HorrorUtil.playTo(c.p, SoundEvents.ENDERMAN_STARE, c.p.getEyePosition(), 0.7f, 0.6f);
+            case 5 -> {
+                List<BlockPos> doors = scan(c, 10, 3, st -> st.getBlock() instanceof DoorBlock && st.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER);
+                if (doors.isEmpty()) return false;
+                Vec3 d = Vec3.atCenterOf(doors.get(c.r.nextInt(doors.size())));
+                for (int i = 0; i < 4; i++) {
+                    Scheduler.schedule(i * 14, () -> HorrorUtil.playTo(c.p, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, d, 1f, 0.8f));
+                }
+            }
+            default -> HorrorUtil.playTo(c.p, SoundEvents.GLASS_BREAK, HorrorUtil.behind(c.p, 6), 1f, 0.8f);
+        }
+        Sanity.add(c.p, -3);
+        return true;
     }
 
     private static boolean knock(Ctx c) {

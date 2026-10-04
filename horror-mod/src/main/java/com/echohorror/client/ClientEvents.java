@@ -25,6 +25,7 @@ public final class ClientEvents {
         if (mc.player == null) return;
         ClientState.tick();
         SoundSequencer.tick();
+        ambience(mc);
         if (mc.isPaused()) return;
         boolean beat = ClientState.heartbeat > 0 || (ClientState.chapter > 0 && ClientState.sanity < 15);
         if (beat && --heartbeatCd <= 0) {
@@ -34,10 +35,34 @@ public final class ClientEvents {
         }
     }
 
+    private static AmbientLoop ambient;
+
+    /** Chooses the background drone: the depths breathe, the night hums, the day is silent. */
+    private static void ambience(Minecraft mc) {
+        String want = null;
+        if (ClientState.chapter > 0 && ClientState.chapter < 7 && !ClientState.bossFight() && mc.level != null) {
+            long t = mc.level.getDayTime() % 24000L;
+            boolean night = t > 13000 && t < 23000;
+            boolean under = !mc.level.canSeeSky(mc.player.blockPosition()) && mc.player.getY() < mc.level.getSeaLevel() - 6;
+            if (ClientState.deep()) want = "ambient.depths";
+            else if (night || under || ClientState.sanity < 40) want = "ambient.drone";
+        }
+        if (ambient != null && (want == null || !want.equals(ambient.name())) && !ambient.isFadingOut()) ambient.fadeOut();
+        if (ambient != null && ambient.isStopped()) ambient = null;
+        if (want != null && (ambient == null || ambient.isFadingOut() && ambient.isStopped())) {
+            if (ambient == null) {
+                ambient = new AmbientLoop(want, want.equals("ambient.depths") ? 0.55f : 0.35f);
+                mc.getSoundManager().play(ambient);
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientState.reset();
         SoundSequencer.reset();
+        if (ambient != null) Minecraft.getInstance().getSoundManager().stop(ambient);
+        ambient = null;
     }
 
     private static float targetFog() {

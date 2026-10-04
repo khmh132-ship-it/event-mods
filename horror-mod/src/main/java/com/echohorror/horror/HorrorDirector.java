@@ -14,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
 
@@ -23,6 +24,9 @@ public final class HorrorDirector {
         long nextEvent;
         final Map<String, Long> lastUse = new HashMap<>();
         int brokenTicks;
+        int stalkStage;      // 0 = not stalked tonight
+        long stalkNext;
+        long stalkDay = -1;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -50,6 +54,7 @@ public final class HorrorDirector {
             State st = STATES.computeIfAbsent(p.getUUID(), k -> new State());
             if (st.nextEvent == 0) st.nextEvent = seconds + 20 + p.getRandom().nextInt(30);
             brokenMind(p, d, st);
+            stalker(p, d, st, seconds);
             if (seconds >= st.nextEvent) {
                 runRandom(p, d, st, seconds);
                 st.nextEvent = seconds + interval(p, d);
@@ -114,7 +119,57 @@ public final class HorrorDirector {
     public static boolean force(ServerPlayer p, String name) {
         Scares.Scare s = Scares.get(name);
         if (s == null) return false;
-        return s.run().apply(Scares.ctx(p, StoryData.get(p.server)));
+        Scares.Ctx c = Scares.ctx(p, StoryData.get(p.server));
+        if (!s.cond().test(c)) return false;
+        return s.run().apply(c);
+    }
+
+    private static final double[] STALK_DIST = {46, 36, 27, 19, 12};
+
+    /**
+     * Преследователь: once a night something picks one player and comes a little closer every time it is seen.
+     * The last time it is right behind you.
+     */
+    private static void stalker(ServerPlayer p, StoryData d, State st, long seconds) {
+        if (d.chapter < StoryManager.CH_RELAY || d.chapter >= StoryManager.CH_BELFRY) return;
+        boolean night = HorrorUtil.isNight(p.serverLevel());
+        long day = p.serverLevel().getDayTime() / 24000L;
+        if (!night) {
+            st.stalkStage = 0;
+            return;
+        }
+        if (st.stalkStage == 0) {
+            if (st.stalkDay == day) return;
+            st.stalkDay = day;
+            float chance = 0.35f + 0.5f * Sanity.fear(p);
+            if (p.getRandom().nextFloat() > chance) return;
+            st.stalkStage = 1;
+            st.stalkNext = seconds + 40 + p.getRandom().nextInt(60);
+            return;
+        }
+        if (seconds < st.stalkNext || st.stalkStage > STALK_DIST.length + 1) return;
+        st.stalkNext = seconds + 50 + p.getRandom().nextInt(50);
+        if (st.stalkStage <= STALK_DIST.length) {
+            double dist = STALK_DIST[st.stalkStage - 1];
+            boolean placed = HorrorUtil.spotAround(p, dist - 3, dist + 3, 0, 75, false).map(s -> {
+                com.echohorror.entity.PhantomEntity.spawn(p, com.echohorror.entity.PhantomEntity.KIND_WATCHER,
+                        com.echohorror.entity.PhantomEntity.MODE_STARE, s, 500).vanishDistance(Math.max(4, dist - 8)).watchLimit(25);
+                return true;
+            }).orElse(false);
+            if (placed) {
+                if (st.stalkStage >= 3) HorrorUtil.playAt(p, "scare.heartbeat", 0.6f, 1f);
+                st.stalkStage++;
+            }
+        } else {
+            // it has arrived
+            Vec3 b = HorrorUtil.behind(p, 1.8);
+            HorrorUtil.ground(p.serverLevel(), Mth.floor(b.x), Mth.floor(b.z), p.getBlockY() + 1, 2, 3).ifPresent(g -> {
+                com.echohorror.entity.PhantomEntity.spawn(p, com.echohorror.entity.PhantomEntity.KIND_WATCHER,
+                        com.echohorror.entity.PhantomEntity.MODE_BEHIND, Vec3.atBottomCenterOf(g), 300).withJumpscare();
+                HorrorUtil.playTo(p, "scare.breath", Vec3.atCenterOf(g).add(0, 1.5, 0), 1f, 0.7f);
+            });
+            st.stalkStage++;
+        }
     }
 
     private static void brokenMind(ServerPlayer p, StoryData d, State st) {

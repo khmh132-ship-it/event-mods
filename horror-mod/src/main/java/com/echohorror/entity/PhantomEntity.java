@@ -45,6 +45,7 @@ public class PhantomEntity extends PathfinderMob {
     private boolean jumpscare;
     private boolean gone;
     private double vanishDistance = 11;
+    private int watchLimit = -1;
 
     public PhantomEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -83,6 +84,18 @@ public class PhantomEntity extends PathfinderMob {
     /** How close the target may come before a staring phantom dissolves. */
     public PhantomEntity vanishDistance(double d) {
         this.vanishDistance = d;
+        return this;
+    }
+
+    /** Ticks of being looked at before it dissolves. */
+    public PhantomEntity watchLimit(int ticks) {
+        this.watchLimit = ticks;
+        return this;
+    }
+
+    /** Hangs in the air (window faces). */
+    public PhantomEntity floating() {
+        setNoGravity(true);
         return this;
     }
 
@@ -131,7 +144,9 @@ public class PhantomEntity extends PathfinderMob {
                 faceTarget(t);
                 getNavigation().stop();
                 if (watched) watchedTicks++;
-                if (watchedTicks > (getKind() == KIND_SHADE ? 4 : 30) || dist < vanishDistance) vanish(t, dist < vanishDistance || getKind() != KIND_SHADE && watchedTicks > 30 && vanishDistance < 11);
+                int limit = watchLimit > 0 ? watchLimit : getKind() == KIND_SHADE ? 4 : 30;
+                if (watchedTicks > limit || dist < vanishDistance)
+                    vanish(t, dist < vanishDistance || getKind() != KIND_SHADE && watchedTicks > limit && vanishDistance < 11);
             }
             case MODE_BEHIND -> {
                 faceTarget(t);

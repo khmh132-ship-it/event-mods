@@ -105,6 +105,16 @@ public final class ForgeEvents {
     public static void onChat(ServerChatEvent e) {
         ServerPlayer p = e.getPlayer();
         ChatMemory.record(p.getUUID(), p.getGameProfile().getName(), e.getRawText());
+        // the echo: sometimes your own words come back to you a few seconds later
+        String text = e.getRawText();
+        if (text != null && !text.startsWith("/") && StoryData.get(p.server).chapter >= StoryManager.CH_RELAY
+                && StoryData.get(p.server).chapter < StoryManager.CH_SILENCE && Config.FAKE_CHAT.get() && p.getRandom().nextFloat() < 0.1f) {
+            String echo = text.toLowerCase(java.util.Locale.ROOT).replaceAll("[!?.]+$", "") + "...";
+            Scheduler.schedule(60 + p.getRandom().nextInt(100), () -> {
+                if (!p.hasDisconnected()) p.sendSystemMessage(Component.translatable("chat.type.text",
+                        p.getGameProfile().getName(), Component.literal(echo).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)));
+            });
+        }
     }
 
     @SubscribeEvent
