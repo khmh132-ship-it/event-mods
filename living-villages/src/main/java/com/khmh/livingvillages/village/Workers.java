@@ -260,7 +260,10 @@ public final class Workers {
         if (w.isSleeping()) {
             return false; // nobody is woken to be told he has a new trade; it can wait till morning
         }
-        return inJob >= 12000 || inJob >= 2400 && idleFor(level, w) >= 400;
+        // A camp of two or three switches trades as the work in hand calls for it: wood for the builder, then
+        // back to the site; stone; the fields. A grown village keeps people at their trades.
+        boolean camp = w.village().map(v -> v.population() <= 3).orElse(false);
+        return inJob >= (camp ? 2400 : 12000) || inJob >= (camp ? 1200 : 2400) && idleFor(level, w) >= 400;
     }
 
     private static boolean idleNow(VillageWorker w) {
@@ -293,7 +296,7 @@ public final class Workers {
                                     List<WorkerJob> lower, List<WorkerJob> all,
                                     java.util.Map<WorkerJob, Boolean> needed) {
         long now = level.getGameTime();
-        boolean recent = now - v.data().getLong("lastReassign") < 4800;
+        boolean recent = now - v.data().getLong("lastReassign") < (v.population() <= 3 ? 1200 : 4800);
         VillageWorker donor = null;
         // Someone whose job is not needed at all right now, whatever its rank; else the least pressing one below.
         for (WorkerJob from : all) {
