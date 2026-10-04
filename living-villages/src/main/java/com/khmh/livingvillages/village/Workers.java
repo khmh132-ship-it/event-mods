@@ -172,7 +172,7 @@ public final class Workers {
         for (WorkerJob j : priority) {
             String key = "idle_" + j.name().toLowerCase();
             // (a hunt that came to nothing is not tried again for a whole day: the game about is out of reach)
-            long rest = j == WorkerJob.BUTCHER ? 24000 : 6000;
+            long rest = j == WorkerJob.BUTCHER ? 24000 : j == WorkerJob.APPRENTICE ? 12000 : 6000;
             if (v.data().contains(key) && level.getGameTime() - v.data().getLong(key) < rest) {
                 needed.put(j, false);
             }
