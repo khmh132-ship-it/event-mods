@@ -83,7 +83,29 @@ final class Unstuck {
         Direction dir = Math.abs(dx) >= Math.abs(dz) ? (dx > 0 ? Direction.EAST : Direction.WEST)
                 : (dz > 0 ? Direction.SOUTH : Direction.NORTH);
         boolean upward = wanted.y > feet.getY() + 1.5;
-        // A wall in the way at head or foot height (or overhead when climbing): dig through it.
+        // Climb first where there is room overhead: jump and put a block underfoot (out of water up a bank, too).
+        boolean footing = worker.onGround() || worker.isInWater();
+        boolean upwardOrBank = upward || worker.isInWater() && wanted.y > worker.getY() + 0.5;
+        double flat = Math.sqrt(dx * dx + dz * dz);
+        // (far from where he wants to go, only once well and truly stuck, unless it is well above him: a pit)
+        if (upwardOrBank && (flat < 8 || wanted.y - feet.getY() > 3 || still >= 10) && footing
+                && level.getBlockState(feet.above(2)).isAir()
+                && (level.getBlockState(feet).isAir() || level.getBlockState(feet).canBeReplaced())) {
+            ItemStack fill = fill();
+            if (fill != null && fill.getItem() instanceof BlockItem bi) {
+                // Jump-and-place in one go: up a block, the block underfoot.
+                worker.getNavigation().stop();
+                worker.setPos(worker.getX(), feet.getY() + 1.0, worker.getZ());
+                level.setBlock(feet, bi.getBlock().defaultBlockState(), Block.UPDATE_ALL);
+                fill.shrink(1);
+                worker.getInventory().setChanged();
+                worker.swing(InteractionHand.MAIN_HAND);
+                still = 3;
+                actions++;
+                return;
+            }
+        }
+        // Otherwise a wall in the way at head or foot height (or overhead when climbing): dig through it.
         BlockPos[] ahead = upward
                 ? new BlockPos[]{feet.above(2), feet.relative(dir).above(), feet.relative(dir).above(2)}
                 : new BlockPos[]{feet.relative(dir).above(), feet.relative(dir)};
@@ -97,27 +119,6 @@ final class Unstuck {
                 if (!upward) {
                     break; // a village wall: no breaking that; try going over instead
                 }
-            }
-        }
-        // Climb: jump and put a block underfoot.
-        // Out of water up a bank, too: the block goes where he swims.
-        boolean footing = worker.onGround() || worker.isInWater();
-        boolean upwardOrBank = upward || worker.isInWater() && wanted.y > worker.getY() + 0.5;
-        double flat = Math.sqrt(dx * dx + dz * dz);
-        // (far from where he wants to go, only once well and truly stuck: the bottom of a ravine)
-        if (upwardOrBank && (flat < 8 || still >= 10) && footing && level.getBlockState(feet.above(2)).isAir()
-                && (level.getBlockState(feet).isAir() || level.getBlockState(feet).canBeReplaced())) {
-            ItemStack fill = fill();
-            if (fill != null && fill.getItem() instanceof BlockItem bi) {
-                // Jump-and-place in one go: up a block, the block underfoot.
-                worker.getNavigation().stop();
-                worker.setPos(worker.getX(), feet.getY() + 1.0, worker.getZ());
-                level.setBlock(feet, bi.getBlock().defaultBlockState(), Block.UPDATE_ALL);
-                fill.shrink(1);
-                worker.getInventory().setChanged();
-                worker.swing(InteractionHand.MAIN_HAND);
-                still = 3;
-                actions++;
             }
         }
     }
