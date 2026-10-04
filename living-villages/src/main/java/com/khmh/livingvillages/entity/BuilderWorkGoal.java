@@ -132,7 +132,8 @@ public class BuilderWorkGoal extends Goal {
         long now = level.getGameTime();
         village.reportWorking(target.id(), now);
         worker.setStatus("building " + target.typeId() + " " + target.phase().name().toLowerCase() + " "
-                + target.progress() + (waitingSince >= 0 ? " (waiting for materials)" : ""));
+                + target.progress() + (waitingSince >= 0 ? " (waiting for materials: "
+                + target.data().getString("waitingFor") + ")" : ""));
 
         if (target.phase() == com.khmh.livingvillages.building.Building.Phase.PREPARE) {
             prepare(level, village, now);
@@ -181,9 +182,14 @@ public class BuilderWorkGoal extends Goal {
             if (other == null) {
                 village.request(need, look.getOrDefault(need, 1), "build:" + target.id(), now);
             }
-            if (waitingSince < 0) {
-                waitingSince = now;
+            // The wait is the site's, not the man's: a builder moved off and back (or a new one) carries on the
+            // count instead of starting it over, or a stand-in might never be used.
+            String waitKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(need).toString();
+            if (!waitKey.equals(target.data().getString("waitingFor"))) {
+                target.data().putString("waitingFor", waitKey);
+                target.data().putLong("waitingSince", now);
             }
+            waitingSince = target.data().getLong("waitingSince");
             // Once a stand-in had to be used for this item on this site, the rest get one straight away.
             String needId = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(need).toString();
             final Item needed = need;
