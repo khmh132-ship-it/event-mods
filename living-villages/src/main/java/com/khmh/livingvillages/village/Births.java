@@ -57,12 +57,15 @@ final class Births {
         for (int i = 0; i < adults.size(); i++) {
             for (int j = i + 1; j < adults.size(); j++) {
                 double d = adults.get(i).distanceToSqr(adults.get(j));
-                if (d < best) {
+                if (d < best && d < 24 * 24) { // two who are about together, not one at each end of the woods
                     best = d;
                     a = adults.get(i);
                     b = adults.get(j);
                 }
             }
+        }
+        if (a == null) {
+            return; // nobody near anybody just now: another time
         }
         a.courting(b, now + 2400);
         b.courting(a, now + 2400);

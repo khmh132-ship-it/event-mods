@@ -26,6 +26,29 @@ class Unloading {
     private BlockPos target;
     private int timer;
     private int opened = -1;
+    private double closest = Double.MAX_VALUE;
+    private int stall;
+    private BlockPos stallTarget;
+
+    /** Ticks since he last got any nearer to the target. */
+    private int stalled() {
+        if (target == null) {
+            return 0;
+        }
+        if (!target.equals(stallTarget)) {
+            stallTarget = target;
+            closest = Double.MAX_VALUE;
+            stall = 0;
+        }
+        double d = worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
+        if (d < closest - 1.0) {
+            closest = d;
+            stall = 0;
+        } else {
+            stall++;
+        }
+        return stall;
+    }
     /** Items the worker keeps for his own work (a farmer's seeds), item -> how many. */
     private java.util.Map<net.minecraft.world.item.Item, Integer> keep = java.util.Map.of();
 
@@ -75,7 +98,7 @@ class Unloading {
         // (and if the bell cannot be got at at all, what he carries counts as delivered to the village store)
         double reach = bell ? (timer > GIVE_UP_TICKS * 4 ? Double.MAX_VALUE : timer > GIVE_UP_TICKS ? 144 : 16) : 6.25;
         if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > reach) {
-            if (!bell && timer > GIVE_UP_TICKS) {
+            if (!bell && stalled() > GIVE_UP_TICKS) { // no nearer for a good while (a long walk is fine)
                 skip.add(target);
                 if (!target.equals(pendingChest)) {
                     Stockpile.unreachable(level, target); // nobody else need try it for a while either

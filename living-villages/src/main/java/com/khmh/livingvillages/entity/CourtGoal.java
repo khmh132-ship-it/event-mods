@@ -61,7 +61,7 @@ class CourtGoal extends Goal {
         worker.getLookControl().setLookAt(mate, 30.0F, 30.0F);
         if (worker.distanceToSqr(mate) > 4.0) {
             if (timer % 20 == 1) {
-                worker.getNavigation().moveTo(mate, 0.6);
+                worker.getNavigation().moveTo(mate.getX(), mate.getY(), mate.getZ(), 0.6);
             }
         } else {
             worker.getNavigation().stop();
