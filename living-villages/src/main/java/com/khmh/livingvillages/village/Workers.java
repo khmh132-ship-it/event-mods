@@ -171,7 +171,9 @@ public final class Workers {
         // A job whose last holder stood idle and was moved off is not handed out again for five minutes.
         for (WorkerJob j : priority) {
             String key = "idle_" + j.name().toLowerCase();
-            if (v.data().contains(key) && level.getGameTime() - v.data().getLong(key) < 6000) {
+            // (a hunt that came to nothing is not tried again for a whole day: the game about is out of reach)
+            long rest = j == WorkerJob.BUTCHER ? 24000 : 6000;
+            if (v.data().contains(key) && level.getGameTime() - v.data().getLong(key) < rest) {
                 needed.put(j, false);
             }
         }
