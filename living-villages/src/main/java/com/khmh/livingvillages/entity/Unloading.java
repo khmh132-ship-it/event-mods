@@ -204,7 +204,8 @@ class Unloading {
             var box = b.box();
             for (BlockPos p : BlockPos.betweenClosed(box.minX() + 1, box.minY(), box.minZ() + 1, box.maxX() - 1,
                     box.maxY() - 1, box.maxZ() - 1)) {
-                if (!level.getBlockState(p).isAir() || !level.getBlockState(p.above()).isAir()
+                // Ground floor only: an upstairs reached by a ladder is out of a villager's reach.
+                if (p.getY() > b.groundY() + 2 || !level.getBlockState(p).isAir() || !level.getBlockState(p.above()).isAir()
                         || !level.getBlockState(p.below()).isSolidRender(level, p.below())
                         || p.closerThan(b.entrance(), 2.5) || !underRoof(level, p) || skip.contains(p)) {
                     continue;
