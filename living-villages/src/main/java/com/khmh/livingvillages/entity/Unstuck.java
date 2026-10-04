@@ -197,7 +197,12 @@ final class Unstuck {
         var inv = worker.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
-            if (!s.isEmpty() && (FILL.contains(s.getItem()) || s.is(net.minecraft.tags.ItemTags.LOGS))) {
+            if (!s.isEmpty() && (FILL.contains(s.getItem()) || s.is(net.minecraft.tags.ItemTags.LOGS)
+                    // any plain full block will do to stand on: granite, diorite, sand, gravel...
+                    || s.getItem() instanceof BlockItem bi && bi.getBlock().defaultBlockState()
+                            .isCollisionShapeFullBlock(worker.level(), worker.blockPosition())
+                            && !(bi.getBlock() instanceof net.minecraft.world.level.block.EntityBlock)
+                            && !(bi.getBlock() instanceof net.minecraft.world.level.block.FallingBlock))) {
                 return s;
             }
         }

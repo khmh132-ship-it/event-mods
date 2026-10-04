@@ -108,7 +108,8 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         goalSelector.addGoal(2, new GuardGoals.Patrol(this));
         targetSelector.addGoal(1, new GuardGoals.Retaliate(this));
         targetSelector.addGoal(2, new GuardGoals.Hunt(this));
-        goalSelector.addGoal(3, new ComeUpGoal(this));
+        // Fallen into a pit or the quarry: getting out comes before the work up top (which he cannot reach anyway).
+        goalSelector.addGoal(1, new ComeUpGoal(this));
         goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));

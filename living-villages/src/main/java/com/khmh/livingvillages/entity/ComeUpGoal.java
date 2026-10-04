@@ -27,8 +27,11 @@ class ComeUpGoal extends Goal {
     @Override
     public boolean canUse() {
         BlockPos bell = bell();
-        return bell != null && worker.job() != WorkerJob.MINER && !worker.isSleeping()
-                && worker.getY() < bell.getY() - BELOW;
+        return bell != null && worker.job() != WorkerJob.MINER && worker.job() != WorkerJob.BUILDER
+                && !worker.isSleeping() && worker.getY() < bell.getY() - BELOW
+                // not inside one of the village's own buildings (a mine dug down, a cellar)
+                && worker.village().map(v -> v.buildings().stream()
+                        .noneMatch(b -> b.box().inflatedBy(1).isInside(worker.blockPosition()))).orElse(false);
     }
 
     @Override
