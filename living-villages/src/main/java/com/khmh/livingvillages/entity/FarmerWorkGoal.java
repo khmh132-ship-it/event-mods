@@ -119,7 +119,10 @@ public class FarmerWorkGoal extends Goal {
             state = State.RETURN;
             return;
         }
-        if (worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) > 5.0) {
+        double d2 = worker.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
+        // Close by but no way onto it (a row up a step, across the water channel): reached over, as a player would.
+        boolean reachOver = d2 <= 16.0 && timer > 60;
+        if (d2 > 5.0 && !reachOver) {
             if (timer > 300) {
                 todo = todo.stream().filter(p -> !p.equals(target)).toList();
                 target = null;
