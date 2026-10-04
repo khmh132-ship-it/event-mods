@@ -340,8 +340,10 @@ public class AnimalWorkGoal extends Goal {
             worker.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
             return true;
         }
-        if (timer % 15 == 1) {
-            worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.65);
+        // After game he runs (and keeps after it as it bolts); otherwise an ordinary walk.
+        boolean chase = task == Task.CULL;
+        if (timer % (chase ? 5 : 15) == 1) {
+            worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, chase ? 1.0 : 0.65);
         }
         return false;
     }
