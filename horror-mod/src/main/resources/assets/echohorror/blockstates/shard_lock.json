@@ -1,0 +1,68 @@
+{
+  "variants": {
+    "facing=north,shards=0": {
+      "model": "echohorror:block/shard_lock_0",
+      "y": 0
+    },
+    "facing=north,shards=1": {
+      "model": "echohorror:block/shard_lock_1",
+      "y": 0
+    },
+    "facing=north,shards=2": {
+      "model": "echohorror:block/shard_lock_2",
+      "y": 0
+    },
+    "facing=north,shards=3": {
+      "model": "echohorror:block/shard_lock_3",
+      "y": 0
+    },
+    "facing=east,shards=0": {
+      "model": "echohorror:block/shard_lock_0",
+      "y": 90
+    },
+    "facing=east,shards=1": {
+      "model": "echohorror:block/shard_lock_1",
+      "y": 90
+    },
+    "facing=east,shards=2": {
+      "model": "echohorror:block/shard_lock_2",
+      "y": 90
+    },
+    "facing=east,shards=3": {
+      "model": "echohorror:block/shard_lock_3",
+      "y": 90
+    },
+    "facing=south,shards=0": {
+      "model": "echohorror:block/shard_lock_0",
+      "y": 180
+    },
+    "facing=south,shards=1": {
+      "model": "echohorror:block/shard_lock_1",
+      "y": 180
+    },
+    "facing=south,shards=2": {
+      "model": "echohorror:block/shard_lock_2",
+      "y": 180
+    },
+    "facing=south,shards=3": {
+      "model": "echohorror:block/shard_lock_3",
+      "y": 180
+    },
+    "facing=west,shards=0": {
+      "model": "echohorror:block/shard_lock_0",
+      "y": 270
+    },
+    "facing=west,shards=1": {
+      "model": "echohorror:block/shard_lock_1",
+      "y": 270
+    },
+    "facing=west,shards=2": {
+      "model": "echohorror:block/shard_lock_2",
+      "y": 270
+    },
+    "facing=west,shards=3": {
+      "model": "echohorror:block/shard_lock_3",
+      "y": 270
+    }
+  }
+}

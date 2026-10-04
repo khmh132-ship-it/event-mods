@@ -1,0 +1,747 @@
+package com.echohorror.story;
+
+import com.echohorror.Config;
+import com.echohorror.EchoHorror;
+import com.echohorror.entity.CrawlerEntity;
+import com.echohorror.entity.EchoBossEntity;
+import com.echohorror.entity.MimicEntity;
+import com.echohorror.entity.PhantomEntity;
+import com.echohorror.horror.HorrorUtil;
+import com.echohorror.horror.Sanity;
+import com.echohorror.horror.Scheduler;
+import com.echohorror.item.NoteItem;
+import com.echohorror.network.*;
+import com.echohorror.registry.ModEntities;
+import com.echohorror.registry.ModItems;
+import com.echohorror.registry.ModSounds;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/** The story director: chapters, triggers, broadcasts and set pieces. Server side only. */
+public final class StoryManager {
+    public static final int CH_NONE = 0, CH_SIGNAL = 1, CH_RELAY = 2, CH_VILLAGE = 3, CH_DEPTHS = 4, CH_OBJECT = 5, CH_BELFRY = 6, CH_SILENCE = 7;
+
+    private static int firstPlayerTicks;
+
+    private StoryManager() {}
+
+    public static StoryData data(MinecraftServer server) {
+        return StoryData.get(server);
+    }
+
+    public static String chapterTitle(int ch) {
+        return switch (ch) {
+            case CH_SIGNAL -> "ПРОЛОГ|Сигнал";
+            case CH_RELAY -> "ГЛАВА I|Ретранслятор";
+            case CH_VILLAGE -> "ГЛАВА II|Тихий Лог";
+            case CH_DEPTHS -> "ГЛАВА III|Глубина";
+            case CH_OBJECT -> "ГЛАВА IV|Объект «Колокол»";
+            case CH_BELFRY -> "ГЛАВА V|Звонница";
+            case CH_SILENCE -> "ЭПИЛОГ|Тишина";
+            default -> "|";
+        };
+    }
+
+    public static String objective(StoryData d) {
+        return switch (d.chapter) {
+            case CH_NONE -> "Всё спокойно. Слишком спокойно. Дождитесь ночи.";
+            case CH_SIGNAL -> "Найдите источник сигнала — ретранслятор Р-7.\nДержите пеленгатор в руке: он покажет направление.";
+            case CH_RELAY -> d.flag("console_used") ? "Слушайте эфир."
+                    : "Изучите ретранслятор. Прочтите журнал радиста.\nВключите передатчик на столе — НОЧЬЮ.";
+            case CH_VILLAGE -> !d.flag("clapper_installed")
+                    ? "Тихий Лог. Узнайте, что случилось с жителями.\nКолокол церкви нем: найдите его язык. Говорят, его унесли в подпол."
+                    : "Язык колокола на месте.\nПоднимитесь на колокольню и позвоните в колокол в ПОЛНОЧЬ.";
+            case CH_DEPTHS -> "Колодец открыт. Спуститесь в Глубину.\nНайдите три осколка колокола и вставьте их в печать у ворот объекта ("
+                    + lockCount(d) + "/3).\nПолзуны слепы: двигайтесь пригнувшись.";
+            case CH_OBJECT -> "Объект «Колокол». Восстановите питание: три рубильника (" + d.switchesOn.size() + "/3).\n"
+                    + "НЕ ОТВОДИТЕ ВЗГЛЯД от Немой. Работайте парами.";
+            case CH_BELFRY -> d.flag("boss_spawned") ? "Звоните в колокола, чтобы оглушить Отголосок. Пока он оглушён — бейте.\nОдин колокол дважды подряд не сработает."
+                    : "Спуститесь в Звонницу. Заставьте Эхо замолчать.";
+            case CH_SILENCE -> "Тишина.\nСюжет завершён. Но эхо иногда возвращается.";
+            default -> "";
+        };
+    }
+
+    private static int lockCount(StoryData d) {
+        return d.flag("lock3") ? 3 : d.flag("lock2") ? 2 : d.flag("lock1") ? 1 : 0;
+    }
+
+    // =========================================================================================== sync
+    public static void sendJournal(ServerPlayer p, boolean open) {
+        StoryData d = data(p.server);
+        Net.send(p, new JournalPacket(open, d.chapter, objective(d), new ArrayList<>(d.notes)));
+    }
+
+    public static void syncAll(MinecraftServer server) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) sendJournal(p, false);
+    }
+
+    private static void broadcast(MinecraftServer server, Component c) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) p.sendSystemMessage(c);
+    }
+
+    private static void broadcastBar(MinecraftServer server, Component c) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) p.displayClientMessage(c, true);
+    }
+
+    public static void setChapter(MinecraftServer server, int ch) {
+        StoryData d = data(server);
+        if (d.chapter == ch) return;
+        d.chapter = ch;
+        d.setDirty();
+        EchoHorror.LOG.info("Story chapter -> {}", ch);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.CHAPTER, chapterTitle(ch));
+            HorrorUtil.playAt(p, "story.chapter", 0.9f, 1f);
+            giveKit(p);
+        }
+        syncAll(server);
+    }
+
+    // =========================================================================================== kit
+    public static void giveKit(ServerPlayer p) {
+        StoryData d = data(p.server);
+        if (d.chapter < CH_SIGNAL || d.kits.contains(p.getUUID())) return;
+        d.kits.add(p.getUUID());
+        d.setDirty();
+        give(p, new ItemStack(ModItems.JOURNAL.get()));
+        give(p, new ItemStack(ModItems.LOCATOR.get()));
+        give(p, new ItemStack(ModItems.FLASHLIGHT.get()));
+        give(p, new ItemStack(ModItems.BATTERY.get(), 2));
+        give(p, new ItemStack(ModItems.PILLS.get(), 1));
+        p.sendSystemMessage(Component.literal("В рюкзаке: полевой дневник, пеленгатор, фонарь. Держитесь вместе.")
+                .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+    }
+
+    private static void give(ServerPlayer p, ItemStack s) {
+        if (!p.getInventory().add(s)) p.drop(s, false);
+    }
+
+    // =========================================================================================== start
+    public static void start(MinecraftServer server, BlockPos origin) {
+        StoryData d = data(server);
+        ServerLevel level = server.overworld();
+        d.put("origin", origin);
+        BlockPos site = Structures.findSite(level, origin, Config.LOCATION_DISTANCE.get(), 12);
+        Structures.buildRadio(level, site, d);
+        d.notes.add("prologue");
+        setChapter(server, CH_SIGNAL);
+        int count = server.getPlayerList().getPlayerCount();
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.send(p, prologueBroadcast(count));
+        }
+    }
+
+    private static SoundSeqPacket prologueBroadcast(int count) {
+        SoundSeqPacket.Builder b = new SoundSeqPacket.Builder()
+                .sound("radio.tune", 60, "[ треск помех ]")
+                .sound("scare.static", 30)
+                .sound("radio.b_prologue", 50, "«Всем, кто слышит. Не отвечайте голосам из темноты.»")
+                .sub("«Повторяю. Не отвечайте голосам из темноты.»", 120)
+                .sub("«Не открывайте дверь, если стучат ночью.»", 110);
+        appendCount(b, count, false, 140);
+        return b.build();
+    }
+
+    /** Numbers-station count. */
+    private static void appendCount(SoundSeqPacket.Builder b, int count, boolean more, int firstDelay) {
+        b.sound("radio.intro", firstDelay, "[ позывной ]");
+        b.sound("radio.b_attention", 170, "«Внимание. Внимание. Говорит ретранслятор Р-7. Считаю.»");
+        int n = Mth.clamp(count, 1, 12);
+        String[] words = {"ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять", "одиннадцать", "двенадцать"};
+        int delay = 175;
+        for (int i = 1; i <= n; i++) {
+            b.sound("radio.num" + i, delay, "«" + words[i] + "...»");
+            delay = 34;
+        }
+        if (more) {
+            b.sound("radio.num" + Math.min(12, n + 1), 60, "«...» " + words[Math.min(12, n + 1)] + ".");
+            b.sound("radio.b_more", 50, "«Вас стало больше.»");
+            b.sound("radio.b_end", 80, "«Конец связи.»");
+        } else {
+            b.sound("radio.b_end", 50, "«Конец связи.»");
+        }
+    }
+
+    // =========================================================================================== tick
+    public static void tick(MinecraftServer server) {
+        StoryData d = data(server);
+        ServerLevel ow = server.overworld();
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
+        if (players.isEmpty()) return;
+
+        if (d.chapter == CH_NONE) {
+            firstPlayerTicks += 20;
+            if (Config.AUTO_START.get() && firstPlayerTicks > 2400 && HorrorUtil.isNight(ow) && ow.getDayTime() % 24000L > 14000) {
+                ServerPlayer first = players.get(0);
+                start(server, first.level() == ow ? first.blockPosition() : ow.getSharedSpawnPos());
+            }
+            return;
+        }
+        for (ServerPlayer p : players) giveKit(p);
+
+        // nightly count at midnight
+        long day = ow.getDayTime() / 24000L;
+        if (d.chapter >= CH_RELAY && d.chapter < CH_SILENCE && HorrorUtil.isMidnight(ow) && d.lastCountDay != day) {
+            d.lastCountDay = day;
+            d.nights++;
+            d.setDirty();
+            int count = players.size();
+            for (ServerPlayer p : players) {
+                if (!hasLocator(p)) continue;
+                SoundSeqPacket.Builder b = new SoundSeqPacket.Builder().sound("radio.tune", 1, "[ пеленгатор оживает ]");
+                if (d.nights % 2 == 0) b.sound("radio.b_counting", 40, "«Я считаю вас каждую ночь. И каждую ночь вас на одного больше.»");
+                appendCount(b, count, d.chapter >= CH_VILLAGE, d.nights % 2 == 0 ? 190 : 40);
+                Net.send(p, b.build());
+            }
+            if (d.chapter >= CH_VILLAGE && echoNight(d, ow)) {
+                for (ServerPlayer p : players) {
+                    p.sendSystemMessage(Component.literal("Ночь Эха. Небо слушает.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
+                    HorrorUtil.playAt(p, "story.bell_far", 0.8f, 0.8f);
+                }
+            }
+        }
+
+        for (ServerPlayer p : players) {
+            if (p.level() != ow || p.isSpectator()) continue;
+            Vec3 pos = p.position();
+            switch (d.chapter) {
+                case CH_SIGNAL -> {
+                    BlockPos r = d.get("radio");
+                    if (r != null && pos.distanceTo(Vec3.atCenterOf(r)) < 18) {
+                        setChapter(server, CH_RELAY);
+                        HorrorUtil.playAt(p, "scare.static", 0.6f, 1f);
+                    }
+                }
+                case CH_VILLAGE -> {
+                    if (d.in("cellar", pos) && d.setFlag("cellar_scare")) cellarScare(p, d);
+                }
+                case CH_DEPTHS -> {
+                    for (int i = 0; i < 3; i++) {
+                        if (d.in("shard" + i, pos) && d.setFlag("ambush_shard" + i)) ambush(p, 2 + players.size() / 2);
+                    }
+                }
+                case CH_OBJECT -> {
+                    if (d.in("archive", pos) && d.setFlag("archive_mimic")) archiveMimic(p, d);
+                    if (d.in("genroom", pos) && d.setFlag("gen_ambush")) ambush(p, 3 + players.size() / 2);
+                }
+                case CH_BELFRY -> {
+                    if (d.in("arena", pos)) belfryTick(server, p, d);
+                }
+                default -> {}
+            }
+            // one-time location titles
+            if (d.in("village", pos) && d.setFlag("title_village")) {
+                Net.fx(p, Fx.SUBTITLE, 100, 0, "Тихий Лог. Ни одного огня. Ни одной собаки.");
+            }
+            if (d.in("depths", pos) && d.setFlag("title_depths")) {
+                Net.fx(p, Fx.SUBTITLE, 100, 0, "Стены тёплые. Где-то внизу кто-то повторяет ваши шаги.");
+            }
+            if (d.in("bunker", pos) && d.setFlag("title_bunker")) {
+                Net.fx(p, Fx.SUBTITLE, 100, 0, "Объект «Колокол». Здесь давно никто не говорил вслух.");
+            }
+        }
+    }
+
+    public static boolean echoNight(StoryData d, Level level) {
+        return d.chapter >= CH_VILLAGE && d.chapter < CH_SILENCE && HorrorUtil.isNight((ServerLevel) level) && d.nights % 3 == 0 && d.nights > 0;
+    }
+
+    private static boolean hasLocator(ServerPlayer p) {
+        return p.getInventory().contains(new ItemStack(ModItems.LOCATOR.get()));
+    }
+
+    // =========================================================================================== locator
+    public static BlockPos target(ServerPlayer p, StoryData d) {
+        switch (d.chapter) {
+            case CH_SIGNAL, CH_RELAY:
+                return d.get("console");
+            case CH_VILLAGE:
+                if (!d.flag("clapper_installed")) {
+                    if (p.getInventory().contains(new ItemStack(ModItems.BELL_CLAPPER.get()))) return d.get("bell");
+                    return d.flag("cellar_scare") ? d.get("cellar") : d.get("village");
+                }
+                return d.get("bell");
+            case CH_DEPTHS: {
+                if (p.getInventory().contains(new ItemStack(ModItems.ECHO_SHARD.get()))) return d.get("lock");
+                BlockPos best = null;
+                double bd = Double.MAX_VALUE;
+                for (BlockPos c : d.list("shard_chests")) {
+                    BlockEntity be = p.level().getBlockEntity(c);
+                    if (be instanceof Container cont && cont.hasAnyOf(java.util.Set.of(ModItems.ECHO_SHARD.get()))) {
+                        double dd = c.distSqr(p.blockPosition());
+                        if (dd < bd) {
+                            bd = dd;
+                            best = c;
+                        }
+                    }
+                }
+                return best != null ? best : d.get("lock");
+            }
+            case CH_OBJECT: {
+                BlockPos best = null;
+                double bd = Double.MAX_VALUE;
+                for (BlockPos s : d.list("switches")) {
+                    if (d.switchesOn.contains(s.asLong())) continue;
+                    double dd = s.distSqr(p.blockPosition());
+                    if (dd < bd) {
+                        bd = dd;
+                        best = s;
+                    }
+                }
+                return best;
+            }
+            case CH_BELFRY:
+                return d.get("arena");
+            default:
+                return null;
+        }
+    }
+
+    public static void locatorTick(ServerPlayer p) {
+        StoryData d = data(p.server);
+        float sanity = Sanity.get(p);
+        if (sanity < 30 && p.getRandom().nextFloat() < 0.12f) {
+            String[] glitch = {"▮▮▮▮▮ С З А Д И ▮▮▮▮▮", "О Н О   З Д Е С Ь", "▮▮▮▮▮ 0 м ▮▮▮▮▮", "не ищи", "ТЫ ЕГО ИСТОЧНИК"};
+            p.displayClientMessage(Component.literal(glitch[p.getRandom().nextInt(glitch.length)]).withStyle(ChatFormatting.DARK_RED), true);
+            return;
+        }
+        BlockPos t = target(p, d);
+        if (t == null || p.level() != p.server.overworld()) {
+            p.displayClientMessage(Component.literal("· · · тишина · · ·").withStyle(ChatFormatting.DARK_GRAY), true);
+            return;
+        }
+        double dx = t.getX() + 0.5 - p.getX(), dz = t.getZ() + 0.5 - p.getZ(), dy = t.getY() - p.getY();
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        float yawTo = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90F;
+        float rel = Mth.wrapDegrees(yawTo - p.getYRot());
+        String[] arrows = {"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"};
+        String arrow = arrows[Math.floorMod(Math.round(rel / 45f), 8)];
+        int bars = dist < 15 ? 5 : dist < 50 ? 4 : dist < 120 ? 3 : dist < 300 ? 2 : 1;
+        String strength = "▮".repeat(bars) + "▯".repeat(5 - bars);
+        String vert = Math.abs(dy) > 6 ? (dy < 0 ? "  ▼ ниже" : "  ▲ выше") : "";
+        String text = dist < 8 && Math.abs(dy) < 6 ? "◉ ИСТОЧНИК РЯДОМ  " + strength : arrow + "  " + (int) dist + " м  " + strength + vert;
+        p.displayClientMessage(Component.literal(text).withStyle(bars >= 4 ? ChatFormatting.GREEN : ChatFormatting.DARK_GREEN), true);
+        if (p.tickCount % 40 == 0) HorrorUtil.playAt(p, "scare.static", 0.05f + 0.06f * bars, 0.9f + bars * 0.05f);
+    }
+
+    // =========================================================================================== notes
+    public static void readNote(ServerPlayer p, String id) {
+        Notes.Note n = Notes.get(id);
+        if (n == null) return;
+        Net.fx(p, Fx.OPEN_NOTE, id);
+        StoryData d = data(p.server);
+        if (n.story() && d.notes.add(id)) {
+            d.setDirty();
+            broadcast(p.server, Component.literal("[Журнал] ").withStyle(ChatFormatting.DARK_GRAY)
+                    .append(Component.literal(p.getGameProfile().getName() + " нашёл запись: «" + n.title() + "»").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)));
+            syncAll(p.server);
+            Sanity.add(p, -1.5f);
+        } else if (!n.story()) {
+            Sanity.add(p, -4f);
+        }
+    }
+
+    public static boolean playTape(ServerPlayer p, String id) {
+        Notes.Note n = Notes.get(id);
+        if (n == null || !id.startsWith("tape")) return false;
+        float seconds = switch (id) {
+            case "tape1" -> 23.3f;
+            case "tape2" -> 23.7f;
+            case "tape3" -> 26.6f;
+            default -> 31.1f;
+        };
+        SoundSeqPacket seq = subtitled("tape." + id, n.text().replace("«", "").replace("»", ""), seconds, 0.6f);
+        for (ServerPlayer o : p.server.getPlayerList().getPlayers()) {
+            if (o.level() == p.level() && o.distanceTo(p) < 20) Net.send(o, seq);
+        }
+        StoryData d = data(p.server);
+        if (d.notes.add(id)) {
+            d.setDirty();
+            syncAll(p.server);
+        }
+        return true;
+    }
+
+    /** One sound with subtitles distributed over its duration proportionally to sentence length. */
+    public static SoundSeqPacket subtitled(String sound, String text, float seconds, float lead) {
+        String[] parts = text.split("(?<=[.!?])\\s+");
+        int total = 0;
+        for (String s : parts) total += s.length();
+        SoundSeqPacket.Builder b = new SoundSeqPacket.Builder();
+        b.sound(sound, 1, "");
+        int delay = Math.round(lead * 20);
+        float speech = (seconds - lead - 0.8f) * 20f;
+        for (String s : parts) {
+            b.sub("«" + s.trim() + "»", Math.max(1, delay));
+            delay = Math.round(speech * s.length() / (float) total);
+        }
+        b.sub("", Math.max(20, delay));
+        return b.build();
+    }
+
+    // =========================================================================================== chapter 2: console
+    public static void onConsoleUse(ServerPlayer p, BlockPos pos) {
+        MinecraftServer server = p.server;
+        StoryData d = data(server);
+        if (d.chapter == CH_SIGNAL) setChapter(server, CH_RELAY);
+        if (d.chapter < CH_RELAY) {
+            p.displayClientMessage(Component.literal("Мёртвая аппаратура.").withStyle(ChatFormatting.GRAY), true);
+            return;
+        }
+        ServerLevel level = p.serverLevel();
+        if (d.chapter > CH_RELAY || d.flag("console_used")) {
+            HorrorUtil.playTo(p, "scare.static", Vec3.atCenterOf(pos), 0.8f, 0.8f);
+            p.displayClientMessage(Component.literal("Из динамика — только дыхание.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC), true);
+            return;
+        }
+        if (!HorrorUtil.isNight(level)) {
+            HorrorUtil.playTo(p, "scare.static", Vec3.atCenterOf(pos), 0.6f, 1f);
+            p.displayClientMessage(Component.literal("Передатчик молчит. Эфир открывается только ночью.").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), true);
+            return;
+        }
+        d.setFlag("console_used");
+        syncAll(server);
+        List<ServerPlayer> near = new ArrayList<>();
+        for (ServerPlayer o : server.getPlayerList().getPlayers()) if (o.level() == level && o.distanceTo(p) < 48) near.add(o);
+        SoundSeqPacket.Builder b = new SoundSeqPacket.Builder()
+                .sound("radio.tune", 1, "[ щелчок тумблера ]")
+                .sound("radio.intro", 30, "[ позывной ]")
+                .sound("radio.b_lis", 170, "«Это Лисицын. Ретранслятор Р-7.»")
+                .sub("«Если вы слышите это, значит, я уже не я.»", 70)
+                .sub("«Оно выучило мой голос.»", 90)
+                .sub("«Найдите колокол. Тихий Лог.»", 70)
+                .sub("«Только колокол заставляет его замолчать.»", 80)
+                .sub("", 110);
+        for (ServerPlayer o : near) Net.send(o, b.build());
+
+        // build the village now; it will be ready when the broadcast ends
+        Scheduler.schedule(40, () -> {
+            BlockPos radio = d.get("station_center") != null ? d.get("station_center") : pos;
+            BlockPos origin = d.get("origin") != null ? d.get("origin") : radio;
+            double ang = radio.equals(origin) ? Double.NaN : Math.atan2(radio.getZ() - origin.getZ(), radio.getX() - origin.getX());
+            BlockPos site = Structures.findSite(server.overworld(), radio, Config.LOCATION_DISTANCE.get(), 34, ang);
+            Structures.buildVillage(server.overworld(), site, d);
+        });
+        // the set piece
+        Scheduler.schedule(560, () -> {
+            for (ServerPlayer o : near) {
+                if (o.hasDisconnected()) continue;
+                Net.fx(o, Fx.BLACKOUT, 30);
+                HorrorUtil.playAt(o, "scare.stinger", 1f, 0.8f);
+                BlockPos door = d.get("radio_door");
+                if (door != null && o.distanceToSqr(Vec3.atCenterOf(door)) < 40 * 40) {
+                    HorrorUtil.playTo(o, "scare.knock_frantic", Vec3.atCenterOf(door), 1.5f, 1f);
+                    Scheduler.schedule(40, () -> {
+                        if (!o.hasDisconnected()) PhantomEntity.spawn(o, PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_STARE,
+                                Vec3.atBottomCenterOf(door.north(2)), 400).vanishDistance(2.5).withJumpscare();
+                    });
+                }
+                Sanity.add(o, -10f);
+            }
+            Scheduler.schedule(80, () -> {
+                for (ServerPlayer o : near) if (!o.hasDisconnected()) HorrorUtil.playAt(o, "voice.laugh", 0.6f, 0.9f);
+            });
+            Scheduler.schedule(160, () -> setChapter(server, CH_VILLAGE));
+        });
+    }
+
+    // =========================================================================================== chapter 3: village
+    private static void cellarScare(ServerPlayer p, StoryData d) {
+        ServerLevel level = p.serverLevel();
+        BlockPos hatch = d.get("cellar_hatch");
+        if (hatch != null && level.getBlockState(hatch).getBlock() instanceof net.minecraft.world.level.block.TrapDoorBlock) {
+            level.setBlock(hatch, level.getBlockState(hatch).setValue(net.minecraft.world.level.block.TrapDoorBlock.OPEN, false), 3);
+            level.playSound(null, hatch, net.minecraft.sounds.SoundEvents.WOODEN_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 2f, 0.5f);
+        }
+        Net.fx(p, Fx.FLICKER, 60);
+        Scheduler.schedule(30, () -> HorrorUtil.playTo(p, "whisper", HorrorUtil.behind(p, 1.5), 1f, 0.8f));
+        Scheduler.schedule(70, () -> {
+            HorrorUtil.playTo(p, "scare.knock", Vec3.atCenterOf(hatch != null ? hatch : p.blockPosition()), 1.5f, 0.8f);
+            Sanity.add(p, -6f);
+        });
+    }
+
+    /** Called for any bell interaction. Returns true if the vanilla interaction must be cancelled. */
+    public static boolean onBellUse(ServerPlayer p, BlockPos pos) {
+        StoryData d = data(p.server);
+        BlockPos bell = d.get("bell");
+        if (bell == null || !bell.equals(pos) || d.chapter != CH_VILLAGE) return false;
+        if (!d.flag("clapper_installed")) {
+            ItemStack held = p.getMainHandItem();
+            if (held.is(ModItems.BELL_CLAPPER.get())) {
+                if (!p.getAbilities().instabuild) held.shrink(1);
+                d.setFlag("clapper_installed");
+                p.serverLevel().playSound(null, pos, net.minecraft.sounds.SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 1f, 0.6f);
+                broadcast(p.server, Component.literal(p.getGameProfile().getName() + " повесил язык колокола на место.").withStyle(ChatFormatting.GOLD));
+                syncAll(p.server);
+            } else {
+                p.displayClientMessage(Component.literal("Колокол нем. У него нет языка.").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), true);
+            }
+            return true;
+        }
+        if (!HorrorUtil.isMidnight(p.serverLevel())) {
+            p.displayClientMessage(Component.literal("Звон глохнет, будто в вату. Ещё не время — нужна полночь.").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), true);
+            return false;
+        }
+        if (d.setFlag("bell_rung")) bellEvent(p.server, pos);
+        return false;
+    }
+
+    private static void bellEvent(MinecraftServer server, BlockPos bellPos) {
+        StoryData d = data(server);
+        ServerLevel level = server.overworld();
+        level.playSound(null, bellPos, ModSounds.get("story.bell"), SoundSource.BLOCKS, 8f, 0.8f);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.SHAKE, 60, 1.5f, "");
+            if (p.distanceToSqr(Vec3.atCenterOf(bellPos)) > 128 * 128) HorrorUtil.playAt(p, "story.bell_far", 1f, 0.8f);
+        }
+        Scheduler.schedule(120, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                Net.send(p, new SoundSeqPacket.Builder().sound("radio.b_heard", 1, "«Мы услышали вас.»").sub("", 120).build());
+                Sanity.add(p, -8f);
+            }
+        });
+        Scheduler.schedule(30, () -> Structures.buildDepths(level, d));
+        Scheduler.schedule(70, () -> Structures.buildBunker(level, d));
+        Scheduler.schedule(110, () -> Structures.buildBelfry(level, d));
+        Scheduler.schedule(200, () -> {
+            BlockPos well = d.get("well");
+            if (well != null) {
+                level.setBlock(well, Blocks.AIR.defaultBlockState(), 3);
+                level.sendParticles(ParticleTypes.LARGE_SMOKE, well.getX() + 0.5, well.getY() + 0.5, well.getZ() + 0.5, 60, 0.4, 0.8, 0.4, 0.05);
+                level.playSound(null, well, ModSounds.get("scare.scream_far"), SoundSource.HOSTILE, 4f, 0.7f);
+            }
+            broadcast(server, Component.literal("Из колодца тянет тёплым воздухом. Крышка сорвана изнутри.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
+            setChapter(server, CH_DEPTHS);
+        });
+    }
+
+    // =========================================================================================== chapter 4: depths
+    public static void onShardInserted(ServerPlayer p, BlockPos pos, int n) {
+        MinecraftServer server = p.server;
+        StoryData d = data(server);
+        d.setFlag("lock" + n);
+        broadcast(server, Component.literal("Печать: " + n + "/3").withStyle(ChatFormatting.GOLD));
+        syncAll(server);
+        if (n < 3 || !d.setFlag("gate_open")) return;
+        ServerLevel level = p.serverLevel();
+        List<BlockPos> gate = new ArrayList<>(d.list("gate"));
+        level.playSound(null, pos, ModSounds.get("story.door_open"), SoundSource.BLOCKS, 4f, 0.8f);
+        for (int i = 0; i < gate.size(); i++) {
+            BlockPos g = gate.get(i);
+            Scheduler.schedule(10 + i * 8, () -> {
+                level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
+                level.sendParticles(ParticleTypes.CLOUD, g.getX() + 0.5, g.getY() + 0.5, g.getZ() + 0.5, 8, 0.3, 0.3, 0.3, 0.02);
+            });
+        }
+        for (ServerPlayer o : server.getPlayerList().getPlayers()) {
+            Net.send(o, new SoundSeqPacket.Builder().sound("radio.b_deeper", 80, "«Глубже. Спускайтесь глубже. Мы ждём.»").sub("", 120).build());
+        }
+        Scheduler.schedule(120, () -> setChapter(server, CH_OBJECT));
+    }
+
+    private static void ambush(ServerPlayer p, int count) {
+        if (!Config.HOSTILE_SPAWNS.get()) return;
+        ServerLevel level = p.serverLevel();
+        HorrorUtil.playTo(p, "entity.crawler.click", HorrorUtil.behind(p, 8), 1.5f, 0.8f);
+        Scheduler.schedule(40, () -> {
+            for (int i = 0; i < count; i++) {
+                Optional<Vec3> spot = HorrorUtil.spotAround(p, 9, 18, 180, 120, false);
+                spot.ifPresent(s -> {
+                    CrawlerEntity c = new CrawlerEntity(ModEntities.CRAWLER.get(), level);
+                    c.moveTo(s.x, s.y, s.z, level.random.nextFloat() * 360, 0);
+                    c.setTarget(p);
+                    level.addFreshEntity(c);
+                });
+            }
+        });
+    }
+
+    // =========================================================================================== chapter 5: object
+    private static void archiveMimic(ServerPlayer p, StoryData d) {
+        List<ServerPlayer> others = HorrorUtil.others(p);
+        ServerPlayer face = others.isEmpty() ? p : others.get(p.getRandom().nextInt(others.size()));
+        StoryData.Box box = d.regions.get("archive");
+        if (box == null) return;
+        Vec3 spot = new Vec3(box.x1() + 3.5, box.y1() + 1, box.z2() - 2.5);
+        MimicEntity m = MimicEntity.spawnAs(p.serverLevel(), spot, face);
+        m.daylightImmune();
+        m.setTarget(p);
+    }
+
+    public static void onSwitch(ServerPlayer p, BlockPos pos) {
+        MinecraftServer server = p.server;
+        StoryData d = data(server);
+        if (!d.switchesOn.add(pos.asLong())) return;
+        d.setDirty();
+        ServerLevel level = p.serverLevel();
+        level.playSound(null, pos, ModSounds.get("story.power"), SoundSource.BLOCKS, 3f, 0.7f + d.switchesOn.size() * 0.15f);
+        broadcast(server, Component.literal("Питание: " + d.switchesOn.size() + "/3").withStyle(ChatFormatting.GOLD));
+        syncAll(server);
+        // every switch wakes something up
+        for (ServerPlayer o : server.getPlayerList().getPlayers()) {
+            if (d.in("bunker", o.position())) Net.fx(o, Fx.FLICKER, 40);
+        }
+        if (d.switchesOn.size() < 3 || d.chapter != CH_OBJECT || !d.setFlag("power_on")) return;
+        for (BlockPos lamp : d.list("lamps")) level.setBlock(lamp, Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+        List<BlockPos> door = new ArrayList<>(d.list("belfry_door"));
+        for (int i = 0; i < door.size(); i++) {
+            BlockPos g = door.get(i);
+            Scheduler.schedule(60 + i * 6, () -> level.setBlock(g, Blocks.AIR.defaultBlockState(), 3));
+        }
+        if (!door.isEmpty()) level.playSound(null, door.get(0), ModSounds.get("story.door_open"), SoundSource.BLOCKS, 4f, 0.7f);
+        SoundSeqPacket tape = subtitled("tape.tape4", Notes.get("tape4").text().replace("«", "").replace("»", ""), 31.1f, 0.6f);
+        for (ServerPlayer o : server.getPlayerList().getPlayers()) {
+            if (d.in("bunker", o.position()) || o.distanceTo(p) < 64) Net.send(o, tape);
+        }
+        d.notes.add("tape4");
+        Scheduler.schedule(660, () -> setChapter(server, CH_BELFRY));
+    }
+
+    // =========================================================================================== chapter 6: belfry
+    private static void belfryTick(MinecraftServer server, ServerPlayer p, StoryData d) {
+        ServerLevel level = p.serverLevel();
+        BlockPos arena = d.get("arena");
+        if (arena == null) return;
+        if (!d.flag("boss_spawned")) {
+            d.setFlag("boss_spawned");
+            syncAll(server);
+            for (ServerPlayer o : server.getPlayerList().getPlayers()) {
+                if (!d.in("arena", o.position()) && o.distanceToSqr(Vec3.atCenterOf(arena)) > 80 * 80) continue;
+                Net.fx(o, Fx.BLACKOUT, 40);
+                Net.fx(o, Fx.CHAPTER, "ОТГОЛОСОК|Звоните в колокола");
+                Net.fx(o, Fx.MUSIC, "music.finale");
+            }
+            Scheduler.schedule(40, () -> {
+                EchoBossEntity.spawn(level, arena);
+                level.playSound(null, arena, ModSounds.get("entity.boss.roar"), SoundSource.HOSTILE, 6f, 0.7f);
+            });
+            return;
+        }
+        // safety: boss vanished (e.g. removed by a command) while the fight is unfinished
+        if (p.tickCount % 200 == 0 && d.chapter == CH_BELFRY) {
+            StoryData.Box box = d.regions.get("arena");
+            if (box != null && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty() && d.setFlag("boss_respawn_check")) {
+                Scheduler.schedule(200, () -> {
+                    if (d.chapter == CH_BELFRY && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty()) {
+                        EchoBossEntity.spawn(level, arena);
+                    }
+                    d.flags.remove("boss_respawn_check");
+                });
+            }
+        }
+    }
+
+    public static void onBossDefeated(ServerLevel level, BlockPos pos) {
+        MinecraftServer server = level.getServer();
+        StoryData d = data(server);
+        if (d.chapter != CH_BELFRY) return;
+        d.notes.add("ending");
+        setChapter(server, CH_SILENCE);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.MUSIC, "");
+            Sanity.set(p, 100f);
+            give(p, new ItemStack(ModItems.SILENCE.get()));
+            Net.send(p, new SoundSeqPacket.Builder()
+                    .sound("radio.tune", 80, "[ пеленгатор оживает в последний раз ]")
+                    .sound("radio.b_attention", 40, "«Внимание. Внимание. Говорит ретранслятор Р-7. Считаю.»")
+                    .sound("radio.num0", 175, "«...ноль.»")
+                    .sub("", 60)
+                    .sub("[ тишина ]", 100)
+                    .sound("radio.num1", 160, "«...один.»")
+                    .sub("", 60)
+                    .build());
+        }
+        Scheduler.schedule(700, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                Net.fx(p, Fx.CREDITS, 0);
+                Net.fx(p, Fx.MUSIC, "music.ending");
+            }
+        });
+        // the echo never truly leaves
+        Scheduler.schedule(20 * 60 * 12, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                p.sendSystemMessage(Component.translatable("chat.type.text", p.getGameProfile().getName(), "я всё ещё здесь"));
+                Scheduler.schedule(100, () -> {
+                    if (!p.hasDisconnected())
+                        p.sendSystemMessage(Component.translatable("multiplayer.player.joined", "Эхо").withStyle(ChatFormatting.YELLOW));
+                });
+            }
+        });
+    }
+
+    // =========================================================================================== admin
+    /** Makes sure the structures for the given chapter exist (used by /echo chapter). */
+    public static void ensureBuilt(MinecraftServer server, int ch, BlockPos near) {
+        StoryData d = data(server);
+        ServerLevel level = server.overworld();
+        if (ch >= CH_SIGNAL && d.get("console") == null) {
+            if (d.get("origin") == null) d.put("origin", near);
+            Structures.buildRadio(level, Structures.findSite(level, near, Config.LOCATION_DISTANCE.get(), 12), d);
+            d.notes.add("prologue");
+        }
+        if (ch >= CH_VILLAGE && d.get("bell") == null) {
+            BlockPos r = d.get("station_center") != null ? d.get("station_center") : near;
+            BlockPos o = d.get("origin") != null ? d.get("origin") : r;
+            double ang = r.equals(o) ? Double.NaN : Math.atan2(r.getZ() - o.getZ(), r.getX() - o.getX());
+            Structures.buildVillage(level, Structures.findSite(level, r, Config.LOCATION_DISTANCE.get(), 34, ang), d);
+        }
+        if (ch >= CH_DEPTHS && d.get("lock") == null) Structures.buildDepths(level, d);
+        if (ch >= CH_DEPTHS && d.get("bunker") == null) Structures.buildBunker(level, d);
+        if (ch >= CH_DEPTHS && d.get("arena") == null) Structures.buildBelfry(level, d);
+        if (ch >= CH_DEPTHS) {
+            BlockPos well = d.get("well");
+            if (well != null) level.setBlock(well, Blocks.AIR.defaultBlockState(), 3);
+            d.setFlag("clapper_installed");
+            d.setFlag("bell_rung");
+        }
+        if (ch >= CH_OBJECT && d.setFlag("gate_open")) {
+            for (BlockPos g : d.list("gate")) level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
+        }
+        if (ch >= CH_BELFRY && d.setFlag("power_on")) {
+            for (BlockPos lamp : d.list("lamps")) level.setBlock(lamp, Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+            for (BlockPos g : d.list("belfry_door")) level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
+        }
+        if (ch >= CH_RELAY) d.setFlag("console_used");
+        d.setDirty();
+    }
+
+    public static void reset(MinecraftServer server) {
+        StoryData d = data(server);
+        d.chapter = 0;
+        d.pos.clear();
+        d.lists.clear();
+        d.regions.clear();
+        d.notes.clear();
+        d.flags.clear();
+        d.kits.clear();
+        d.switchesOn.clear();
+        d.nights = 0;
+        d.lastCountDay = -1;
+        d.setDirty();
+        firstPlayerTicks = 0;
+        syncAll(server);
+    }
+
+    public static ItemStack noteStack(String id) {
+        return NoteItem.create(id);
+    }
+}

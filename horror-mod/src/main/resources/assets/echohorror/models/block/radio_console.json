@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "echohorror:block/console_top",
+    "front": "echohorror:block/console_front",
+    "side": "echohorror:block/console_side"
+  }
+}

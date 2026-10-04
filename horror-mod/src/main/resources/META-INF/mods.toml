@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="echohorror"
+version="${file.jarVersion}"
+displayName="ЭХО: Объект «Колокол»"
+authors="event-mods"
+description='''
+Сюжетный хоррор на долгое прохождение.
+Ретранслятор Р-7, деревня Тихий Лог, Глубина, Объект «Колокол» и Звонница.
+Рассудок, галлюцинации, двойники с вашими лицами и голосами, Немая, Ползуны и Отголосок.
+Начало: автоматически с первой ночью или командой /echo start.
+'''
+
+[[dependencies.echohorror]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.echohorror]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="BOTH"

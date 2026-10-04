@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "echohorror:block/lock_side",
+    "front": "echohorror:block/lock_front_3",
+    "side": "echohorror:block/lock_side"
+  }
+}
