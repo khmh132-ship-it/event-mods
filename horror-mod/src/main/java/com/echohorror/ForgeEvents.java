@@ -167,6 +167,20 @@ public final class ForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onGameEvent(net.minecraftforge.event.VanillaGameEvent e) {
+        if (e.getLevel() instanceof net.minecraft.server.level.ServerLevel sl) {
+            NoiseSystem.onGameEvent(sl, e.getVanillaEvent(), e.getEventPosition(), e.getCause());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLoudSound(net.minecraftforge.event.PlayLevelSoundEvent.AtPosition e) {
+        if (e.getLevel() instanceof net.minecraft.server.level.ServerLevel sl) {
+            NoiseSystem.onSound(sl, e.getPosition(), e.getNewVolume(), e.getSource());
+        }
+    }
+
+    @SubscribeEvent
     public static void onCommands(RegisterCommandsEvent e) {
         EchoCommand.register(e.getDispatcher());
     }

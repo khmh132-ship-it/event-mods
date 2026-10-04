@@ -21,6 +21,8 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Ползун. Eyeless, crawls on all fours and up walls, hunts by sound: a player sneaking more than a few blocks
@@ -71,6 +73,32 @@ public class CrawlerEntity extends Monster {
             if (getTarget() instanceof Player p && p.isCrouching() && p.distanceTo(this) > 7 && getLastHurtByMob() != p) {
                 setTarget(null);
             }
+        }
+    }
+
+    private Vec3 heard;
+    private int investigate;
+
+    /** Called by the noise system: run towards the sound; if the source is close, it is found. */
+    public void hear(Vec3 pos, ServerPlayer source) {
+        if (getTarget() != null) return;
+        if (source != null && HorrorUtil.isSurvivalLike(source) && source.distanceTo(this) < 10) {
+            setTarget(source);
+            playSound(ModSounds.get("entity.crawler.click"), 1.5f, 1.3f);
+            return;
+        }
+        heard = pos;
+        investigate = 200;
+        getNavigation().moveTo(pos.x, pos.y, pos.z, 1.35);
+        if (random.nextFloat() < 0.5f) playSound(ModSounds.get("entity.crawler.click"), 1.2f, 1.2f);
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (!level().isClientSide && heard != null && getTarget() == null) {
+            if (--investigate <= 0 || distanceToSqr(heard) < 4) heard = null;
+            else if (getNavigation().isDone()) getNavigation().moveTo(heard.x, heard.y, heard.z, 1.35);
         }
     }
 
