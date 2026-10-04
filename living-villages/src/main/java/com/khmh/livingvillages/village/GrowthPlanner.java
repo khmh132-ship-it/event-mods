@@ -107,7 +107,9 @@ public final class GrowthPlanner {
             // up, and a builder makes do without them if nobody can get any.
             Map<CostKey, Integer> bulk = new java.util.HashMap<>(data.cost());
             bulk.keySet().removeIf(k -> k instanceof CostKey.Of);
-            if (!MaterialCost.canAfford(stock, bulk, START_SHARE)) {
+            // A field is cheap and food comes first: half its wood in hand is enough to start it.
+            double share = "farm".equals(rule.group()) ? 0.5 : START_SHARE;
+            if (!MaterialCost.canAfford(stock, bulk, share)) {
                 if (waiting == null) {
                     waiting = type.id();
                 }
