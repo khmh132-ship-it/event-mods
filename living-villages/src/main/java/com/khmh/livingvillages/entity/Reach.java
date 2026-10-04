@@ -13,9 +13,25 @@ public final class Reach {
     }
 
     public static boolean sees(Mob mob, BlockPos pos) {
+        // Right beside it: in reach whatever the corners of the blocks round about (a low mine chamber).
+        BlockPos at = mob.blockPosition();
+        if (Math.abs(at.getX() - pos.getX()) <= 1 && Math.abs(at.getZ() - pos.getZ()) <= 1
+                && pos.getY() >= at.getY() - 1 && pos.getY() <= at.getY() + 2) {
+            return true;
+        }
         Vec3 eye = mob.getEyePosition();
-        BlockHitResult hit = mob.level().clip(new ClipContext(eye, pos.getCenter(), ClipContext.Block.COLLIDER,
-                ClipContext.Fluid.NONE, mob));
-        return hit.getType() == HitResult.Type.MISS || hit.getBlockPos().equals(pos);
+        Vec3 c = pos.getCenter();
+        // The middle, the top and the side facing him: any of them in sight will do, as for a player.
+        Vec3 toward = eye.subtract(c);
+        Vec3 face = c.add(Math.signum(toward.x) * 0.45 * (Math.abs(toward.x) >= Math.abs(toward.z) ? 1 : 0), 0,
+                Math.signum(toward.z) * 0.45 * (Math.abs(toward.z) > Math.abs(toward.x) ? 1 : 0));
+        for (Vec3 aim : new Vec3[]{c, c.add(0, 0.45, 0), face}) {
+            BlockHitResult hit = mob.level().clip(new ClipContext(eye, aim, ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE, mob));
+            if (hit.getType() == HitResult.Type.MISS || hit.getBlockPos().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
