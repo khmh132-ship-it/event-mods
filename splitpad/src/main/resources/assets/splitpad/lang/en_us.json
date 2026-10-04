@@ -1,0 +1,4 @@
+{
+  "splitpad.hud.no_gamepad": "SplitPad: gamepad #%s not found (connected: %s)",
+  "splitpad.hud.gamepad": "SplitPad: P%s — %s"
+}

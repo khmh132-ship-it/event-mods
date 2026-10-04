@@ -1,0 +1,28 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="splitpad"
+version="${version}"
+displayName="SplitPad"
+description='''
+Splitscreen on one PC: PlayStation / Xbox controller support and automatic
+window layout (left/right/top/bottom/quarters) for running several Minecraft
+instances side by side. Client-only.
+'''
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.splitpad]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.splitpad]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="CLIENT"
