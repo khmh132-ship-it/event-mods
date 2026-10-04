@@ -147,6 +147,19 @@ public final class StoryManager {
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Net.send(p, prologueBroadcast(count));
         }
+        // the first night does not wait: something is already watching when the broadcast ends
+        Scheduler.schedule(880, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                if (!HorrorUtil.isSurvivalLike(p)) continue;
+                com.echohorror.horror.HorrorDirector.force(p, "watcher");
+                HorrorUtil.playTo(p, "whisper", HorrorUtil.behind(p, 1.2), 0.8f, 0.85f);
+            }
+        });
+        Scheduler.schedule(1500, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                if (HorrorUtil.isSurvivalLike(p)) com.echohorror.horror.HorrorDirector.force(p, "footsteps");
+            }
+        });
     }
 
     private static SoundSeqPacket prologueBroadcast(int count) {
@@ -189,8 +202,18 @@ public final class StoryManager {
 
         if (d.chapter == CH_NONE) {
             firstPlayerTicks += 20;
-            if (Config.AUTO_START.get() && firstPlayerTicks > 2400 && HorrorUtil.isNight(ow) && ow.getDayTime() % 24000L > 14000) {
+            if (!Config.AUTO_START.get() && firstPlayerTicks % 6000 == 20) dormantHint(server);
+            if (Config.AUTO_START.get() && firstPlayerTicks >= 600) {
                 ServerPlayer first = players.get(0);
+                // the sun goes down faster than it should
+                long t = ow.getDayTime() % 24000L;
+                if (t < 11500 || t > 23500) {
+                    long base = ow.getDayTime() - t;
+                    ow.setDayTime(base + (t > 23500 ? 24000L : 0L) + 11500L);
+                }
+                for (ServerPlayer p : players) {
+                    p.sendSystemMessage(Component.literal("Солнце садится быстрее, чем должно.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+                }
                 start(server, first.level() == ow ? first.blockPosition() : ow.getSharedSpawnPos());
             }
             return;
@@ -256,6 +279,16 @@ public final class StoryManager {
             }
             if (d.in("bunker", pos) && d.setFlag("title_bunker")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Объект «Колокол». Здесь давно никто не говорил вслух.");
+            }
+        }
+    }
+
+    /** Tells operators that the mod is waiting for /echo start. */
+    public static void dormantHint(MinecraftServer server) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            if (p.hasPermissions(2)) {
+                p.sendSystemMessage(Component.literal("[ЭХО] Сюжет ещё не начат. Чтобы начать: /echo start (точка старта — там, где вы стоите).")
+                        .withStyle(ChatFormatting.DARK_RED));
             }
         }
     }

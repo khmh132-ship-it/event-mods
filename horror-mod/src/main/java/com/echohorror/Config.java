@@ -23,9 +23,9 @@ public final class Config {
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         b.push("story");
-        AUTO_START = b.comment("Автоматически начать сюжет с наступлением первой ночи. По умолчанию выключено:",
-                        "мод спит, пока админ не введёт /echo start (сборка используется и для других ивентов).")
-                .define("autoStart", false);
+        AUTO_START = b.comment("Сюжет начинается сам примерно через 30 секунд после входа первого игрока.",
+                        "false — мод спит, пока админ не введёт /echo start.")
+                .define("autoStartOnJoin", true);
         LOCATION_DISTANCE = b.comment("Расстояние (в блоках) между сюжетными локациями")
                 .defineInRange("locationDistance", 260, 64, 2000);
         b.pop();

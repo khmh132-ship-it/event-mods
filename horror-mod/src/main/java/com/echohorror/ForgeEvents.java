@@ -62,6 +62,10 @@ public final class ForgeEvents {
         if (e.getEntity() instanceof ServerPlayer sp) {
             StoryManager.giveKit(sp);
             StoryManager.sendJournal(sp, false);
+            if (!Config.AUTO_START.get() && StoryData.get(sp.server).chapter == StoryManager.CH_NONE && sp.hasPermissions(2)) {
+                sp.sendSystemMessage(Component.literal("[ЭХО] Сюжет ещё не начат. Чтобы начать: /echo start")
+                        .withStyle(ChatFormatting.DARK_RED));
+            }
         }
     }
 

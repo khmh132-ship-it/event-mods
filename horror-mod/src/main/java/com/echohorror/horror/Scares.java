@@ -118,14 +118,14 @@ public final class Scares {
             Sanity.add(c.p, -2);
             return true;
         });
-        add("whisper", 1, 90, 8, 60, c -> true, c -> {
+        add("whisper", 1, 100, 8, 60, c -> true, c -> {
             HorrorUtil.playTo(c.p, "whisper", HorrorUtil.behind(c.p, 1.2), 0.7f, 0.9f + c.r.nextFloat() * 0.2f);
             Sanity.add(c.p, -2);
             return true;
         });
-        add("footsteps", 1, 95, 7, 90, c -> true, Scares::footsteps);
+        add("footsteps", 1, 100, 8, 90, c -> true, Scares::footsteps);
         add("knock", 1, 100, 7, 120, c -> c.night, Scares::knock);
-        add("breath", 1, 75, 5, 90, c -> true, c -> {
+        add("breath", 1, 92, 5, 90, c -> true, c -> {
             HorrorUtil.playTo(c.p, "scare.breath", HorrorUtil.behind(c.p, 0.9), 0.9f, 0.9f);
             Sanity.add(c.p, -3);
             return true;
@@ -135,12 +135,12 @@ public final class Scares {
             HorrorUtil.playTo(c.p, SoundEvents.AMBIENT_CAVE.value(), c.p.getEyePosition().add(dir.scale(12)), 1f, 0.8f + c.r.nextFloat() * 0.3f);
             return true;
         });
-        add("music_box", 4, 50, 2, 400, c -> true, c -> {
+        add("music_box", 3, 75, 2, 400, c -> true, c -> {
             HorrorUtil.playTo(c.p, "scare.music_box", HorrorUtil.behind(c.p, 18), 1.2f, 0.95f);
             Sanity.add(c.p, -3);
             return true;
         });
-        add("hum", 3, 100, 3, 300, Ctx::dark, c -> {
+        add("hum", 2, 100, 3, 300, Ctx::dark, c -> {
             Vec3 dir = HorrorUtil.rotate(HorrorUtil.horizontalLook(c.p), 90 + c.r.nextInt(180));
             HorrorUtil.playTo(c.p, "scare.hum", c.p.getEyePosition().add(dir.scale(14)), 1.3f, 1f);
             Sanity.add(c.p, -3);
@@ -150,7 +150,7 @@ public final class Scares {
             HorrorUtil.playAt(c.p, "story.bell_far", 0.7f, 0.75f + c.r.nextFloat() * 0.1f);
             return true;
         });
-        add("call", 2, 90, 4, 240, Ctx::dark, c -> {
+        add("call", 1, 100, 4, 240, Ctx::dark, c -> {
             String[] calls = {"voice.call", "voice.help", "voice.child", "voice.open"};
             Vec3 dir = HorrorUtil.rotate(HorrorUtil.horizontalLook(c.p), 120 + c.r.nextInt(120));
             HorrorUtil.playTo(c.p, calls[c.r.nextInt(calls.length)], c.p.getEyePosition().add(dir.scale(16 + c.r.nextInt(12))), 1.8f, 1f);
@@ -173,18 +173,18 @@ public final class Scares {
         add("voice_mimic", 3, 95, 5, 240, c -> VoiceBridge.available(), Scares::voiceMimic);
 
         // ---- world tampering
-        add("door_open", 1, 90, 4, 180, c -> Config.WORLD_TAMPERING.get(), Scares::doorOpen);
-        add("torches_out", 2, 85, 4, 300, c -> Config.WORLD_TAMPERING.get() && c.dark(), Scares::torchesOut);
+        add("door_open", 1, 100, 4, 180, c -> Config.WORLD_TAMPERING.get(), Scares::doorOpen);
+        add("torches_out", 2, 100, 4, 300, c -> Config.WORLD_TAMPERING.get() && c.dark(), Scares::torchesOut);
         add("chest_note", 2, 90, 2, 900, c -> Config.WORLD_TAMPERING.get(), Scares::chestNote);
         add("sign", 3, 70, 2, 600, c -> Config.WORLD_TAMPERING.get(), Scares::sign);
         add("rename_item", 3, 45, 2, 900, c -> true, Scares::renameItem);
 
         // ---- visions
-        add("watcher", 2, 100, 6, 180, c -> true, c -> HorrorUtil.spotAround(c.p, 26, 44, 0, 70, false).map(s -> {
+        add("watcher", 1, 100, 6, 180, c -> true, c -> HorrorUtil.spotAround(c.p, 26, 44, 0, 70, false).map(s -> {
             PhantomEntity.spawn(c.p, PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_STARE, s, 600);
             return true;
         }).orElse(false));
-        add("behind", 2, 60, 4, 240, c -> true, c -> {
+        add("behind", 2, 85, 4, 240, c -> true, c -> {
             Vec3 b = HorrorUtil.behind(c.p, 2.6);
             return HorrorUtil.ground(c.level, Mth.floor(b.x), Mth.floor(b.z), c.p.getBlockY() + 1, 2, 3).map(g -> {
                 PhantomEntity e = PhantomEntity.spawn(c.p, c.r.nextBoolean() ? PhantomEntity.KIND_WATCHER : PhantomEntity.KIND_SHADE,
@@ -194,11 +194,11 @@ public final class Scares {
                 return true;
             }).orElse(false);
         });
-        add("shade", 1, 75, 5, 120, c -> true, c -> HorrorUtil.spotAround(c.p, 12, 20, c.r.nextBoolean() ? 80 : -80, 15, false).map(s -> {
+        add("shade", 1, 100, 4, 120, c -> true, c -> HorrorUtil.spotAround(c.p, 12, 20, c.r.nextBoolean() ? 80 : -80, 15, false).map(s -> {
             PhantomEntity.spawn(c.p, PhantomEntity.KIND_SHADE, PhantomEntity.MODE_STARE, s, 100);
             return true;
         }).orElse(false));
-        add("fake_player", 3, 90, 5, 300, c -> true, c -> HorrorUtil.spotAround(c.p, 22, 36, 0, 60, false).map(s -> {
+        add("fake_player", 2, 100, 5, 300, c -> true, c -> HorrorUtil.spotAround(c.p, 22, 36, 0, 60, false).map(s -> {
             ServerPlayer face = randomFace(c);
             PhantomEntity.spawn(c.p, PhantomEntity.KIND_FAKE_PLAYER, c.r.nextFloat() < 0.4f ? PhantomEntity.MODE_WALK_AWAY : PhantomEntity.MODE_STARE, s, 700)
                     .skin(face.getUUID(), face.getGameProfile().getName());
@@ -212,7 +212,7 @@ public final class Scares {
         add("look_turn", 3, 40, 2, 600, c -> true, Scares::lookTurn);
 
         // ---- social engineering
-        add("fake_chat", 3, 85, 6, 150, c -> Config.FAKE_CHAT.get(), c -> {
+        add("fake_chat", 2, 100, 6, 150, c -> Config.FAKE_CHAT.get(), c -> {
             ServerPlayer face = randomFace(c);
             String name = face == c.p && c.r.nextFloat() < 0.5f ? FAKE_NAMES[c.r.nextInt(FAKE_NAMES.length)] : face.getGameProfile().getName();
             String text = c.r.nextFloat() < 0.5f
@@ -251,11 +251,11 @@ public final class Scares {
         add("fake_tab", 4, 50, 2, 900, c -> Config.FAKE_CHAT.get(), Scares::fakeTab);
 
         // ---- screen
-        add("flicker", 2, 100, 3, 120, c -> true, c -> {
+        add("flicker", 1, 100, 3, 120, c -> true, c -> {
             Net.fx(c.p, Fx.FLICKER, 30);
             return true;
         });
-        add("screen_text", 2, 50, 3, 300, c -> true, c -> {
+        add("screen_text", 2, 70, 3, 300, c -> true, c -> {
             String t = SCREEN_TEXT[c.r.nextInt(SCREEN_TEXT.length)];
             if (c.r.nextFloat() < 0.2f) t = c.p.getGameProfile().getName().toUpperCase(Locale.ROOT);
             Net.fx(c.p, Fx.SCREEN_TEXT, 3, 0f, t);

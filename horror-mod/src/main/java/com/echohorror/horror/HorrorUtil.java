@@ -119,8 +119,9 @@ public final class HorrorUtil {
         ServerLevel level = p.serverLevel();
         RandomSource r = p.getRandom();
         Vec3 look = horizontalLook(p);
-        for (int i = 0; i < 24; i++) {
-            double ang = angleCenter + (r.nextDouble() * 2 - 1) * spread;
+        for (int i = 0; i < 40; i++) {
+            double sp = i < 24 ? spread : Math.min(180, spread * 2.5); // nothing there (water, cliff)? look wider
+            double ang = angleCenter + (r.nextDouble() * 2 - 1) * sp;
             double d = minD + r.nextDouble() * (maxD - minD);
             Vec3 dir = rotate(look, ang);
             int x = Mth.floor(p.getX() + dir.x * d);

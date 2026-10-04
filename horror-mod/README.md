@@ -5,8 +5,8 @@
 
 ## Как запустить
 
-Мод «спит», пока админ (OP 2) не введёт **`/echo start`**. Место ввода становится точкой отсчёта: в ~260 блоках от неё вырастает первая локация.
-Автозапуск с первой ночью включается в `config/echohorror-common.toml` → `autoStart = true`.
+Сюжет начинается сам: через ~30 секунд после входа первого игрока солнце начинает садиться и в эфир прорывается сигнал. Ничего вводить не нужно. Первая локация вырастает в ~260 блоках от места, где стоял игрок.
+Если нужно, чтобы мод спал до команды `/echo start` (например, на сервере с другими ивентами), выставьте `autoStartOnJoin = false` в `config/echohorror-common.toml`.
 
 ## Сюжет
 
@@ -62,7 +62,7 @@
 
 ## Настройки
 
-`config/echohorror-common.toml` (сервер): `autoStart`, `locationDistance`, `intensity`, `sanityDrain`, `fakeScreens`, `fakeChat`,
+`config/echohorror-common.toml` (сервер): `autoStartOnJoin`, `locationDistance`, `intensity`, `sanityDrain`, `fakeScreens`, `fakeChat`,
 `worldTampering`, `jumpscares`, `voiceMimic`, `hostileSpawns`.
 `config/echohorror-client.toml` (игрок): `reduceFlashing` (для фоточувствительных), `screenEffects`.
 

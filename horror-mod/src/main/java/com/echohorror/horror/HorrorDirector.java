@@ -48,7 +48,7 @@ public final class HorrorDirector {
 
             if (d.chapter == StoryManager.CH_NONE || !HorrorUtil.isSurvivalLike(p) || !p.isAlive()) continue;
             State st = STATES.computeIfAbsent(p.getUUID(), k -> new State());
-            if (st.nextEvent == 0) st.nextEvent = seconds + 60 + p.getRandom().nextInt(120);
+            if (st.nextEvent == 0) st.nextEvent = seconds + 20 + p.getRandom().nextInt(30);
             brokenMind(p, d, st);
             if (seconds >= st.nextEvent) {
                 runRandom(p, d, st, seconds);
@@ -63,8 +63,8 @@ public final class HorrorDirector {
         if (d.chapter == StoryManager.CH_NONE) base = 480;
         else if (d.chapter == StoryManager.CH_SILENCE) base = 900;
         else {
-            float fear = Mth.clamp(0.3f * d.chapter / 6f + 0.7f * (1f - sanity / 100f), 0f, 1f);
-            base = Mth.lerp(fear, 170, 35);
+            float fear = Mth.clamp(0.35f * d.chapter / 6f + 0.65f * (1f - sanity / 100f), 0f, 1f);
+            base = Mth.lerp(fear, 110, 25);
             if (StoryManager.echoNight(d, p.level())) base *= 0.6;
         }
         base *= 0.6 + p.getRandom().nextDouble() * 0.8;
@@ -100,6 +100,7 @@ public final class HorrorDirector {
                         ok = false;
                     }
                     if (ok) {
+                        com.echohorror.EchoHorror.LOG.debug("Scare {} -> {}", s.name(), p.getGameProfile().getName());
                         st.lastUse.put(s.name(), seconds);
                         return;
                     }
