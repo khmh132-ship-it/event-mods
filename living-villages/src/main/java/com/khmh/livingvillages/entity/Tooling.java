@@ -144,6 +144,8 @@ class Tooling {
         }
     }
 
+    private long fetchFailedAt = Long.MIN_VALUE / 2;
+
     /** Two logs make planks and sticks, and those a wooden tool, as a player starts out. */
     private boolean makeOwn() {
         Item ownMake = woodenTool();
@@ -198,6 +200,9 @@ class Tooling {
         }
         if (fetching.active()) {
             fetching.tick();
+            if (!fetching.active()) {
+                fetchFailedAt = level.getGameTime(); // came back without one (it could not be got at): not again soon
+            }
             return Status.BUSY;
         }
         // Far out in the woods with logs in hand: knock a wooden one together on the spot rather than walk back.
@@ -211,7 +216,7 @@ class Tooling {
                 inStock = e.getKey();
             }
         }
-        if (inStock != null) {
+        if (inStock != null && level.getGameTime() - fetchFailedAt > 1200) {
             fetching.start(Map.of(inStock, 1));
             return Status.BUSY;
         }
