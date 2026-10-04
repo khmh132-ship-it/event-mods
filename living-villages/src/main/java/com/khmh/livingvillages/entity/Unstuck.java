@@ -52,8 +52,9 @@ final class Unstuck {
         // Miners dig their own way (and stand still a lot while they do): this is for everybody else.
         if (wanted == null || level.getGameTime() - wantedAt > 60 || worker.isSleeping()
                 || worker.position().distanceTo(wanted) < 2.0
-                // only when truly trapped: no path at all, or one that stops short (a pit, a bank)
-                || !(worker.getNavigation() instanceof WorkerNavigation nav && nav.noWay())) {
+                // only when truly trapped: no path at all, or one that stops short (a pit, a bank), or a path he is
+                // on but not getting along (no headroom on a step up, say)
+                || !(worker.getNavigation() instanceof WorkerNavigation nav && (nav.noWay() || !nav.isDone()))) {
             still = 0;
             actions = 0;
             resetBreak(level);
@@ -73,7 +74,8 @@ final class Unstuck {
             still = dx * dx + dz * dz < 0.16 ? still + 1 : 0;
             lastPos = worker.position();
         }
-        if (still < 4) { // a few seconds trapped
+        boolean pathed = worker.getNavigation() instanceof WorkerNavigation wn && !wn.noWay();
+        if (still < (pathed ? 6 : 4)) { // a few seconds trapped (a little longer when there is a way, just a snag)
             return;
         }
         BlockPos feet = worker.blockPosition();
