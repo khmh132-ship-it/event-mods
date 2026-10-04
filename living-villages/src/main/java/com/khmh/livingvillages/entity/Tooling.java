@@ -144,6 +144,26 @@ class Tooling {
         }
     }
 
+    /** Two logs make planks and sticks, and those a wooden tool, as a player starts out. */
+    private boolean makeOwn() {
+        Item ownMake = woodenTool();
+        if (ownMake == null) {
+            return false;
+        }
+        SimpleContainer pocket = worker.getInventory();
+        for (int i = 0; i < pocket.getContainerSize(); i++) {
+            ItemStack s = pocket.getItem(i);
+            if (s.is(net.minecraft.tags.ItemTags.LOGS) && s.getCount() >= 2) {
+                s.shrink(2);
+                pocket.setChanged();
+                worker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ownMake));
+                worker.swing(InteractionHand.MAIN_HAND);
+                return true;
+            }
+        }
+        return false;
+    }
+
     Status tick(ServerLevel level, Village village) {
         TagKey<Item> tag = worker.job().toolTag();
         if (tag == null) {
@@ -180,6 +200,10 @@ class Tooling {
             fetching.tick();
             return Status.BUSY;
         }
+        // Far out in the woods with logs in hand: knock a wooden one together on the spot rather than walk back.
+        if (worker.blockPosition().distSqr(village.center()) > 40 * 40 && makeOwn()) {
+            return Status.READY;
+        }
         Item inStock = null;
         for (Map.Entry<Item, Integer> e : village.stock(level).totals().entrySet()) {
             if (e.getValue() > 0 && new ItemStack(e.getKey()).is(tag)
@@ -191,20 +215,11 @@ class Tooling {
             fetching.start(Map.of(inStock, 1));
             return Status.BUSY;
         }
-        // Nobody to make one: two logs make planks and sticks, and those a wooden tool, as a player starts out.
-        Item ownMake = woodenTool();
-        if (ownMake != null) {
-            SimpleContainer pocket = worker.getInventory();
-            for (int i = 0; i < pocket.getContainerSize(); i++) {
-                ItemStack s = pocket.getItem(i);
-                if (s.is(net.minecraft.tags.ItemTags.LOGS) && s.getCount() >= 2) {
-                    s.shrink(2);
-                    pocket.setChanged();
-                    worker.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ownMake));
-                    worker.swing(InteractionHand.MAIN_HAND);
-                    return Status.READY;
-                }
-            }
+        if (makeOwn()) {
+            return Status.READY;
+        }
+        // No logs on him for one: two from the store.
+        if (woodenTool() != null) {
             if (!fetching.active() && level.getGameTime() - lastLogTrip > 1200) {
                 for (Map.Entry<Item, Integer> e : village.stock(level).totals().entrySet()) {
                     if (e.getValue() >= 2 && new ItemStack(e.getKey()).is(net.minecraft.tags.ItemTags.LOGS)) {
