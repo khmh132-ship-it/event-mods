@@ -331,7 +331,10 @@ class Unloading {
             net.minecraft.world.item.Items.MELON_SEEDS, 32,
             net.minecraft.world.item.Items.ROTTEN_FLESH, 0,
             net.minecraft.world.item.Items.POISONOUS_POTATO, 0,
-            net.minecraft.world.item.Items.SPIDER_EYE, 16);
+            net.minecraft.world.item.Items.SPIDER_EYE, 16,
+            // spoil from levelling building sites: a heap is kept for filling holes, the rest is tipped
+            net.minecraft.world.item.Items.DIRT, 64,
+            net.minecraft.world.item.Items.GRAVEL, 64);
     private static final int PLENTY_SAPLINGS = 48;
 
     private void compostSurplus(ServerLevel level, Village village) {
