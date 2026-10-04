@@ -25,6 +25,18 @@ class WorkerNavigation extends GroundPathNavigation {
     public boolean moveTo(double x, double y, double z, double speed) {
         wanted = new Vec3(x, y, z);
         wantedAt = level.getGameTime();
+        // Paths are only searched so far: a long way home goes by stages, a stretch at a time.
+        double dx = x - mob.getX(), dz = z - mob.getZ();
+        double far = Math.sqrt(dx * dx + dz * dz);
+        if (far > 48) {
+            double sx = mob.getX() + dx / far * 40, sz = mob.getZ() + dz / far * 40;
+            int sy = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    (int) Math.floor(sx), (int) Math.floor(sz));
+            if (level.hasChunkAt(net.minecraft.core.BlockPos.containing(sx, sy, sz))
+                    && super.moveTo(sx, sy, sz, brisk(speed))) {
+                return true;
+            }
+        }
         return super.moveTo(x, y, z, brisk(speed));
     }
 
