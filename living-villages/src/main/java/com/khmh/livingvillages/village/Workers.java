@@ -73,8 +73,11 @@ public final class Workers {
         var stock = v.stock(level); // looked at once for the whole scan
         // A village that builds always has a builder, one that needs things made an apprentice, workplace or not.
         boolean building = v.buildings().stream().anyMatch(b -> !b.isComplete());
+        var totals = v.stock(level).totals();
+        // Orders an apprentice could actually make out of what is in store (not just ones nobody has tried yet).
         boolean orders = v.requests().stream().anyMatch(r -> r.remaining() > 0 && r.unobtainableSince() < 0
-                && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v));
+                && com.khmh.livingvillages.economy.Trades.isMine(WorkerJob.APPRENTICE, r.item(), v)
+                && com.khmh.livingvillages.economy.CraftPlanner.plan(level, totals, r.item(), 1).isPresent());
         // Wood is the first thing every village needs: a lumberjack works from the bell until he has a hut.
         boolean woodShort = CostKey.Wood.INSTANCE.available(stock) < 512
                 || v.buildings().stream().anyMatch(b -> "lumberjack_hut".equals(b.typeId()) && b.isComplete());
