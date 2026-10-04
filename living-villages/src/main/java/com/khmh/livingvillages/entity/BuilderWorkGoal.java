@@ -186,8 +186,12 @@ public class BuilderWorkGoal extends Goal {
             }
             // Once a stand-in had to be used for this item on this site, the rest get one straight away.
             String needId = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(need).toString();
+            final Item needed = need;
             boolean givenUp = target.data().getList("standIns", net.minecraft.nbt.Tag.TAG_STRING).stream()
-                    .anyMatch(t -> t.getAsString().equals(needId));
+                    .anyMatch(t -> t.getAsString().equals(needId))
+                    // Known not to be makeable by anyone here: no point standing about a full minute for it.
+                    || village.requests().stream().anyMatch(r -> r.item() == needed
+                            && r.requester().equals("build:" + target.id()) && r.unobtainableSince() >= 0);
             if (!givenUp && now - waitingSince < SUBSTITUTE_TICKS) {
                 // Nobody to make it: he puts the trowel down and makes it himself, as a player would.
                 if (village.professions().getOrDefault("apprentice", 0) == 0 && com.khmh.livingvillages.economy.CraftPlanner
