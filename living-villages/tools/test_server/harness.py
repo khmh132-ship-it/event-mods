@@ -35,7 +35,8 @@ def make_snapshot():
     if not os.path.exists(os.path.join(SNAPSHOT, 'build')) and os.path.exists(os.path.join(ROOT, 'build')):
         shutil.copytree(os.path.join(ROOT, 'build'), os.path.join(SNAPSHOT, 'build'), symlinks=True)
 LEVEL = 'test_world'
-PORT, PASSWORD = 25576, 'test'
+# LV_PORT lets two test servers run side by side (each from its own LV_SNAPSHOT copy).
+PORT, PASSWORD = int(os.environ.get('LV_PORT', '25576')), 'test'
 
 # Flat ground with grass at y=63.
 FLAT = {'layers': [{'block': 'minecraft:bedrock', 'height': 1}, {'block': 'minecraft:stone', 'height': 123},
@@ -76,7 +77,7 @@ class TestServer:
                 'generator-settings=' + (gen if self.flat else '{}'),
                 'gamemode=creative', f'difficulty={self.difficulty}', 'spawn-monsters=false', 'spawn-animals=true',
                 'spawn-npcs=true', f'generate-structures={str(self.structures).lower()}', 'online-mode=false', 'max-tick-time=-1',
-                'enable-rcon=true', f'rcon.port={PORT}', f'rcon.password={PASSWORD}', 'spawn-protection=0',
+                'enable-rcon=true', f'rcon.port={PORT}', f'server-port={PORT - 11}', f'rcon.password={PASSWORD}', 'spawn-protection=0',
                 'view-distance=4', 'simulation-distance=4', '']))
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
         self.log = open(self.log_path, 'w')
