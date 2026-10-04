@@ -300,8 +300,8 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         if (level() instanceof net.minecraft.server.level.ServerLevel sl && getNavigation() instanceof WorkerNavigation nav) {
             unstuck.tick(sl, nav.wanted, nav.wantedAt);
         }
-        if (tickCount % 2400 == 0 && food > 0 && !isSleeping()) {
-            food--; // a loaf every ten minutes of work, two or so a day
+        if (tickCount % 4800 == 0 && food > 0 && !isSleeping()) {
+            food--; // about a loaf a day: wheat takes days to ripen, and the fields have to feed children too
         }
         if (tickCount % 40 == 0 && level() instanceof ServerLevel sl) {
             village().ifPresent(v -> com.khmh.livingvillages.village.VillageLoader.follow(sl, this, v));
