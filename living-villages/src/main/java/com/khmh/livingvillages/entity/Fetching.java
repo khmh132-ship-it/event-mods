@@ -149,7 +149,7 @@ class Fetching {
         double bestDist = Double.MAX_VALUE;
         List<BlockPos> chests = Stockpile.containers(level, village);
         for (BlockPos p : chests) {
-            if (skip.contains(p) || Stockpile.isUnreachable(level, p) || !(level.getBlockEntity(p) instanceof Container c)
+            if (skip.contains(p) || Stockpile.downTheMine(village, p, worker.job() == WorkerJob.MINER) || Stockpile.isUnreachable(level, p) || !(level.getBlockEntity(p) instanceof Container c)
                     || !hasAny(c)) {
                 continue;
             }

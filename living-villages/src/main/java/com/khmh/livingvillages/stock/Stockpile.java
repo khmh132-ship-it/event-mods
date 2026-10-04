@@ -72,6 +72,12 @@ public final class Stockpile implements Stock {
         return until != null;
     }
 
+    /** A chest down the mine: the miner's to use; everyone else keeps out of the shaft. */
+    public static boolean downTheMine(Village village, BlockPos pos, boolean miner) {
+        return !miner && village.buildings().stream().anyMatch(b -> b.type() != null && "mine".equals(b.type().group())
+                && b.box().isInside(pos));
+    }
+
     /** A chest was just put in or taken away: look again next time. */
     public static void forget(Village village) {
         FOUND.remove(village.id());

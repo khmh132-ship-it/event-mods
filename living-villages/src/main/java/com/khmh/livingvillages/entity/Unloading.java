@@ -157,7 +157,7 @@ class Unloading {
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;
         for (BlockPos p : chests) {
-            if (skip.contains(p) || Stockpile.isUnreachable(level, p) || !hasRoom(level, p)) {
+            if (skip.contains(p) || Stockpile.downTheMine(village, p, worker.job() == WorkerJob.MINER) || Stockpile.isUnreachable(level, p) || !hasRoom(level, p)) {
                 continue;
             }
             double d = p.distSqr(worker.blockPosition());
