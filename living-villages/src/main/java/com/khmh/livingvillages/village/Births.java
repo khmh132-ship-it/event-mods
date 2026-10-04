@@ -21,7 +21,7 @@ import java.util.List;
  * from the warehouse). Children grow up in a Minecraft day's worth of ticks and join the work force.
  */
 final class Births {
-    private static final int FOOD_PER_CHILD = 12;
+    private static final int FOOD_PER_CHILD = 8; // a loaf or so a day for a few days: two dozen wheat
     private static final List<Item> FOOD = List.of(Items.BREAD, Items.CARROT, Items.POTATO, Items.BEETROOT,
             Items.BAKED_POTATO, Items.COOKED_BEEF, Items.COOKED_PORKCHOP, Items.COOKED_MUTTON, Items.COOKED_CHICKEN,
             Items.COOKED_COD, Items.COOKED_SALMON, Items.APPLE, Items.SWEET_BERRIES,
