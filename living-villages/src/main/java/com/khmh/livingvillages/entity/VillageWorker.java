@@ -352,6 +352,12 @@ public class VillageWorker extends PathfinderMob implements InventoryCarrier {
         return mate;
     }
 
+    /** Down off a roof or a ledge four blocks high rather than stuck up there (a bump, half a heart at most). */
+    @Override
+    public int getMaxFallDistance() {
+        return Math.max(super.getMaxFallDistance(), 4);
+    }
+
     /** Where he is trying to get to and whether there is a way, for /village workers. */
     public String navInfo() {
         if (getNavigation() instanceof WorkerNavigation nav && nav.wanted != null) {

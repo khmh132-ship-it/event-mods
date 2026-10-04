@@ -63,8 +63,9 @@ final class Unstuck {
             lastWanted = wanted;
             actions = 0;
         }
-        if (actions >= 12) {
-            return; // tried enough on the way to this spot: no digging the whole hillside away
+        // Tried enough on the way to this spot: no digging the whole hillside away (more tries the deeper the pit).
+        if (actions >= 12 + 2 * Math.max(0, (int) (wanted.y - worker.getY()))) {
+            return;
         }
         if (worker.tickCount % 20 == 0) {
             // Bobbing in water is no progress: only ground covered counts.
@@ -101,7 +102,8 @@ final class Unstuck {
         boolean footing = worker.onGround() || worker.isInWater();
         boolean upwardOrBank = upward || worker.isInWater() && wanted.y > worker.getY() + 0.5;
         double flat = Math.sqrt(dx * dx + dz * dz);
-        if (upwardOrBank && flat < 8 && footing && level.getBlockState(feet.above(2)).isAir()
+        // (far from where he wants to go, only once well and truly stuck: the bottom of a ravine)
+        if (upwardOrBank && (flat < 8 || still >= 10) && footing && level.getBlockState(feet.above(2)).isAir()
                 && (level.getBlockState(feet).isAir() || level.getBlockState(feet).canBeReplaced())) {
             ItemStack fill = fill();
             if (fill != null && fill.getItem() instanceof BlockItem bi) {
