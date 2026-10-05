@@ -24,7 +24,7 @@ public class SilentRenderer extends HumanoidMobRenderer<SilentEntity, PlayerMode
             float v = (e.getId() * 0.618f) % 1f;
             head.yRot = 0.2f * (v - 0.5f);
             head.xRot = 0.35f;
-            head.zRot = 0.85f + 0.3f * v;        // the neck is broken
+            head.zRot = 0.5f + 0.25f * v;        // the neck is broken
             head.yScale = 1.15f;
             head.y = -2.5f;                       // a gap where the neck should be
             body.xRot = 0.12f;
@@ -36,6 +36,8 @@ public class SilentRenderer extends HumanoidMobRenderer<SilentEntity, PlayerMode
             leftArm.yRot = 0.05f;
             leftArm.zRot = -0.05f;
             rightArm.yScale = leftArm.yScale = 1.4f;
+            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 0.7f;
+            rightLeg.xScale = leftLeg.xScale = rightLeg.zScale = leftLeg.zScale = 0.8f;
             rightLeg.xRot = 0f;
             leftLeg.xRot = 0f;
             rightLeg.yRot = leftLeg.yRot = 0f;

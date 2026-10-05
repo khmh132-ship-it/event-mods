@@ -24,15 +24,18 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
             crouching = !e.onClimbable(); // vanilla's crouch pose bends the spine for us
             super.setupAnim(e, limbSwing, limbAmount, age, headYaw, headPitch);
             rightArm.yScale = leftArm.yScale = 1.75f;   // knuckles on the ground
+            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 0.62f; // bone-thin
+            rightLeg.xScale = leftLeg.xScale = rightLeg.zScale = leftLeg.zScale = 0.7f;
+            head.xScale = head.yScale = head.zScale = 1.12f;
             rightLeg.yScale = leftLeg.yScale = 0.85f;
-            body.xScale = 0.8f;
+            body.xScale = 0.72f;
             float twitch = Mth.sin(age * 9.1f) * Mth.sin(age * 2.3f) > 0.85f ? 0.5f : 0f;
-            head.zRot = (float) Math.PI + Mth.sin(age * 0.23f) * 0.25f + twitch; // the face is upside down
+            head.zRot = 1.4f + Mth.sin(age * 0.23f) * 0.2f + twitch; // the head lies on its shoulder, sideways
             head.yRot += twitch * 0.6f;
             if (!e.onClimbable()) {
                 float sw = limbSwing * 1.1f;
                 body.xRot = 0.95f;
-                head.xRot = -0.9f + Mth.sin(age * 0.6f) * 0.08f; // craning up at you
+                head.xRot = -0.75f + Mth.sin(age * 0.6f) * 0.08f; // craning up to stare at you
                 head.y = 5.5f;
                 head.z = -3.5f;
                 rightArm.y = leftArm.y = 5.5f;

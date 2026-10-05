@@ -24,6 +24,8 @@ public class MimicRenderer extends HumanoidMobRenderer<MimicEntity, PlayerModel<
             head.yScale = 1f;
             head.y = 0f;
             rightArm.yScale = leftArm.yScale = 1f;
+            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 1f;
+            body.xRot = 0f;
             if (!e.isRevealed()) {
                 hat.copyFrom(head);
                 rightSleeve.copyFrom(rightArm);
@@ -34,11 +36,13 @@ public class MimicRenderer extends HumanoidMobRenderer<MimicEntity, PlayerModel<
             float t = (float) Math.floor(age * 6f) / 6f;
             head.zRot = Mth.sin(t * 1.7f) * 0.45f + (e.getId() % 2 == 0 ? 0.6f : -0.6f);
             head.xRot += Mth.sin(t * 3.1f) * 0.25f;
-            head.yScale = 1.3f;
-            head.y = -5f - Mth.sin(t * 0.7f) * 1.5f;   // the head has come loose from the neck
-            rightArm.yScale = leftArm.yScale = 1.7f;   // hands below the knees
-            rightArm.xRot = -1.6f + Mth.cos(age * 0.9f) * 0.15f;
-            leftArm.xRot = -1.6f + Mth.sin(age * 0.9f) * 0.15f;
+            head.yScale = 1.12f;
+            head.y = -1.5f;                            // the neck is a little too long
+            body.xRot = 0.3f;                          // hunched, leaning at you
+            rightArm.yScale = leftArm.yScale = 1.65f;  // hands below the knees
+            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 0.75f;
+            rightArm.xRot = -0.25f + Mth.cos(t * 0.9f) * 0.12f;  // arms hang, swinging out of step
+            leftArm.xRot = -0.1f + Mth.sin(t * 0.9f) * 0.12f;
             rightArm.zRot = -0.1f;
             leftArm.zRot = 0.1f;
             hat.copyFrom(head);
