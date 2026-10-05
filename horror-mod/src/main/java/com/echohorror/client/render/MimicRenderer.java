@@ -37,10 +37,10 @@ public class MimicRenderer extends HumanoidMobRenderer<MimicEntity, PlayerModel<
             head.zRot = Mth.sin(t * 1.7f) * 0.45f + (e.getId() % 2 == 0 ? 0.6f : -0.6f);
             head.xRot += Mth.sin(t * 3.1f) * 0.25f;
             head.yScale = 1.12f;
-            head.y = -1.5f;                            // the neck is a little too long
+            head.y = 0f;
             body.xRot = 0.3f;                          // hunched, leaning at you
             rightArm.yScale = leftArm.yScale = 1.65f;  // hands below the knees
-            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 0.75f;
+
             rightArm.xRot = -0.25f + Mth.cos(t * 0.9f) * 0.12f;  // arms hang, swinging out of step
             leftArm.xRot = -0.1f + Mth.sin(t * 0.9f) * 0.12f;
             rightArm.zRot = -0.1f;

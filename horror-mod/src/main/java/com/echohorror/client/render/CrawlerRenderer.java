@@ -19,34 +19,47 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
             super(root, false);
         }
 
+        // Geometry of the hunch: the body pivots at the neck; shoulders, hips and head are placed where the
+        // rotated body actually puts them, so nothing floats or detaches.
+        private static final float PITCH = 0.9f, NECK_Y = 4.5f;
+
         @Override
         public void setupAnim(CrawlerEntity e, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
-            crouching = !e.onClimbable(); // vanilla's crouch pose bends the spine for us
+            crouching = false;
             super.setupAnim(e, limbSwing, limbAmount, age, headYaw, headPitch);
-            rightArm.yScale = leftArm.yScale = 1.75f;   // knuckles on the ground
-            rightArm.xScale = leftArm.xScale = rightArm.zScale = leftArm.zScale = 0.62f; // bone-thin
-            rightLeg.xScale = leftLeg.xScale = rightLeg.zScale = leftLeg.zScale = 0.7f;
-            head.xScale = head.yScale = head.zScale = 1.12f;
-            rightLeg.yScale = leftLeg.yScale = 0.85f;
-            body.xScale = 0.72f;
-            float twitch = Mth.sin(age * 9.1f) * Mth.sin(age * 2.3f) > 0.85f ? 0.5f : 0f;
-            head.zRot = 0.18f + Mth.sin(age * 0.23f) * 0.08f + twitch; // straight at you, twitching
-            head.yRot += twitch * 0.6f;
-            if (!e.onClimbable()) {
-                float sw = limbSwing * 1.1f;
-                body.xRot = 0.65f;                    // shoulders up, ready to lunge
-                head.xRot = -0.55f + Mth.sin(age * 0.6f) * 0.05f; // staring right at you
-                head.y = 5.5f;
-                head.z = -3.5f;
-                rightArm.y = leftArm.y = 5.5f;
-                rightArm.z = leftArm.z = -2.5f;
-                rightArm.xRot = -0.35f + Mth.cos(sw) * 0.7f * limbAmount;            // walking on its hands
-                leftArm.xRot = -0.35f + Mth.cos(sw + (float) Math.PI) * 0.7f * limbAmount;
-                rightArm.zRot = 0.42f;                // spread wide like a predator
-                leftArm.zRot = -0.42f;
-                rightLeg.xRot = -0.6f + Mth.cos(sw + (float) Math.PI) * 0.5f * limbAmount;
-                leftLeg.xRot = -0.6f + Mth.cos(sw) * 0.5f * limbAmount;
+            float twitch = Mth.sin(age * 9.1f) * Mth.sin(age * 2.3f) > 0.85f ? 0.45f : 0f;
+            rightArm.yScale = leftArm.yScale = 1.55f;       // arms long enough to walk on
+            head.xScale = head.yScale = head.zScale = 1.1f;
+            if (e.onClimbable()) {                           // clinging to a wall
+                rightArm.xRot = leftArm.xRot = -2.9f;
+                rightLeg.yScale = leftLeg.yScale = 1f;
+                head.zRot = twitch;
+                copyOverlays();
+                return;
             }
+            float c = Mth.cos(PITCH), s = Mth.sin(PITCH);
+            body.xRot = PITCH;
+            body.y = NECK_Y;
+            body.z = 0f;
+            head.y = NECK_Y;
+            head.z = -0.5f;
+            head.xRot = -0.25f + Mth.sin(age * 0.6f) * 0.05f; // head up, staring at you
+            head.zRot = 0.12f + twitch;
+            head.yRot = headYaw * ((float) Math.PI / 180f) + twitch * 0.5f;
+            float shoulderY = NECK_Y + 2f * c, shoulderZ = 2f * s;
+            rightArm.y = leftArm.y = shoulderY;
+            rightArm.z = leftArm.z = shoulderZ;
+            float hipY = NECK_Y + 12f * c, hipZ = 12f * s;
+            rightLeg.y = leftLeg.y = hipY;
+            rightLeg.z = leftLeg.z = hipZ;
+            rightLeg.yScale = leftLeg.yScale = (24f - hipY) / 12f; // legs reach the ground exactly
+            float sw = limbSwing * 1.1f;
+            rightArm.xRot = -0.1f + Mth.cos(sw) * 0.45f * limbAmount;           // front legs
+            leftArm.xRot = -0.1f + Mth.cos(sw + (float) Math.PI) * 0.45f * limbAmount;
+            rightArm.zRot = 0.12f;
+            leftArm.zRot = -0.12f;
+            rightLeg.xRot = Mth.cos(sw + (float) Math.PI) * 0.45f * limbAmount;
+            leftLeg.xRot = Mth.cos(sw) * 0.45f * limbAmount;
             copyOverlays();
         }
 
