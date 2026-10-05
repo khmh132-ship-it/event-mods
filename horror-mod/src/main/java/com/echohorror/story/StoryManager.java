@@ -351,6 +351,7 @@ public final class StoryManager {
             }
             locationAmbience(p, d);
             pioneerAmbience(p, d);
+            secondHouseTick(p, d);
             if (d.flag("ending_lullaby") && HorrorUtil.isNight(p.serverLevel()) && p.getRandom().nextFloat() < 0.0012f) {
                 // it sleeps. it doesn't sleep well.
                 HorrorUtil.playTo(p, "scare.music_box", p.position().add(0, -6, 0), 0.25f, 0.8f);
@@ -553,6 +554,23 @@ public final class StoryManager {
         }
     }
 
+    /** Walking up to the copy of your own house. */
+    private static void secondHouseTick(ServerPlayer p, StoryData d) {
+        BlockPos h = d.get("house_" + p.getUUID());
+        if (h == null || d.flag("house_seen_" + p.getUUID()) || p.position().distanceToSqr(Vec3.atCenterOf(h)) > 40 * 40) return;
+        d.setFlag("house_seen_" + p.getUUID());
+        Net.fx(p, Fx.SUBTITLE, 110, 0, "Это твой дом. Ты не помнишь, чтобы строил его здесь.");
+        ServerLevel level = p.serverLevel();
+        for (int[] o : new int[][]{{1, 0}, {-1, 0}, {0, -1}, {1, -1}, {-1, -1}, {0, 1}, {2, 0}, {0, -2}}) {
+            BlockPos g = h.offset(o[0], 0, o[1]); // next to your bed, inside
+            if (!level.getBlockState(g).isAir() || !level.getBlockState(g.above()).isAir() || level.getBlockState(g.below()).isAir()) continue;
+            PhantomEntity.spawn(p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(g), 2400)
+                    .skin(p.getUUID(), p.getGameProfile().getName()).vanishDistance(4).watchLimit(160);
+            break;
+        }
+        Sanity.add(p, -8);
+    }
+
     /** At night the camp is never quite empty. */
     private static void pioneerAmbience(ServerPlayer p, StoryData d) {
         BlockPos camp = d.get("pioneer");
@@ -703,7 +721,17 @@ public final class StoryManager {
         String text = dist < 8 && Math.abs(dy) < 6 ? "◉ ИСТОЧНИК РЯДОМ  " + strength : arrow + "  " + (int) dist + " м  " + strength + vert;
         BlockPos pc = d.get("pioneer");
         boolean pioneerPing = false;
-        if (pc != null && !d.flag("pioneer_seen")) {
+        BlockPos copy = d.get("house_" + p.getUUID());
+        if (copy != null && !d.flag("house_seen_" + p.getUUID())) {
+            double cdx = copy.getX() + 0.5 - p.getX(), cdz = copy.getZ() + 0.5 - p.getZ();
+            double cd = Math.sqrt(cdx * cdx + cdz * cdz);
+            if (cd < 200) {
+                float crel = Mth.wrapDegrees((float) (Mth.atan2(cdz, cdx) * (180F / Math.PI)) - 90F - p.getYRot());
+                text += "   · твой дом " + arrows[Math.floorMod(Math.round(crel / 45f), 8)] + " " + (int) cd + " м";
+                pioneerPing = true;
+            }
+        }
+        if (!pioneerPing && pc != null && !d.flag("pioneer_seen")) {
             double cdx = pc.getX() + 0.5 - p.getX(), cdz = pc.getZ() + 0.5 - p.getZ();
             double cd = Math.sqrt(cdx * cdx + cdz * cdz);
             if (cd < 220) {
@@ -1034,6 +1062,11 @@ public final class StoryManager {
                 if (d.get("pioneer") == null) return false;
                 lineup(server, d);
                 return true;
+            }
+            case "house" -> { // replay walking up to the copied house
+                boolean any = false;
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) any |= d.flags.remove("house_seen_" + p.getUUID());
+                return any;
             }
             case "dream" -> {
                 boolean any = false;

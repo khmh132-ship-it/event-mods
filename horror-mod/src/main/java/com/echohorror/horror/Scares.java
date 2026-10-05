@@ -317,6 +317,9 @@ public final class Scares {
         // weight 0: never random, fired by the director when you come home after a long trip
         add("homecoming", 2, 100, 0, 0, c -> c.p.getRespawnPosition() != null && c.p.getRespawnDimension() == c.level.dimension()
                 && c.p.getRespawnPosition().distSqr(c.p.blockPosition()) < 16 * 16, Scares::homecoming);
+        add("second_house", com.echohorror.story.StoryManager.CH_DEPTHS, 100, 1, 99999, c -> c.night && !c.underground && Config.WORLD_TAMPERING.get()
+                && c.p.getRespawnPosition() != null && c.p.getRespawnDimension() == c.level.dimension()
+                && c.p.getRespawnPosition().distSqr(c.p.blockPosition()) < 40 * 40 && c.d.get("house_" + c.p.getUUID()) == null, Scares::secondHouse);
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {
@@ -698,6 +701,45 @@ public final class Scares {
         }
         Sanity.add(c.p, -4);
         return true;
+    }
+
+    /** The Echo builds itself a copy of your home in the woods. Not quite right. You are already inside. */
+    private static boolean secondHouse(Ctx c) {
+        BlockPos home = c.p.getRespawnPosition();
+        List<BlockPos> avoid = new ArrayList<>(c.d.pos.values());
+        avoid.add(home);
+        BlockPos site = com.echohorror.story.Structures.findSite(c.level, home, 90, 7, c.r.nextDouble() * Math.PI * 2, avoid);
+        if (site.distSqr(home) < 50 * 50) return false;
+        int flags = net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE;
+        for (int dx = -6; dx <= 6; dx++)
+            for (int dz = -6; dz <= 6; dz++) {
+                for (int dy = -6; dy <= -2; dy++) { // something to stand on
+                    BlockPos t = site.offset(dx, dy, dz);
+                    if (c.level.getBlockState(t).canBeReplaced()) c.level.setBlock(t, Blocks.DIRT.defaultBlockState(), flags);
+                }
+                for (int dy = -1; dy <= 8; dy++) {
+                    BlockState s = c.level.getBlockState(home.offset(dx, dy, dz));
+                    if (dy == -1 && s.isAir()) s = Blocks.DIRT.defaultBlockState();
+                    s = wrong(s);
+                    c.level.setBlock(site.offset(dx, dy, dz), s, flags);
+                }
+            }
+        c.d.put("house_" + c.p.getUUID(), site);
+        Vec3 dir = Vec3.atCenterOf(site).subtract(c.p.position()).normalize();
+        HorrorUtil.playTo(c.p, SoundEvents.WOODEN_DOOR_CLOSE, c.p.position().add(dir.scale(30)), 1f, 0.7f);
+        return true;
+    }
+
+    /** Copies are never exact: the light is wrong, the glass is wrong, the chests are empty shells. */
+    private static BlockState wrong(BlockState s) {
+        if (s.is(Blocks.TORCH)) return Blocks.REDSTONE_TORCH.defaultBlockState().setValue(net.minecraft.world.level.block.RedstoneTorchBlock.LIT, false);
+        if (s.is(Blocks.WALL_TORCH)) return Blocks.REDSTONE_WALL_TORCH.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.RedstoneWallTorchBlock.FACING, s.getValue(net.minecraft.world.level.block.WallTorchBlock.FACING))
+                .setValue(net.minecraft.world.level.block.RedstoneWallTorchBlock.LIT, false);
+        if (s.is(Blocks.GLASS)) return Blocks.TINTED_GLASS.defaultBlockState();
+        if (s.is(Blocks.LANTERN)) return Blocks.SOUL_LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, s.getValue(net.minecraft.world.level.block.LanternBlock.HANGING));
+        if (s.hasBlockEntity() && !(s.getBlock() instanceof net.minecraft.world.level.block.BedBlock)) return Blocks.AIR.defaultBlockState();
+        return s;
     }
 
     /** While you were away, someone was home. */
