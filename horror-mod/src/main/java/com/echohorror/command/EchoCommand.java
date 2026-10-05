@@ -37,7 +37,7 @@ public final class EchoCommand {
                 .then(Commands.literal("status").executes(EchoCommand::status))
                 .then(Commands.literal("reset").executes(c -> {
                     StoryManager.reset(c.getSource().getServer());
-                    c.getSource().sendSuccess(() -> Component.literal("Сюжет сброшен (постройки остались в мире)."), true);
+                    c.getSource().sendSuccess(() -> Component.literal("Сюжет сброшен (постройки остались в мире). При autoStartOnJoin=true он начнётся заново через 30 секунд."), true);
                     return 1;
                 }))
                 .then(Commands.literal("chapter").then(Commands.argument("n", IntegerArgumentType.integer(0, 7)).executes(c -> {

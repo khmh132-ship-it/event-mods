@@ -48,7 +48,7 @@ public final class ClientEvents {
             else if (night || under || ClientState.sanity < 40) want = "ambient.drone";
         }
         if (ambient != null && (want == null || !want.equals(ambient.name())) && !ambient.isFadingOut()) ambient.fadeOut();
-        if (ambient != null && ambient.isStopped()) ambient = null;
+        if (ambient != null && (ambient.isStopped() || !mc.getSoundManager().isActive(ambient))) ambient = null;
         if (want != null && (ambient == null || ambient.isFadingOut() && ambient.isStopped())) {
             if (ambient == null) {
                 ambient = new AmbientLoop(want, want.equals("ambient.depths") ? 0.55f : 0.35f);

@@ -39,7 +39,7 @@ public class HandbellItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (level instanceof ServerLevel sl && player instanceof ServerPlayer sp) {
-            sl.playSound(null, player.blockPosition(), SoundEvents.BELL_BLOCK, SoundSource.PLAYERS, 2.0f, 1.6f);
+            sl.playSound(null, player.blockPosition(), SoundEvents.BELL_BLOCK, SoundSource.PLAYERS, 1.9f, 1.6f); // below the noise threshold: crawlers do not come to it
             sl.playSound(null, player.blockPosition(), SoundEvents.BELL_RESONATE, SoundSource.PLAYERS, 1.0f, 1.4f);
             sl.sendParticles(ParticleTypes.NOTE, player.getX(), player.getY() + 2.2, player.getZ(), 6, 0.6, 0.3, 0.6, 1);
             AABB box = player.getBoundingBox().inflate(16);

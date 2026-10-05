@@ -236,7 +236,7 @@ public final class StoryManager {
 
         // nightly count at midnight
         long day = ow.getDayTime() / 24000L;
-        if (d.chapter >= CH_RELAY && d.chapter < CH_SILENCE && HorrorUtil.isMidnight(ow) && d.lastCountDay != day) {
+        if (d.chapter >= CH_RELAY && effectiveChapter(d) < CH_SILENCE && HorrorUtil.isMidnight(ow) && d.lastCountDay != day) {
             d.lastCountDay = day;
             d.nights++;
             d.setDirty();
@@ -797,9 +797,9 @@ public final class StoryManager {
         // safety: boss vanished (e.g. removed by a command) while the fight is unfinished
         if (p.tickCount % 200 == 0 && d.chapter == CH_BELFRY) {
             StoryData.Box box = d.regions.get("arena");
-            if (box != null && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty() && d.setFlag("boss_respawn_check")) {
+            if (box != null && !d.flag("boss_dead") && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty() && d.setFlag("boss_respawn_check")) {
                 Scheduler.schedule(200, () -> {
-                    if (d.chapter == CH_BELFRY && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty()) {
+                    if (d.chapter == CH_BELFRY && !d.flag("boss_dead") && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty()) {
                         EchoBossEntity.spawn(level, arena);
                     }
                     d.flags.remove("boss_respawn_check");
