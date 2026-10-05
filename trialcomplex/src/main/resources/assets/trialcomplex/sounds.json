@@ -1,0 +1,938 @@
+{
+ "voice.intro.wait": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/intro_wait",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.4": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_4",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.fall.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/fall_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.idle.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/idle_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.idle.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/idle_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.idle.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/idle_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.pre.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_pre_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.pre.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_pre_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.pre.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_pre_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.pre.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_pre_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.none.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_none_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.hint.nothing": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/hint_nothing",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.reset.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/reset_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.reset.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/reset_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.skip.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/skip_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.skip.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/skip_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.4": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_4",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.5": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_5",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.6": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_6",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.intro.7": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_intro_7",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.button": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_button",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.early": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_early",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.idle": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_idle",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.pressed.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_pressed_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.pressed.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_pressed_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r00.pressed.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r00_pressed_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.split": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_split",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.desync.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_desync_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.desync.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_desync_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.desync.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_desync_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.desync.4": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_desync_4",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.round1.ok": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_round1_ok",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.symbols": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_symbols",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.screen.left": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_screen_left",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.screen.right": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_screen_right",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.wrong.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_wrong_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.wrong.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_wrong_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.wrong.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_wrong_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.wrong.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_wrong_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.wrong.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_wrong_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.ok.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_ok_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.ok.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_ok_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r01.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r01_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.short": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_short",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.4": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_4",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.wrong.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_wrong_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r02.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r02_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.split": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_split",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.screen.left": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_screen_left",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.screen.right": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_screen_right",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.wrong.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_wrong_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.wrong.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_wrong_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.wrong.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_wrong_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.wrong.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_wrong_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.wrong.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_wrong_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.tnt": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_tnt",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.ok.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_ok_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.ok.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_ok_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.round2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_round2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.round3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_round3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r03.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r03_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.missed.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_missed_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.missed.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_missed_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.missed.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_missed_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.paranoid.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_paranoid_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.paranoid.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_paranoid_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.paranoid.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_paranoid_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.ok.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_ok_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.ok.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_ok_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.ok.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_ok_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.almost": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_almost",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.fake.reveal": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_fake_reveal",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.dragged.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_dragged_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.dragged.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_dragged_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.dragged.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_dragged_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.r04.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/r04_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.demo.end": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/demo_end",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ }
+}
