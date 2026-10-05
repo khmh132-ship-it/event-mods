@@ -507,5 +507,32 @@
     "stream": true
    }
   ]
+ },
+ "tape.tape5": {
+  "subtitle": "subtitles.echohorror.tape.tape5",
+  "sounds": [
+   {
+    "name": "echohorror:tape/tape5",
+    "stream": true
+   }
+  ]
+ },
+ "tape.tape6": {
+  "subtitle": "subtitles.echohorror.tape.tape6",
+  "sounds": [
+   {
+    "name": "echohorror:tape/tape6",
+    "stream": true
+   }
+  ]
+ },
+ "tape.tape7": {
+  "subtitle": "subtitles.echohorror.tape.tape7",
+  "sounds": [
+   {
+    "name": "echohorror:tape/tape7",
+    "stream": true
+   }
+  ]
  }
 }

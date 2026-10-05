@@ -99,5 +99,8 @@
   "item.echohorror.echo_heart": "Сердце Эха",
   "block.echohorror.great_bell_rope": "Верёвка Великого колокола",
   "block.echohorror.sealed_door": "Гермодверь",
-  "item.echohorror.handbell": "Ручной колокольчик"
+  "item.echohorror.handbell": "Ручной колокольчик",
+  "subtitles.echohorror.tape.tape5": "Магнитофонная запись",
+  "subtitles.echohorror.tape.tape6": "Магнитофонная запись",
+  "subtitles.echohorror.tape.tape7": "Магнитофонная запись"
 }

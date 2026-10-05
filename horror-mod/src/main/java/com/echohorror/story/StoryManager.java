@@ -446,6 +446,9 @@ public final class StoryManager {
             case "tape1" -> 23.3f;
             case "tape2" -> 23.7f;
             case "tape3" -> 26.6f;
+            case "tape5" -> 21.3f;
+            case "tape6" -> 33.7f;
+            case "tape7" -> 32.1f;
             default -> 31.1f;
         };
         SoundSeqPacket seq = subtitled("tape." + id, n.text().replace("«", "").replace("»", ""), seconds, 0.6f);

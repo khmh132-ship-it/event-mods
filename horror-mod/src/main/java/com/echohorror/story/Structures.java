@@ -378,7 +378,7 @@ public final class Structures {
         d.put("radio_door", b.at(0, 0, 0));
         b.chest(-4, 0, 8, Direction.EAST, note("lis1"), note("lis2"), it(ModItems.BATTERY.get(), 2), it(Items.BREAD, 3));
         b.barrel(4, 0, 8, note("lis3"), it(ModItems.PILLS.get(), 1), it(Items.CANDLE, 2));
-        b.chest(4, 0, 3, Direction.WEST, note("lis4"), it(ModItems.BATTERY.get(), 1));
+        b.chest(4, 0, 3, Direction.WEST, note("lis4"), it(ModItems.BATTERY.get(), 1), TapeItem.create("tape6"));
         // makeshift bed, stains, trail
         b.set(-4, 0, 3, Blocks.WHITE_CARPET);
         b.set(-4, 0, 4, Blocks.WHITE_CARPET);
@@ -524,7 +524,7 @@ public final class Structures {
         b.setC(-16, 0, -15, Blocks.SPRUCE_FENCE);
         b.set(-16, 1, -15, Blocks.SPRUCE_PRESSURE_PLATE);
         b.candles(-15, 0, -13);
-        b.chest(-15, 0, -16, Direction.WEST, note("masha"), it(Items.BREAD, 2), it(ModItems.BATTERY.get(), 1), it(Items.PAPER, 3));
+        b.chest(-15, 0, -16, Direction.WEST, note("masha"), it(Items.BREAD, 2), it(ModItems.BATTERY.get(), 1), it(Items.PAPER, 3), TapeItem.create("tape5"));
         b.set(-18, 0, -12, Blocks.FLOWER_POT);
         b.sign(-19, 2, -16, Direction.SOUTH, "мама", "не моргает");
 
@@ -566,7 +566,7 @@ public final class Structures {
             }
         }
         b.set(-18, 0, 13, Blocks.AIR);
-        b.chest(-18, 0, 15, Direction.NORTH, it(ModItems.BATTERY.get(), 2), it(Items.TORCH, 6), it(ModItems.PILLS.get(), 1));
+        b.chest(-18, 0, 15, Direction.NORTH, it(ModItems.BATTERY.get(), 2), it(Items.TORCH, 6), it(ModItems.PILLS.get(), 1), TapeItem.create("tape7"));
 
         // house D — burned
         house(b, 14, 12, false, true);
