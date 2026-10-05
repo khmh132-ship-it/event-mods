@@ -710,6 +710,14 @@ public final class Scares {
         avoid.add(home);
         BlockPos site = com.echohorror.story.Structures.findSite(c.level, home, 90, 7, c.r.nextDouble() * Math.PI * 2, avoid);
         if (site.distSqr(home) < 50 * 50) return false;
+        // never on top of somebody's build
+        for (BlockPos t : BlockPos.betweenClosed(site.offset(-7, -1, -7), site.offset(7, 8, 7))) {
+            BlockState st = c.level.getBlockState(t);
+            if (st.hasBlockEntity() || st.is(net.minecraft.tags.BlockTags.PLANKS) || st.is(net.minecraft.tags.BlockTags.WOOL)
+                    || st.is(net.minecraft.tags.BlockTags.DOORS) || st.is(net.minecraft.tags.BlockTags.BEDS)
+                    || st.getBlock() instanceof net.minecraft.world.level.block.AbstractGlassBlock
+                    || st.is(Blocks.BRICKS) || st.is(Blocks.STONE_BRICKS) || st.is(Blocks.TORCH) || st.is(Blocks.WALL_TORCH)) return false;
+        }
         int flags = net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE;
         for (int dx = -6; dx <= 6; dx++)
             for (int dz = -6; dz <= 6; dz++) {
