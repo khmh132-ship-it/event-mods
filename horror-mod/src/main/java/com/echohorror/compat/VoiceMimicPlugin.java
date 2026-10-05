@@ -40,6 +40,8 @@ public class VoiceMimicPlugin implements VoicechatPlugin, VoiceBridge.Impl {
         return EchoHorror.MODID;
     }
 
+    private final java.util.Map<UUID, Long> lastHeard = new java.util.concurrent.ConcurrentHashMap<>();
+
     @Override
     public void registerEvents(EventRegistration reg) {
         reg.registerEvent(VoicechatServerStartedEvent.class, e -> {
@@ -51,15 +53,25 @@ public class VoiceMimicPlugin implements VoicechatPlugin, VoiceBridge.Impl {
     }
 
     private void onMic(MicrophonePacketEvent e) {
-        try {
-            if (!Config.VOICE_MIMIC.get()) return;
-        } catch (Exception ignored) {
-            return;
-        }
         VoicechatConnection c = e.getSenderConnection();
         if (c == null || c.getPlayer() == null) return;
         UUID id = c.getPlayer().getUuid();
-        recorders.computeIfAbsent(id, k -> new Recorder()).add(e.getPacket().getOpusEncodedData());
+        boolean mimic, heard;
+        try {
+            mimic = Config.VOICE_MIMIC.get();
+            heard = Config.VOICE_HEARD.get();
+        } catch (Exception ignored) {
+            return;
+        }
+        if (heard && !e.getPacket().isWhispering() && c.getPlayer().getPlayer() instanceof ServerPlayer sp) {
+            long now = System.currentTimeMillis();
+            Long last = lastHeard.get(id);
+            if (last == null || now - last > 500) {
+                lastHeard.put(id, now);
+                sp.server.execute(() -> com.echohorror.horror.VoiceNoise.onVoice(sp));
+            }
+        }
+        if (mimic) recorders.computeIfAbsent(id, k -> new Recorder()).add(e.getPacket().getOpusEncodedData());
     }
 
     @Override

@@ -813,6 +813,8 @@ public final class Structures {
         b.set(-4, 0, 3, Blocks.BONE_BLOCK);
         b.sign(3, 1, -5, Direction.SOUTH, "ЗАПАД", "ВОСТОК", "СЕВЕР", "↓ ОБЪЕКТ — ЮГ");
         b.set(3, 1, -6, Blocks.COBBLED_DEEPSLATE);
+        b.set(-3, 1, -6, Blocks.COBBLED_DEEPSLATE);
+        b.sign(-3, 1, -5, Direction.SOUTH, "НЕ ГОВОРИТЕ", "ОНИ СЛЫШАТ", "ГОЛОСА", "только шёпотом");
 
         // tunnels + shard rooms
         int[][] rooms = {{-40, 0}, {40, 0}, {0, -40}};

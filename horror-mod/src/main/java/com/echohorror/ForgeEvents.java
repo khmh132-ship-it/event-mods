@@ -243,5 +243,6 @@ public final class ForgeEvents {
         Scheduler.clear();
         ChatMemory.clear();
         PathMemory.clear();
+        VoiceNoise.clear();
     }
 }
