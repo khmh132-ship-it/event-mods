@@ -325,6 +325,25 @@ public final class Structures {
         return new BlockPos(best.getX(), y, best.getZ());
     }
 
+    /** True if players have built something in this box (only checks chunks that are already generated). */
+    public static boolean hasBuild(ServerLevel level, BlockPos center, int rx, int rz) {
+        for (int cx = (center.getX() - rx) >> 4; cx <= (center.getX() + rx) >> 4; cx++)
+            for (int cz = (center.getZ() - rz) >> 4; cz <= (center.getZ() + rz) >> 4; cz++) {
+                if (!level.hasChunk(cx, cz)) continue;
+                for (BlockPos be : level.getChunk(cx, cz).getBlockEntitiesPos()) {
+                    if (Math.abs(be.getX() - center.getX()) <= rx && Math.abs(be.getZ() - center.getZ()) <= rz
+                            && Math.abs(be.getY() - center.getY()) < 16) return true;
+                }
+            }
+        for (BlockPos t : BlockPos.betweenClosed(center.offset(-rx, 0, -rz), center.offset(rx, 6, rz))) {
+            if (!level.hasChunk(t.getX() >> 4, t.getZ() >> 4)) continue;
+            BlockState st = level.getBlockState(t);
+            if (st.is(net.minecraft.tags.BlockTags.PLANKS) || st.is(net.minecraft.tags.BlockTags.WOOL) || st.is(net.minecraft.tags.BlockTags.BEDS)
+                    || st.is(Blocks.TORCH) || st.is(Blocks.WALL_TORCH) || st.is(Blocks.CRAFTING_TABLE)) return true;
+        }
+        return false;
+    }
+
     private static ItemStack note(String id) {
         return NoteItem.create(id);
     }

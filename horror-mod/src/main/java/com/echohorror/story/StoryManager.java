@@ -309,15 +309,20 @@ public final class StoryManager {
 
         if (d.chapter >= CH_RELAY && !campsPending && d.get("camp2") == null) buildCamps(server, d);
         if (d.flag("blackout") && !d.flag("blackout_end") && !blackoutActive) endBlackout(ow, d);
-        if (d.chapter >= CH_VILLAGE && !pioneerPending && d.get("pioneer") == null && d.get("village") != null) {
+        if (d.chapter >= CH_VILLAGE && !pioneerPending && d.get("pioneer") == null && d.get("pioneer_skipped") == null && d.get("village") != null) {
             pioneerPending = true;
             Scheduler.schedule(100, () -> {
                 pioneerPending = false;
                 if (d.get("pioneer") != null) return;
                 BlockPos v = d.get("village");
                 List<BlockPos> avoid = new ArrayList<>(d.pos.values());
-                BlockPos site = Structures.findSite(ow, v, 150, 18, ow.random.nextDouble() * Math.PI * 2, avoid);
-                Structures.buildPioneerCamp(ow, site, d);
+                BlockPos site = null;
+                for (int tries = 0; tries < 5 && site == null; tries++) {
+                    BlockPos s = Structures.findSite(ow, v, 150 + tries * 30, 18, ow.random.nextDouble() * Math.PI * 2, avoid);
+                    if (!Structures.hasBuild(ow, s, 23, 21)) site = s;
+                }
+                if (site != null) Structures.buildPioneerCamp(ow, site, d);
+                else d.put("pioneer_skipped", v); // nowhere free: never flatten a player's base
             });
         }
 
@@ -496,8 +501,14 @@ public final class StoryManager {
                 if (kind == 2) campsPending = false;
                 if (d.get("camp" + kind) != null) return;
                 List<BlockPos> avoid = new ArrayList<>(d.pos.values());
-                BlockPos site = Structures.findSite(level, radio, 90 + level.random.nextInt(60), 6, ang, avoid);
-                Structures.buildCamp(level, site, d, kind);
+                for (int tries = 0; tries < 5; tries++) {
+                    BlockPos site = Structures.findSite(level, radio, 90 + level.random.nextInt(60) + tries * 25, 6, ang + tries * 0.7, avoid);
+                    if (Structures.hasBuild(level, site, 7, 7)) continue;
+                    Structures.buildCamp(level, site, d, kind);
+                    return;
+                }
+                d.put("camp" + kind, radio); // gave up quietly; marks it as handled
+                d.setFlag("camp_seen" + kind);
             });
         }
     }
