@@ -27,7 +27,7 @@ import java.util.Collection;
 
 /** /echo — admin tools for the event host. */
 public final class EchoCommand {
-    private static final String[] PLACES = {"radio", "village", "bell", "cellar", "well", "depths", "lock", "bunker", "arena"};
+    private static final String[] PLACES = {"radio", "village", "bell", "cellar", "well", "depths", "lock", "bunker", "arena", "camp0", "camp1", "camp2"};
 
     private EchoCommand() {}
 
@@ -135,6 +135,7 @@ public final class EchoCommand {
             case "radio" -> d.get("radio");
             case "bell" -> d.get("bell") == null ? null : d.get("bell").below(2);
             case "lock" -> d.get("lock") == null ? null : d.get("lock").north();
+            case "camp0", "camp1", "camp2" -> d.get(place) == null ? null : d.get(place).south(4);
             default -> d.get(place);
         };
         if (pos == null) {

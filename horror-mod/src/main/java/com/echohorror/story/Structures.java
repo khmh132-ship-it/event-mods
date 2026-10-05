@@ -267,6 +267,11 @@ public final class Structures {
 
     /** {@code preferred} is an angle in radians (NaN = random); candidates fan out around it. */
     public static BlockPos findSite(ServerLevel level, BlockPos from, int dist, int radius, double preferred) {
+        return findSite(level, from, dist, radius, preferred, List.of());
+    }
+
+    /** Same, but stays at least 45 blocks away from everything in {@code avoid}. */
+    public static BlockPos findSite(ServerLevel level, BlockPos from, int dist, int radius, double preferred, List<BlockPos> avoid) {
         RandomSource r = level.random;
         double base = Double.isNaN(preferred) ? r.nextDouble() * Math.PI * 2 : preferred;
         BlockPos best = null;
@@ -304,6 +309,9 @@ public final class Structures {
                 }
                 hs.sort(Integer::compare);
                 int score = (max - min) + water * 25 + (int) (Math.abs(dm - 1.0) * 6);
+                for (BlockPos a : avoid) {
+                    if (a != null && Math.hypot(a.getX() - cx, a.getZ() - cz) < 45) score += 150;
+                }
                 if (score < bestScore) {
                     bestScore = score;
                     best = new BlockPos(cx, hs.get(hs.size() / 2), cz);
@@ -478,6 +486,67 @@ public final class Structures {
         b.decay(x1, 0, z1, x2, 3, z2, burned ? 0.12f : 0.03f);
         b.door(mx, 0, dz, Blocks.SPRUCE_DOOR, doorSouth ? Direction.SOUTH : Direction.NORTH, true);
         b.cobwebs(x1 + 1, 2, z1 + 1, x2 - 1, 5, z2 - 1, 0.06f);
+    }
+
+    /** Optional places along the way: 0 = geologists' camp, 1 = cordon post, 2 = Tanya's car. */
+    public static void buildCamp(ServerLevel level, BlockPos site, StoryData d, int kind) {
+        EchoHorror.LOG.info("Building side location {} at {}", kind, site);
+        B b = new B(level, site);
+        b.prepare(-5, -5, 5, 5, 8, Blocks.GRASS_BLOCK, Blocks.COARSE_DIRT, Blocks.PODZOL);
+        switch (kind) {
+            case 0 -> { // geologists: a collapsed tent, a dead fire, instruments
+                for (int x = -3; x <= 1; x++) {
+                    b.set(x, 0, -2, Blocks.GREEN_WOOL);
+                    b.set(x, 1, -1, Blocks.GREEN_CARPET);
+                    b.set(x, 0, 0, Blocks.GREEN_WOOL);
+                }
+                b.set(-1, 1, -1, Blocks.GREEN_WOOL);
+                b.set(3, 0, 1, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, false));
+                b.set(3, 0, -2, Blocks.LECTERN);
+                b.set(2, 0, 3, Blocks.TRIPWIRE_HOOK);
+                b.set(-3, 0, 3, Blocks.BONE_BLOCK);
+                b.set(-2, 0, 3, Blocks.SKELETON_SKULL);
+                b.chest(-3, 0, -1, Direction.EAST, note("lore_geologist"), it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1),
+                        it(Items.COMPASS, 1));
+                b.standingSign(4, 0, 3, 6, "ПАРТИЯ №4", "не отвечайте", "на позывные");
+            }
+            case 1 -> { // cordon post: sandbags, a barrier, a toppled tower
+                for (int x = -4; x <= 4; x++) {
+                    if (Math.abs(x) <= 1) continue;
+                    b.set(x, 0, -3, Blocks.MUD_BRICKS);
+                    if (b.r.nextBoolean()) b.set(x, 1, -3, Blocks.MUD_BRICK_SLAB);
+                }
+                b.setC(-1, 0, -3, Blocks.OAK_FENCE);
+                b.setC(1, 0, -3, Blocks.OAK_FENCE);
+                b.set(0, 1, -3, Blocks.STRIPPED_OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
+                for (int z = 0; z <= 4; z++) b.set(3, 0, z, Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
+                b.barrel(-3, 0, 1, note("lore_soldier"), it(ModItems.BATTERY.get(), 3), it(Items.ARROW, 16));
+                b.barrel(-3, 0, 2, it(ModItems.PILLS.get(), 1), it(Items.BREAD, 4));
+                b.standingSign(0, 0, -5, 8, "СТОЙ!", "ЗАПРЕТНАЯ ЗОНА", "ОГОНЬ БЕЗ", "ПРЕДУПРЕЖДЕНИЯ");
+                b.set(1, 0, 1, Blocks.REDSTONE_WIRE);
+                b.set(1, 0, 2, Blocks.REDSTONE_WIRE);
+            }
+            default -> { // Tanya's car: she drove all the way here
+                b.fill(-2, 0, -1, 2, 0, 1, Blocks.BLACK_CONCRETE);
+                b.fill(-1, 1, -1, 1, 1, 1, Blocks.BLACK_CONCRETE);
+                b.set(-1, 1, 0, Blocks.AIR);
+                b.set(0, 1, 0, Blocks.AIR);
+                b.setC(-1, 1, -1, Blocks.GLASS_PANE);
+                b.setC(1, 1, -1, Blocks.GLASS_PANE);
+                b.setC(-1, 1, 1, Blocks.GLASS_PANE);
+                b.set(0, 2, 0, Blocks.BLACK_CONCRETE);
+                for (int[] w : new int[][]{{-2, -2}, {2, -2}, {-2, 2}, {2, 2}}) b.set(w[0], 0, w[1], Blocks.COAL_BLOCK);
+                b.set(-2, 1, 0, Blocks.REDSTONE_LAMP);
+                b.chest(1, 1, 0, Direction.WEST, note("lore_tanya"), it(ModItems.BATTERY.get(), 1), it(Items.PAPER, 2));
+                b.set(3, 0, 0, Blocks.RED_CARPET);
+                b.set(4, 0, 1, Blocks.RED_CARPET);
+                b.standingSign(-4, 0, 0, 4, "Серёжа,", "я приехала", "открой");
+            }
+        }
+        b.finish();
+        d.put("camp" + kind, site);
+        d.region("camp" + kind, b.box(-6, -2, -6, 6, 8, 6));
+        d.setDirty();
     }
 
     public static void buildVillage(ServerLevel level, BlockPos site, StoryData d) {

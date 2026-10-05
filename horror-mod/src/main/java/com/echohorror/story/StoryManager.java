@@ -51,9 +51,12 @@ public final class StoryManager {
         pendingTransitions = Math.max(0, pendingTransitions - 1);
     }
 
+    private static boolean campsPending;
+
     public static void onServerStopping() {
         pendingTransitions = 0;
         bossRespawnPending = false;
+        campsPending = false;
         firstPlayerTicks = 0;
     }
 
@@ -277,6 +280,8 @@ public final class StoryManager {
             }
         }
 
+        if (d.chapter >= CH_RELAY && !campsPending && d.get("camp2") == null) buildCamps(server, d);
+
         for (ServerPlayer p : players) {
             if (p.level() != ow || p.isSpectator()) continue;
             Vec3 pos = p.position();
@@ -306,6 +311,9 @@ public final class StoryManager {
                 default -> {}
             }
             locationAmbience(p, d);
+            for (int k = 0; k < 3; k++) {
+                if (d.in("camp" + k, pos) && d.setFlag("camp_seen" + k)) campScene(p, k);
+            }
             // one-time location titles
             if (d.in("village", pos) && d.setFlag("title_village")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Тихий Лог. Ни одного огня. Ни одной собаки.");
@@ -360,6 +368,42 @@ public final class StoryManager {
                     if (w == 0) Net.fx(p, Fx.SUBTITLE, 80, 0, "Из темноты что-то идёт. Много.");
                     HorrorUtil.playTo(p, "entity.crawler.click", HorrorUtil.behind(p, 14), 2f, 0.8f);
                 }
+            });
+        }
+    }
+
+    private static void campScene(ServerPlayer p, int kind) {
+        String[] titles = {"Лагерь геологической партии №4. Палатка ещё тёплая.", "Пост оцепления. Ни одного солдата.",
+                "Машина. Ключ в зажигании. На сиденье — женская сумка."};
+        Net.fx(p, Fx.SUBTITLE, 100, 0, titles[kind]);
+        switch (kind) {
+            case 0 -> Scheduler.schedule(60, () -> HorrorUtil.playTo(p, "voice.call", HorrorUtil.behind(p, 12), 1.2f, 0.9f));
+            case 1 -> Scheduler.schedule(80, () -> {
+                HorrorUtil.playTo(p, net.minecraft.sounds.SoundEvents.SKELETON_SHOOT, HorrorUtil.behind(p, 20), 1.2f, 0.8f);
+                Scheduler.schedule(10, () -> p.displayClientMessage(Component.literal("«Стой! Кто идёт?» — где-то в лесу.")
+                        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), true));
+            });
+            default -> Scheduler.schedule(60, () -> HorrorUtil.playTo(p, "scare.knock", p.position().add(1, 1, 0), 1f, 1.1f));
+        }
+    }
+
+    /** Three optional places scattered around the relay: lore, supplies and a little scene each. */
+    private static void buildCamps(MinecraftServer server, StoryData d) {
+        BlockPos radio = d.get("station_center");
+        if (radio == null) return;
+        campsPending = true;
+        ServerLevel level = server.overworld();
+        double base = level.random.nextDouble() * Math.PI * 2;
+        for (int k = 0; k < 3; k++) {
+            final int kind = k;
+            final double ang = base + k * (Math.PI * 2 / 3);
+            if (d.get("camp" + kind) != null) continue;
+            Scheduler.schedule(60 + k * 30, () -> {
+                if (kind == 2) campsPending = false;
+                if (d.get("camp" + kind) != null) return;
+                List<BlockPos> avoid = new ArrayList<>(d.pos.values());
+                BlockPos site = Structures.findSite(level, radio, 90 + level.random.nextInt(60), 6, ang, avoid);
+                Structures.buildCamp(level, site, d, kind);
             });
         }
     }
@@ -543,6 +587,16 @@ public final class StoryManager {
         String strength = "▮".repeat(bars) + "▯".repeat(5 - bars);
         String vert = Math.abs(dy) > 6 ? (dy < 0 ? "  ▼ ниже" : "  ▲ выше") : "";
         String text = dist < 8 && Math.abs(dy) < 6 ? "◉ ИСТОЧНИК РЯДОМ  " + strength : arrow + "  " + (int) dist + " м  " + strength + vert;
+        for (int k = 0; k < 3; k++) {
+            BlockPos c = d.get("camp" + k);
+            if (c == null || d.flag("camp_seen" + k)) continue;
+            double cdx = c.getX() + 0.5 - p.getX(), cdz = c.getZ() + 0.5 - p.getZ();
+            double cd = Math.sqrt(cdx * cdx + cdz * cdz);
+            if (cd > 130) continue;
+            float crel = Mth.wrapDegrees((float) (Mth.atan2(cdz, cdx) * (180F / Math.PI)) - 90F - p.getYRot());
+            text += "   · слабый сигнал " + arrows[Math.floorMod(Math.round(crel / 45f), 8)] + " " + (int) cd + " м";
+            break;
+        }
         p.displayClientMessage(Component.literal(text).withStyle(bars >= 4 ? ChatFormatting.GREEN : ChatFormatting.DARK_GREEN), true);
         if (p.tickCount % 40 == 0) HorrorUtil.playAt(p, "scare.static", 0.05f + 0.06f * bars, 0.9f + bars * 0.05f);
     }
@@ -1066,6 +1120,7 @@ public final class StoryManager {
         Scheduler.clear();
         pendingTransitions = 0;
         bossRespawnPending = false;
+        campsPending = false;
         d.echoDay = -1;
         d.chapter = 0;
         d.pos.clear();
