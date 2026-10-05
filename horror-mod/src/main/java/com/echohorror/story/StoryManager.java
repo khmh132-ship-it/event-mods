@@ -1139,6 +1139,15 @@ public final class StoryManager {
                 rollCall(new ArrayList<>(server.getPlayerList().getPlayers()));
                 return true;
             }
+            case "showcase" -> { // a watcher and a shade standing still in front of every player
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                    Vec3 look = HorrorUtil.horizontalLook(p);
+                    Vec3 side = HorrorUtil.rotate(look, 90);
+                    PhantomEntity.spawn(p, PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_STILL, p.position().add(look.scale(7)).add(side.scale(-2)), 2400);
+                    PhantomEntity.spawn(p, PhantomEntity.KIND_SHADE, PhantomEntity.MODE_STILL, p.position().add(look.scale(7)).add(side.scale(2)), 2400);
+                }
+                return true;
+            }
             case "dream" -> {
                 boolean any = false;
                 for (ServerPlayer p : server.getPlayerList().getPlayers()) any |= Dreams.tryDream(p, d);

@@ -86,7 +86,7 @@ public final class EchoCommand {
                     return 1;
                 }))
                 .then(Commands.literal("scene").then(Commands.argument("which", StringArgumentType.word())
-                        .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"lineup", "blackout", "dream", "house", "rollcall"}, b))
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"lineup", "blackout", "dream", "house", "rollcall", "showcase"}, b))
                         .executes(c -> {
                             String w = StringArgumentType.getString(c, "which");
                             boolean ok = StoryManager.scene(c.getSource().getServer(), w);

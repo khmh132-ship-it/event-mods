@@ -15,6 +15,7 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
             SHADE_EYES = tex("shade_eyes"), SILENT = tex("silent"), MIMIC = tex("mimic_reveal"), MIMIC_EYES = tex("mimic_eyes");
 
     private final PlayerModel<PhantomEntity> wide, slim;
+    private final ScriptRenderer script;
 
     /** Watchers and shades are not built like people. */
     static class PhantomModel extends PlayerModel<PhantomEntity> {
@@ -48,6 +49,7 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
         super(ctx, new PhantomModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.0f);
         wide = model;
         slim = new PhantomModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        script = new ScriptRenderer(ctx);
         addLayer(new GlowLayer<>(this, e -> switch (e.getKind()) {
             case PhantomEntity.KIND_WATCHER -> WATCHER_EYES;
             case PhantomEntity.KIND_SHADE -> SHADE_EYES;
@@ -58,6 +60,10 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
 
     @Override
     public void render(PhantomEntity e, float yaw, float partial, PoseStack ps, MultiBufferSource buf, int light) {
+        if (e.getKind() == PhantomEntity.KIND_WATCHER || e.getKind() == PhantomEntity.KIND_SHADE) {
+            script.render(e, yaw, partial, ps, buf, light);
+            return;
+        }
         model = e.getKind() == PhantomEntity.KIND_FAKE_PLAYER && Skins.of(e.getSkin().orElse(null)).slim() ? slim : wide;
         super.render(e, yaw, partial, ps, buf, light);
     }

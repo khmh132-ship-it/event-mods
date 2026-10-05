@@ -23,6 +23,11 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
+    public static void layers(EntityRenderersEvent.RegisterLayerDefinitions e) {
+        e.registerLayerDefinition(ScriptModel.LAYER, ScriptModel::create);
+    }
+
+    @SubscribeEvent
     public static void overlays(RegisterGuiOverlaysEvent e) {
         e.registerAboveAll("horror", HorrorOverlay::render);
     }

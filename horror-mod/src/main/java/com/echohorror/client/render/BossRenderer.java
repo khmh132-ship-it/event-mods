@@ -45,7 +45,7 @@ public class BossRenderer extends HumanoidMobRenderer<EchoBossEntity, PlayerMode
 
     @Override
     protected void scale(EchoBossEntity e, PoseStack ps, float partial) {
-        ps.scale(1.4f, 2.3f, 1.4f);
+        ps.scale(2.0f, 2.4f, 2.0f); // massive, not just tall
     }
 
     @Override

@@ -161,30 +161,44 @@ def watcher():
 
 # ============================================================================================ Отголосок: eyes everywhere
 def boss():
+    """Blocky darkness covered in square eyes, each with a pupil; six on the face, no mouth."""
     img = new()
     g = new()
-    for p in BASE:
-        fill(img, p, (10, 9, 12), 3)
     px, pg = img.load(), g.load()
+    for p in BASE:  # dark 2x2 'cubes'
+        for name, (x, y, w, h) in faces(p).items():
+            for bi in range(x, x + w, 2):
+                for bj in range(y, y + h, 2):
+                    v = R.choice([8, 12, 16, 22, 30])
+                    for i in range(bi, min(bi + 2, x + w)):
+                        for j in range(bj, min(bj + 2, y + h)):
+                            px[i, j] = (v, v, v + 3, 255)
+
+    def eye(i, j):
+        for (a, b) in [(0, 0), (1, 0), (0, 1), (1, 1)]:
+            px[i + a, j + b] = (235, 235, 235, 255)
+            pg[i + a, j + b] = (200, 200, 200, 255)
+        pupil = R.choice([(0, 0), (1, 0), (0, 1), (1, 1)])
+        px[i + pupil[0], j + pupil[1]] = (0, 0, 0, 255)
+        pg[i + pupil[0], j + pupil[1]] = (0, 0, 0, 0)
+
     for p in BASE:
         for name, (x, y, w, h) in faces(p).items():
-            if name in ('top', 'bottom') and p != 'head':
+            if name in ('top', 'bottom'):
                 continue
-            for _ in range(max(1, w * h // 18)):
-                i, j = R.randint(x, x + w - 2), R.randint(y, y + h - 1)
-                if p == 'head' and name == 'front':
+            if p == 'head' and name == 'front':
+                continue
+            for _ in range(max(1, w * h // 22)):
+                if w < 3 or h < 3:
                     continue
-                for k in (0, 1) if R.random() < 0.5 else (0,):
-                    px[i + k, j] = (230, 230, 230, 255)
-                    pg[i + k, j] = (255, 255, 255, 255)
-    # the main face: six eyes, no mouth
-    f = {(x, y): (10, 9, 12) for x in range(8) for y in range(8)}
-    eyes = [(1, 2), (6, 2), (2, 4), (5, 4), (1, 6), (6, 6)]
-    for e in eyes:
-        f[e] = WHITE
-    face(img, f)
-    for (x, y) in eyes:
-        pg[FACE[0] + x, FACE[1] + y] = (255, 255, 255, 255)
+                eye(R.randrange(x, x + w - 1, 1), R.randrange(y, y + h - 1, 1))
+    # the face: six eyes in two columns, no mouth
+    fx, fy = FACE
+    for i in range(fx, fx + 8):
+        for j in range(fy, fy + 8):
+            px[i, j] = (6, 6, 8, 255)
+    for (ex, ey) in [(1, 0), (5, 0), (1, 3), (5, 3), (1, 6), (5, 6)]:
+        eye(fx + ex, fy + ey)
     out(img, 'boss.png')
     out(g, 'boss_eyes.png')
 
