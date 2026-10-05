@@ -41,6 +41,7 @@ public class TapeItem extends Item {
             case "tape5" -> "Кассета с наклейкой «Маша поёт»";
             case "tape6" -> "Плёнка Лисицына";
             case "tape7" -> "Плёнка Татьяны";
+            case "tape8" -> "Плёнка вожатой «Отчёт»";
             default -> "Размагниченная плёнка";
         });
     }

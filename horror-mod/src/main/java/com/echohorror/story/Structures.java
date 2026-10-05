@@ -536,7 +536,7 @@ public final class Structures {
         // two cabins
         cabin(b, -19, -6, true);
         cabin(b, 11, -6, false);
-        b.chest(-15, 0, -5, Direction.SOUTH, note("camp_counselor1"), it(ModItems.PILLS.get(), 2), it(Items.BREAD, 3));
+        b.chest(-15, 0, -5, Direction.SOUTH, note("camp_counselor1"), TapeItem.create("tape8"), it(ModItems.PILLS.get(), 2), it(Items.BREAD, 3));
         b.chest(15, 0, -5, Direction.SOUTH, note("camp_list"), it(ModItems.BATTERY.get(), 2), it(Items.CANDLE, 3));
         // medical hut
         Block[] white = {Blocks.WHITE_CONCRETE, Blocks.WHITE_CONCRETE, Blocks.WHITE_TERRACOTTA, Blocks.CALCITE};

@@ -31,7 +31,7 @@ public final class ModTabs {
                 out.accept(ModItems.SILENCE.get());
                 out.accept(ModItems.ECHO_HEART.get());
                 out.accept(ModItems.GREAT_BELL_ROPE.get());
-                for (int i = 1; i <= 7; i++) out.accept(TapeItem.create("tape" + i));
+                for (int i = 1; i <= 8; i++) out.accept(TapeItem.create("tape" + i));
                 for (Notes.Note n : Notes.all().values()) {
                     if (!n.id().startsWith("tape")) out.accept(NoteItem.create(n.id()));
                 }

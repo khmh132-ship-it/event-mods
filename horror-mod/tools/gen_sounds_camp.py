@@ -45,6 +45,21 @@ def main():
     kids = g.bp(g.mix(*layers), 250, 6000)
     g.save('voice/camp_children', g.reverb(g.pad_silence(kids, 0.1, 0.3), 2.8, 0.5, 3500), 0.8)
 
+    # the counselor's tape: every phrase repeated by the children half a beat later
+    text = ('Это Людмила Смирнова, вожатая второго отряда. Двенадцатое июля. '
+            'Дети, тихо. Я записываю для отчёта. Дети, перестаньте повторять. '
+            'Перестаньте. Я не буду с вами разговаривать. Я буду молчать. '
+            'Если меня кто-нибудь слышит: не приезжайте за детьми. Это уже не дети.')
+    v = g.speak(text, 'ru+f4', 112, 55, gap=7)
+    kids = []
+    for i in range(5):
+        k = g.resample(g.speak(text, 'ru+f' + str(1 + i), 108 + i * 3, 85 + i * 3, gap=7), 1.15 + 0.04 * i)
+        kids.append((0.55 + i * 0.07, k, 0.22))
+    y = g.mix((0.0, v, 1.0), *kids)
+    x = g.tape(g.pad_silence(y, 0.6, 1.0))
+    g.save('tape/tape8', x, 0.8, q=2)
+    print('tape8', len(x) / g.SR)
+
     # Masha's music box, clean — the Echo can't copy it
     g.save('item/music_box_play', g.music_box(g.LULLABY[:18], 84, 0.0005, 0.0, 2.5), 0.75)
 

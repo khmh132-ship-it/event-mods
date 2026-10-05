@@ -110,5 +110,6 @@
   "item.echohorror.music_box": "Музыкальная шкатулка Маши",
   "subtitles.echohorror.story.siren": "Воет сирена",
   "subtitles.echohorror.voice.bunker_alarm": "Громкоговоритель: «Объект изолируется»",
-  "item.echohorror.tuning_fork": "Камертон"
+  "item.echohorror.tuning_fork": "Камертон",
+  "subtitles.echohorror.tape.tape8": "Магнитофонная запись"
 }

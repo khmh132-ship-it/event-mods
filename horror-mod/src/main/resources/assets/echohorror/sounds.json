@@ -585,5 +585,14 @@
     "stream": true
    }
   ]
+ },
+ "tape.tape8": {
+  "subtitle": "subtitles.echohorror.tape.tape8",
+  "sounds": [
+   {
+    "name": "echohorror:tape/tape8",
+    "stream": true
+   }
+  ]
  }
 }
