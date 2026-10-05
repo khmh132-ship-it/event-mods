@@ -314,6 +314,9 @@ public final class Scares {
                     .skin(c.p.getUUID(), c.p.getGameProfile().getName()).vanishDistance(4).watchLimit(60);
             return true;
         });
+        // weight 0: never random, fired by the director when you come home after a long trip
+        add("homecoming", 2, 100, 0, 0, c -> c.p.getRespawnPosition() != null && c.p.getRespawnDimension() == c.level.dimension()
+                && c.p.getRespawnPosition().distSqr(c.p.blockPosition()) < 16 * 16, Scares::homecoming);
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {
@@ -695,6 +698,55 @@ public final class Scares {
         }
         Sanity.add(c.p, -4);
         return true;
+    }
+
+    /** While you were away, someone was home. */
+    private static boolean homecoming(Ctx c) {
+        boolean opened = false;
+        for (BlockPos d : scan(c, 12, 3, s -> s.getBlock() instanceof DoorBlock && s.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER
+                && s.getBlock() != Blocks.IRON_DOOR && !s.getValue(DoorBlock.OPEN))) {
+            BlockState s = c.level.getBlockState(d);
+            ((DoorBlock) s.getBlock()).setOpen(null, c.level, s, d, true);
+            opened = true;
+        }
+        List<BlockPos> chests = scan(c, 14, 5, s -> s.is(Blocks.CHEST) || s.is(Blocks.BARREL) || s.is(Blocks.TRAPPED_CHEST));
+        Collections.shuffle(chests);
+        boolean note = false;
+        for (BlockPos ch : chests) {
+            if (!(c.level.getBlockEntity(ch) instanceof Container cont)) continue;
+            int size = cont.getContainerSize();
+            // things are not where you left them
+            for (int k = 0; k < 40; k++) {
+                int a = c.r.nextInt(size), b = c.r.nextInt(size);
+                if (cont.getItem(a).isEmpty()) continue;
+                ItemStack sa = cont.getItem(a);
+                cont.setItem(a, cont.getItem(b));
+                cont.setItem(b, sa);
+            }
+            if (!note) {
+                for (int i = 0; i < size && !note; i++) {
+                    if (cont.getItem(i).isEmpty()) {
+                        cont.setItem(i, NoteItem.create("home" + (1 + c.r.nextInt(4))));
+                        note = true;
+                    }
+                }
+            }
+            cont.setChanged();
+        }
+        if (!opened && !note) return false;
+        Net.fx(c.p, Fx.SUBTITLE, 90, 0, opened ? "Дверь открыта. Ты её закрывал." : "Здесь кто-то был.");
+        Scheduler.schedule(50, () -> {
+            if (c.p.hasDisconnected()) return;
+            HorrorUtil.playTo(c.p, SoundEvents.WOODEN_DOOR_CLOSE, HorrorUtil.behind(c.p, 7), 0.8f, 0.8f);
+            if (c.night) force("bed_double", c);
+        });
+        Sanity.add(c.p, -6);
+        return true;
+    }
+
+    private static void force(String name, Ctx c) {
+        Scare s = BY_NAME.get(name);
+        if (s != null && s.cond().test(c)) s.run().apply(c);
     }
 
     private static boolean chestNote(Ctx c) {

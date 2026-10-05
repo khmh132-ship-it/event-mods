@@ -27,6 +27,8 @@ public final class HorrorDirector {
         int stalkStage;      // 0 = not stalked tonight
         long stalkNext;
         long stalkDay = -1;
+        long awaySince = -1;
+        long homeDay = -100;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -56,6 +58,7 @@ public final class HorrorDirector {
             if (st.nextEvent == 0) st.nextEvent = seconds + 20 + p.getRandom().nextInt(30);
             brokenMind(p, d, st);
             stalker(p, d, st, seconds);
+            homecoming(p, d, st, seconds);
             if (seconds >= st.nextEvent) {
                 runRandom(p, d, st, seconds);
                 st.nextEvent = seconds + interval(p, d);
@@ -127,6 +130,23 @@ public final class HorrorDirector {
         Scares.Ctx c = Scares.ctx(p, StoryData.get(p.server));
         if (!s.cond().test(c)) return false;
         return s.run().apply(c);
+    }
+
+    /** Coming home after a long trip: sometimes the house was not empty. */
+    private static void homecoming(ServerPlayer p, StoryData d, State st, long seconds) {
+        BlockPos home = p.getRespawnPosition();
+        if (home == null || p.getRespawnDimension() != p.level().dimension() || StoryManager.effectiveChapter(d) < StoryManager.CH_RELAY) return;
+        double dist = Math.sqrt(home.distSqr(p.blockPosition()));
+        if (dist > 100) {
+            if (st.awaySince < 0) st.awaySince = seconds;
+            return;
+        }
+        if (dist < 10 && st.awaySince >= 0) {
+            long away = seconds - st.awaySince;
+            st.awaySince = -1;
+            long day = p.level().getDayTime() / 24000;
+            if (away >= 300 && day - st.homeDay >= 2 && p.getRandom().nextFloat() < 0.5f && force(p, "homecoming")) st.homeDay = day;
+        }
     }
 
     private static final double[] STALK_DIST = {46, 36, 27, 19, 12};
