@@ -58,6 +58,11 @@ def main():
         if vc == n.IRINA and i == 5:
             v = g.resample(v, 1.28)
         g.save(f'radio/snip{i + 1}', n.radio_l(g.pad_silence(v, 0.3, 0.4), 0.12), 0.75)
+    # the lullaby ending, told in a whisper over the music box
+    t = 'Сердце бьётся всё медленнее. Эхо пытается повторить колыбельную. У него почти получается.'
+    v = n.say(t, n.IRINA, 1.15, 0.6, 0.8)
+    y = g.mix((0.0, v, 0.45), (0.0, n.whisperize(v), 0.7))
+    g.save('dream/lullaby', g.reverb(g.lp(y, 5000), 3.0, 0.4, 3000), 0.7)
     lis = n.say('Сюда! Я в церкви! Быстрее, пока оно не вернулось!', n.DENIS, 0.9, 0.8, 1.0)
     g.save('voice/lis_call', g.reverb(g.lp(lis, 5000), 2.2, 0.35, 3000), 0.8)
     why = n.say('Почему ты не идёшь ко мне? Почему ты не идёшь ко мне. Почему.', n.DENIS, 1.15, 0.9, 1.0)

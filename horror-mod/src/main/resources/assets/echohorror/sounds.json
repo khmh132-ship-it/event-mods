@@ -786,5 +786,14 @@
   "sounds": [
    "echohorror:radio/snip6"
   ]
+ },
+ "dream.lullaby": {
+  "subtitle": "subtitles.echohorror.dream.lullaby",
+  "sounds": [
+   {
+    "name": "echohorror:dream/lullaby",
+    "stream": true
+   }
+  ]
  }
 }

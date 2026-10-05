@@ -1398,7 +1398,7 @@ public final class StoryManager {
             p.sendSystemMessage(Component.literal(name + " завёл шкатулку Маши над сердцем Эха.").withStyle(ChatFormatting.GOLD));
             Net.send(p, new SoundSeqPacket.Builder()
                     .sub("[ шкатулка играет ]", 120)
-                    .sub("Сердце бьётся всё медленнее.", 100)
+                    .sound("dream.lullaby", 60, "Сердце бьётся всё медленнее.")
                     .sub("Эхо пытается повторить колыбельную. У него почти получается.", 120)
                     .sub("[ тихо ]", 80)
                     .build());
