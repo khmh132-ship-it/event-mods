@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "echohorror:handbell"
+    },
+    "title": "Чужое лицо",
+    "description": "Сорвать маску с Двойника звоном колокольчика",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "echohorror:echo/clapper"
+}

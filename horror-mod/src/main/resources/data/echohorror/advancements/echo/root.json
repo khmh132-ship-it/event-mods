@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "echohorror:locator"
+    },
+    "title": "ЭХО",
+    "description": "В эфире кто-то считает",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:textures/block/deepslate_tiles.png"
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

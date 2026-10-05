@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "echohorror:echo_heart"
+    },
+    "title": "Отголосок",
+    "description": "Заставить Эхо замолчать",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "echohorror:echo/power"
+}

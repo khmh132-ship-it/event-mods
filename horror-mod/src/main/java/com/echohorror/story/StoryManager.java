@@ -110,6 +110,16 @@ public final class StoryManager {
         d.chapter = ch;
         d.setDirty();
         EchoHorror.LOG.info("Story chapter -> {}", ch);
+        String adv = switch (ch) {
+            case CH_SIGNAL -> "root";
+            case CH_RELAY -> "signal";
+            case CH_VILLAGE -> "broadcast";
+            case CH_DEPTHS -> "midnight";
+            case CH_OBJECT -> "sealed";
+            case CH_BELFRY -> "power";
+            default -> null;
+        };
+        if (adv != null) Achievements.awardAll(server, adv);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Net.fx(p, Fx.CHAPTER, chapterTitle(ch));
             HorrorUtil.playAt(p, "story.chapter", 0.9f, 1f);
@@ -121,6 +131,7 @@ public final class StoryManager {
     // =========================================================================================== kit
     public static void giveKit(ServerPlayer p) {
         StoryData d = data(p.server);
+        if (d.chapter >= CH_SIGNAL) Achievements.award(p, "root");
         if (d.chapter < CH_SIGNAL || d.kits.contains(p.getUUID())) return;
         d.kits.add(p.getUUID());
         d.setDirty();
@@ -278,6 +289,7 @@ public final class StoryManager {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Тихий Лог. Ни одного огня. Ни одной собаки.");
                 lisitsynLure(server, d);
             }
+            if (d.in("depths", pos)) Achievements.award(p, "depths");
             if (d.in("depths", pos) && d.setFlag("title_depths")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Стены тёплые. Где-то внизу кто-то повторяет ваши шаги.");
             }
@@ -414,6 +426,10 @@ public final class StoryManager {
         StoryData d = data(p.server);
         if (n.story() && d.notes.add(id)) {
             d.setDirty();
+            long have = d.notes.stream().filter(x -> !x.startsWith("ending")).count();
+            long total = Notes.all().values().stream().filter(x -> x.story() && !x.id().startsWith("ending")).count();
+            if (have >= 10) Achievements.awardAll(p.server, "notes10");
+            if (have >= total) Achievements.awardAll(p.server, "notes_all");
             broadcast(p.server, Component.literal("[Журнал] ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(Component.literal(p.getGameProfile().getName() + " нашёл запись: «" + n.title() + "»").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)));
             syncAll(p.server);
@@ -553,6 +569,7 @@ public final class StoryManager {
             if (held.is(ModItems.BELL_CLAPPER.get())) {
                 if (!p.getAbilities().instabuild) held.shrink(1);
                 d.setFlag("clapper_installed");
+                Achievements.award(p, "clapper");
                 p.serverLevel().playSound(null, pos, net.minecraft.sounds.SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 1f, 0.6f);
                 broadcast(p.server, Component.literal(p.getGameProfile().getName() + " повесил язык колокола на место.").withStyle(ChatFormatting.GOLD));
                 syncAll(p.server);
@@ -730,6 +747,7 @@ public final class StoryManager {
         heart.setDeltaMovement(0, 0.2, 0);
         level.addFreshEntity(heart);
         d.put("rope", center.above(1));
+        Achievements.awardAll(server, "boss");
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Net.fx(p, Fx.MUSIC, "");
             Sanity.add(p, 40f);
@@ -762,6 +780,7 @@ public final class StoryManager {
 
     private static void endingSilence(MinecraftServer server, StoryData d, String name) {
         d.setFlag("ending_silence");
+        Achievements.awardAll(server, "ending_silence");
         d.notes.add("ending");
         BlockPos rope = d.get("rope");
         ServerLevel level = server.overworld();
@@ -812,6 +831,7 @@ public final class StoryManager {
 
     private static void endingEcho(MinecraftServer server, StoryData d, String name) {
         d.setFlag("ending_echo");
+        Achievements.awardAll(server, "ending_echo");
         d.notes.add("ending_echo");
         BlockPos rope = d.get("rope");
         ServerLevel level = server.overworld();

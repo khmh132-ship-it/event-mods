@@ -103,6 +103,12 @@ public class CrawlerEntity extends Monster {
     }
 
     @Override
+    public void die(DamageSource source) {
+        super.die(source);
+        if (source.getEntity() instanceof ServerPlayer sp) com.echohorror.story.Achievements.award(sp, "crawler_kill");
+    }
+
+    @Override
     public boolean onClimbable() {
         return entityData.get(CLIMBING);
     }

@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "echohorror:bell_clapper"
+    },
+    "title": "Язык без колокола",
+    "description": "Вернуть язык колоколу Тихого Лога",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "echohorror:echo/broadcast"
+}

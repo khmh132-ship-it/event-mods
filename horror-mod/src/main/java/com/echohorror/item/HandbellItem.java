@@ -62,6 +62,7 @@ public class HandbellItem extends Item {
             }
             if (unmasked > 0) {
                 sp.displayClientMessage(Component.literal("Звон сорвал с кого-то чужое лицо.").withStyle(ChatFormatting.DARK_RED), true);
+                com.echohorror.story.Achievements.award(sp, "unmask");
             }
             player.getCooldowns().addCooldown(this, 900);
             stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));

@@ -168,6 +168,7 @@ public final class HorrorDirector {
                 com.echohorror.entity.PhantomEntity.spawn(p, com.echohorror.entity.PhantomEntity.KIND_WATCHER,
                         com.echohorror.entity.PhantomEntity.MODE_BEHIND, Vec3.atBottomCenterOf(g), 300).withJumpscare();
                 HorrorUtil.playTo(p, "scare.breath", Vec3.atCenterOf(g).add(0, 1.5, 0), 1f, 0.7f);
+                com.echohorror.story.Achievements.award(p, "stalker");
             });
             st.stalkStage++;
         }
@@ -178,6 +179,7 @@ public final class HorrorDirector {
             st.brokenTicks = 0;
             return;
         }
+        if (st.brokenTicks == 0) com.echohorror.story.Achievements.award(p, "broken");
         if (++st.brokenTicks % 25 == 0) {
             p.displayClientMessage(Component.literal("Ты слышишь, как кто-то повторяет твои мысли. Прими таблетки.")
                     .withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC), true);

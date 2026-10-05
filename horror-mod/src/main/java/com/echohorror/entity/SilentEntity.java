@@ -93,6 +93,7 @@ public class SilentEntity extends Monster {
             doHurtTarget(target);
             level().playSound(null, blockPosition(), ModSounds.get("entity.silent.attack"), SoundSource.HOSTILE, 1.5f, 1f);
             if (target instanceof ServerPlayer sp) {
+                com.echohorror.story.Achievements.award(sp, "silent_touch");
                 Net.fx(sp, Fx.SHAKE, 20, 1.5f, "");
                 Sanity.add(sp, -10f);
             }
