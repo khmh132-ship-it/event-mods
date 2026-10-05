@@ -31,7 +31,7 @@ public final class HorrorDirector {
 
     private static final Map<UUID, State> STATES = new HashMap<>();
     /** Never during the boss fight: they would take control away at the worst moment. */
-    private static final Set<String> DISRUPTIVE = Set.of("fake_death", "fake_disconnect", "look_turn", "jumpscare", "fog", "rename_item", "crawlers", "mimic");
+    private static final Set<String> DISRUPTIVE = Set.of("fake_death", "fake_disconnect", "fake_restart", "look_turn", "jumpscare", "fog", "rename_item", "crawlers", "mimic");
 
     private HorrorDirector() {}
 
@@ -84,6 +84,9 @@ public final class HorrorDirector {
         List<Scares.Scare> pool = new ArrayList<>();
         int total = 0;
         boolean bossFight = d.chapter == StoryManager.CH_BELFRY && d.in("arena", p.position());
+        // never take control away from someone driving, flying or fighting
+        boolean busy = p.isPassenger() || p.isFallFlying() || p.tickCount - p.getLastHurtByMobTimestamp() < 200;
+        bossFight |= busy;
         for (Scares.Scare s : Scares.all()) {
             if (c.chapter < s.minChapter() || c.sanity > s.maxSanity()) continue;
             if (bossFight && DISRUPTIVE.contains(s.name())) continue;

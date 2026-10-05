@@ -246,7 +246,7 @@ public class PhantomEntity extends PathfinderMob {
             HorrorUtil.playAt(t, "scare.stinger", 1.0f, 0.9f + random.nextFloat() * 0.2f);
             Net.fx(t, Fx.SHAKE, 20, 1.0f, "");
             Sanity.add(t, -6f);
-            if (jumpscare && Config.JUMPSCARES.get()) {
+            if (jumpscare && Config.JUMPSCARES.get() && !t.isPassenger() && !t.isFallFlying()) {
                 int face = getKind() == KIND_WATCHER ? 1 : (getKind() == KIND_MIMIC ? 2 : 0);
                 Net.fx(t, Fx.JUMPSCARE, face);
                 Sanity.add(t, -6f);
