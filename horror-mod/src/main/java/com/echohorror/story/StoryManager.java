@@ -54,7 +54,7 @@ public final class StoryManager {
             case CH_DEPTHS -> "ГЛАВА III|Глубина";
             case CH_OBJECT -> "ГЛАВА IV|Объект «Колокол»";
             case CH_BELFRY -> "ГЛАВА V|Звонница";
-            case CH_SILENCE -> "ЭПИЛОГ|Тишина";
+            case CH_SILENCE -> "ЭПИЛОГ|Конец эфира";
             default -> "|";
         };
     }
@@ -318,7 +318,7 @@ public final class StoryManager {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                 if (!d.in("village", p.position())) continue;
                 p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын", "Сюда! Я в церкви! Быстрее, пока оно не вернулось!"));
-                HorrorUtil.playTo(p, "voice.here", Vec3.atCenterOf(door), 2f, 1f);
+                HorrorUtil.playTo(p, "voice.call", Vec3.atCenterOf(door), 2f, 1f);
                 PhantomEntity.spawn(p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(door), 1200)
                         .skin(java.util.UUID.nameUUIDFromBytes("Lisitsyn".getBytes()), "Лисицын").vanishDistance(6).watchLimit(400);
             }
@@ -802,6 +802,7 @@ public final class StoryManager {
         }
         setChapter(server, CH_SILENCE);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.CHAPTER, "ЭПИЛОГ|Тишина");
             Sanity.set(p, 100f);
             give(p, new ItemStack(ModItems.SILENCE.get()));
             Net.send(p, new SoundSeqPacket.Builder()
