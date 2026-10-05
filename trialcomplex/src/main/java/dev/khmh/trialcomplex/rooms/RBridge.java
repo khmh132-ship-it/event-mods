@@ -38,7 +38,7 @@ public class RBridge extends Room {
     private boolean doneSaid;
 
     public RBridge(String id, int level) {
-        super(id, "Невидимый мост" + (level > 1 ? " " + "I".repeat(level) : ""), 34, 12, 21);
+        super(id, "Невидимый мост " + RLaser.roman(level), 34, 12, 21);
         this.level = level;
         this.laneZ = level == 3 ? new int[][]{{2, 8}, {12, 18}} : new int[][]{{3, 17}};
     }
@@ -49,9 +49,9 @@ public class RBridge extends Room {
         blink.clear();
         RandomSource r = RandomSource.create(id.hashCode() * 17L + level);
         for (int[] lz : laneZ) lanes.add(path(r, lz[0], lz[1]));
-        if (level == 2) {
+        if (level == 2 || level == 4) {
             List<BlockPos> p = lanes.get(0);
-            for (int i = 6; i < p.size() - 4; i += 7) {
+            for (int i = 6; i < p.size() - 4; i += level == 4 ? 4 : 7) {
                 blink.add(p.get(i));
                 blink.add(p.get(i + 1));
             }
@@ -179,7 +179,7 @@ public class RBridge extends Room {
 
     @Override
     protected void onTick(long t) {
-        if (level == 2 && !revealed && t % 50 == 0) {
+        if ((level == 2 || level == 4) && !revealed && t % (level == 4 ? 40 : 50) == 0) {
             blinkOn = !blinkOn;
             for (BlockPos l : blink) setL(l.getX(), l.getY(), l.getZ(), (blinkOn ? Blocks.BARRIER : Blocks.AIR).defaultBlockState());
         }

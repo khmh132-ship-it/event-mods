@@ -37,12 +37,11 @@ public class RMines extends Room {
     private final Map<UUID, Boolean> sawField = new HashMap<>();
 
     public RMines(String id, int level) {
-        super(id, "Сапёр " + RLaser.roman(level), (level == 1 ? 10 : level == 2 ? 14 : 12) + 10, 9,
-                (level == 1 ? 7 : level == 2 ? 9 : 8) + 2);
+        super(id, "Сапёр " + RLaser.roman(level), new int[]{0, 10, 14, 12, 16}[level] + 10, 9, new int[]{0, 7, 9, 8, 9}[level] + 2);
         this.level = level;
-        this.L = level == 1 ? 10 : level == 2 ? 14 : 12;
-        this.W = level == 1 ? 7 : level == 2 ? 9 : 8;
-        this.mines = level == 1 ? 11 : level == 2 ? 24 : 16;
+        this.L = new int[]{0, 10, 14, 12, 16}[level];
+        this.W = new int[]{0, 7, 9, 8, 9}[level];
+        this.mines = new int[]{0, 11, 24, 16, 30}[level];
     }
 
     private int z0() {

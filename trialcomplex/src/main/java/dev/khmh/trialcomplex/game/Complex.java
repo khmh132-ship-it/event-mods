@@ -320,8 +320,11 @@ public final class Complex {
      * ВАЖНО: ServerGamePacketListenerImpl.teleport принимает АБСОЛЮТНУЮ цель и сам считает дельту для пакета.
      */
     public void shift(ServerPlayer p, double dx, double dy, double dz) {
-        p.connection.teleport(p.getX() + dx, p.getY() + dy, p.getZ() + dz, p.getYRot(), p.getXRot(),
-                java.util.EnumSet.allOf(net.minecraft.world.entity.RelativeMovement.class));
+        if (Boolean.getBoolean("trialcomplex.allowVanilla")) // боты mineflayer дважды применяют относительный сдвиг
+            p.connection.teleport(p.getX() + dx, p.getY() + dy, p.getZ() + dz, p.getYRot(), p.getXRot());
+        else
+            p.connection.teleport(p.getX() + dx, p.getY() + dy, p.getZ() + dz, p.getYRot(), p.getXRot(),
+                    java.util.EnumSet.allOf(net.minecraft.world.entity.RelativeMovement.class));
         p.resetFallDistance();
         lastFeet.remove(p.getUUID());
     }

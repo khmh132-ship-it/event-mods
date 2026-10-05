@@ -76,9 +76,36 @@ public record Theme(Palette floor, Palette wall, Palette ceil, BlockState trim, 
             s(Blocks.CRIMSON_PLANKS), s(Blocks.CRYING_OBSIDIAN), s(Blocks.RED_CONCRETE),
             s(Blocks.SHROOMLIGHT), s(Blocks.NETHER_BRICKS), false);
 
+    /** Детали отделки для стиля: «экран» в стене (две клетки), блок трубы под потолком, бордюр пола, встроенная лампа. */
+    private BlockState[] details() {
+        if (this == LAB) return new BlockState[]{s(Blocks.BLACK_STAINED_GLASS), s(Blocks.CYAN_STAINED_GLASS), Builder.axis(Blocks.POLISHED_BASALT, Direction.Axis.X), s(Blocks.LIGHT_GRAY_CONCRETE), s(Blocks.SEA_LANTERN)};
+        if (this == VAULT) return new BlockState[]{s(Blocks.GOLD_BLOCK), s(Blocks.CHISELED_POLISHED_BLACKSTONE), s(Blocks.GILDED_BLACKSTONE), s(Blocks.GILDED_BLACKSTONE), s(Blocks.SHROOMLIGHT)};
+        if (this == HALL) return new BlockState[]{s(Blocks.BOOKSHELF), s(Blocks.BOOKSHELF), Builder.axis(Blocks.STRIPPED_DARK_OAK_LOG, Direction.Axis.X), s(Blocks.SPRUCE_PLANKS), s(Blocks.OCHRE_FROGLIGHT)};
+        if (this == MINE) return new BlockState[]{s(Blocks.YELLOW_CONCRETE), s(Blocks.BLACK_CONCRETE), Builder.axis(Blocks.POLISHED_BASALT, Direction.Axis.X), s(Blocks.YELLOW_CONCRETE), s(Blocks.SEA_LANTERN)};
+        if (this == LIGHT) return new BlockState[]{s(Blocks.CRYING_OBSIDIAN), s(Blocks.OBSIDIAN), Builder.axis(Blocks.POLISHED_BASALT, Direction.Axis.X), s(Blocks.POLISHED_DEEPSLATE), s(Blocks.PEARLESCENT_FROGLIGHT)};
+        if (this == ILLUSION) return new BlockState[]{s(Blocks.AMETHYST_BLOCK), s(Blocks.PURPUR_PILLAR), Builder.axis(Blocks.PURPUR_PILLAR, Direction.Axis.X), s(Blocks.PURPUR_BLOCK), s(Blocks.PEARLESCENT_FROGLIGHT)};
+        if (this == MECH) return new BlockState[]{s(Blocks.WAXED_EXPOSED_COPPER), s(Blocks.WAXED_COPPER_BLOCK), Builder.axis(Blocks.STRIPPED_SPRUCE_LOG, Direction.Axis.X), s(Blocks.WAXED_CUT_COPPER), s(Blocks.OCHRE_FROGLIGHT)};
+        if (this == LOGIC) return new BlockState[]{s(Blocks.CHISELED_STONE_BRICKS), s(Blocks.MOSSY_STONE_BRICKS), Builder.axis(Blocks.STRIPPED_OAK_LOG, Direction.Axis.X), s(Blocks.CHISELED_STONE_BRICKS), s(Blocks.GLOWSTONE)};
+        return new BlockState[]{s(Blocks.MAGMA_BLOCK), s(Blocks.RED_NETHER_BRICKS), Builder.axis(Blocks.CRIMSON_STEM, Direction.Axis.X), s(Blocks.RED_NETHER_BRICKS), s(Blocks.SHROOMLIGHT)};
+    }
+
+    private static BlockState rotX(BlockState st, Direction.Axis a) {
+        return st.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS)
+                ? st.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS, a) : st;
+    }
+
     /** Короб комнаты с отделкой. */
     public void shell(Builder b, int sx, int sy, int sz) {
         b.shell(sx, sy, sz, floor, wall, ceil);
+        BlockState[] d = details();
+        // трубы по кромке потолка
+        for (int x = 1; x < sx - 1; x++) { b.set(x, sy - 1, 1, rotX(d[2], Direction.Axis.X)); b.set(x, sy - 1, sz - 2, rotX(d[2], Direction.Axis.X)); }
+        for (int z = 1; z < sz - 1; z++) { b.set(1, sy - 1, z, rotX(d[2], Direction.Axis.Z)); b.set(sx - 2, sy - 1, z, rotX(d[2], Direction.Axis.Z)); }
+        // бордюр пола
+        if (!floorGrid) {
+            for (int x = 1; x < sx - 1; x++) { b.set(x, 0, 1, d[3]); b.set(x, 0, sz - 2, d[3]); }
+            for (int z = 1; z < sz - 1; z++) { b.set(1, 0, z, d[3]); b.set(sx - 2, 0, z, d[3]); }
+        }
         if (floorGrid)
             for (int x = 0; x < sx; x++)
                 for (int z = 0; z < sz; z++)
@@ -105,6 +132,17 @@ public record Theme(Palette floor, Palette wall, Palette ceil, BlockState trim, 
         // решётки вентиляции
         if (sy >= 7)
             for (int x = 2; x < sx - 2; x += 8) { b.set(x, sy - 3, 0, Blocks.IRON_BARS); b.set(x, sy - 3, sz - 1, Blocks.IRON_BARS); }
+        // «экраны»/вставки в стенах между пилястрами и встроенные лампы
+        if (sy >= 8) {
+            for (int x = 6; x < sx - 3; x += 8) {
+                for (int z : new int[]{0, sz - 1}) { b.set(x, 4, z, d[0]); b.set(x + 1, 4, z, d[1]); b.set(x, 5, z, d[1]); b.set(x + 1, 5, z, d[0]); }
+            }
+            for (int z = 6; z < sz - 3; z += 8) {
+                for (int x : new int[]{0, sx - 1}) { b.set(x, 4, z, d[0]); b.set(x, 4, z + 1, d[1]); b.set(x, 5, z, d[1]); b.set(x, 5, z + 1, d[0]); }
+            }
+            for (int x = 2; x < sx - 2; x += 4) { b.set(x, sy - 3, 0, d[4]); b.set(x, sy - 3, sz - 1, d[4]); }
+            for (int z = 2; z < sz - 2; z += 4) { b.set(0, sy - 3, z, d[4]); b.set(sx - 1, sy - 3, z, d[4]); }
+        }
         lamps(b, sx, sy, sz);
     }
 

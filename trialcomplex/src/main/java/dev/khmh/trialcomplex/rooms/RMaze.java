@@ -114,6 +114,13 @@ public class RMaze extends Room {
                     boolean open = normal ? lever[k] : !lever[k];
                     BlockPos p = cell(m, col, row);
                     BlockState s = open ? Blocks.AIR.defaultBlockState() : COLOR[k].defaultBlockState();
+                    // не закрывать дверь на стоящем в проёме игроке — закроется, когда он отойдёт
+                    if (!open) {
+                        net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(p).expandTowards(0, 1, 0);
+                        boolean occupied = false;
+                        for (ServerPlayer pl : players()) if (pl.getBoundingBox().intersects(box)) occupied = true;
+                        if (occupied) continue;
+                    }
                     if (!level().getBlockState(p).is(s.getBlock())) {
                         set(p, s);
                         set(p.above(), s);
@@ -149,6 +156,7 @@ public class RMaze extends Room {
 
     @Override
     protected void onTick(long t) {
+        if (!done && t % 5 == 0) applyDoors();
         if (done || t % 10 != 0) return;
         int need = players().size(), there = 0;
         for (ServerPlayer p : players()) if (local(p.blockPosition()).getX() >= MX + 13) there++;

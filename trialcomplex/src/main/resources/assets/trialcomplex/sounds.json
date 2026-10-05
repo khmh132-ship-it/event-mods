@@ -3841,5 +3841,140 @@
    }
   ],
   "subtitle": "trialcomplex.voice"
+ },
+ "voice.mines4.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/mines4_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.mines4.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/mines4_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.mines4.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/mines4_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.mines4.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/mines4_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.mines4.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/mines4_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.bridge4.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/bridge4_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.bridge4.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/bridge4_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.bridge4.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/bridge4_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.bridge4.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/bridge4_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.bridge4.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/bridge4_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.cmd4.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/cmd4_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.cmd4.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/cmd4_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.cmd4.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/cmd4_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.cmd4.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/cmd4_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.cmd4.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/cmd4_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
  }
 }

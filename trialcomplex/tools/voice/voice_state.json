@@ -95,6 +95,26 @@
 "key": "a6e59629cb1cb2d7b55fb12e77c36c91c0522763",
 "ms": 11775
 },
+"bridge4.done": {
+"key": "4311a01410049f4405d6e7aea56647ad5a952816",
+"ms": 5175
+},
+"bridge4.hint.1": {
+"key": "7c27e53cbe2052f22b46bab5927ff7c4da85f385",
+"ms": 4975
+},
+"bridge4.hint.2": {
+"key": "dd2d04bba2eb35f0cc58beb6bbe07dcd1705a693",
+"ms": 4375
+},
+"bridge4.hint.3": {
+"key": "5783f77ef122280b76382b5d007f75e6c0aadfb3",
+"ms": 5475
+},
+"bridge4.intro": {
+"key": "7aefb9901a08e0b851f91d0833c64c9a48c1f521",
+"ms": 7075
+},
 "c00.both": {
 "key": "f41fb89606db121e303bf5473fb74ba0f9e7ebdf",
 "ms": 8175
@@ -442,6 +462,26 @@
 "cmd3.intro": {
 "key": "a84ef8bbf3bc4959a13771cf1bca4df88ef2930c",
 "ms": 9575
+},
+"cmd4.done": {
+"key": "785d5c889c5ffca05d6a47a2a398df010b76233f",
+"ms": 7175
+},
+"cmd4.hint.1": {
+"key": "53fd123296520d25991d6e906c36082930d69c13",
+"ms": 5375
+},
+"cmd4.hint.2": {
+"key": "ba0af3df6357b094bf3b1c20c4021a6a4996aca4",
+"ms": 3770
+},
+"cmd4.hint.3": {
+"key": "2a4635ad67e05f0fa0b4e28296354d7081f5a81b",
+"ms": 4053
+},
+"cmd4.intro": {
+"key": "201a1f4b01fe935155493a39df0c301f12952cbd",
+"ms": 8075
 },
 "core.desync.1": {
 "key": "0b93c6d3d953166b5ea382de4021fd2f5fc9b0e9",
@@ -1334,6 +1374,26 @@
 "mines3.intro": {
 "key": "5b77c667a0d65df7ddf19cf0d2293bcddb01803d",
 "ms": 9875
+},
+"mines4.done": {
+"key": "e97e35d1649a941adf47b0c228704d3b8e32b05a",
+"ms": 5975
+},
+"mines4.hint.1": {
+"key": "1330cc2f162d574d4b6d18e076af5e896b6b9e2b",
+"ms": 5175
+},
+"mines4.hint.2": {
+"key": "77274edcd8744cd2fe84959f0b1f84a033d018d0",
+"ms": 5775
+},
+"mines4.hint.3": {
+"key": "dabf4fa5379a6615e83bf71e0ae005500cac053e",
+"ms": 5275
+},
+"mines4.intro": {
+"key": "54c998e52ff1bf70bcc16cd10c9ae80d7df266c7",
+"ms": 9275
 },
 "parkour.fall.1": {
 "key": "6b0a1382dc1aad8701cb4aa1ba7c8704f5a02679",

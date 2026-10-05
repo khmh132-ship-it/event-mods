@@ -40,7 +40,7 @@ public class RCows extends Room {
     private Gate finN, finS;
 
     public RCows(String id, int level) {
-        super(id, "Быки и коровы" + (level > 1 ? " " + "I".repeat(level) : ""), 31, 10, 17);
+        super(id, "Быки и коровы " + RLaser.roman(level), 31, 10, 17);
         this.level = level;
         this.digits = level == 3 ? 5 : 4;
         this.keypad = new Keypad(new BlockPos(level == 3 ? 23 : 19, 5, 1), Direction.SOUTH);

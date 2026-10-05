@@ -43,7 +43,7 @@ public class RCommand extends Room {
     private final Map<UUID, Boolean> wasOnGround = new HashMap<>();
 
     public RCommand(String id, int level) {
-        super(id, "Голос приказывает" + (level > 1 ? " " + "I".repeat(level) : ""), 19, 9, 19);
+        super(id, "Голос приказывает " + RLaser.roman(level), 19, 9, 19);
         this.level = level;
     }
 
@@ -81,11 +81,11 @@ public class RCommand extends Room {
     }
 
     private int length() {
-        return level == 1 ? 7 : level == 2 ? 9 : 11;
+        return new int[]{0, 7, 9, 11, 13}[level];
     }
 
     private int windowTicks() {
-        return level == 1 ? 100 : level == 2 ? 80 : 60;
+        return new int[]{0, 100, 80, 60, 50}[level];
     }
 
     private void newSequence() {
@@ -102,6 +102,7 @@ public class RCommand extends Room {
                 List<Pre> opts = new ArrayList<>(List.of(Pre.NONE));
                 if (level >= 2) opts.add(Pre.ASK);
                 if (level >= 3) { opts.add(Pre.NOT); opts.add(Pre.NOT); }
+                if (level >= 4) opts.add(Pre.ASK);
                 pre = opts.get(rnd.nextInt(opts.size()));
             } else pre = Pre.ORDER;
             Who who = Who.ALL;
