@@ -302,6 +302,7 @@ public final class StoryManager {
                     p.sendSystemMessage(Component.literal("Ночь Эха. Небо слушает.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
                     HorrorUtil.playAt(p, "story.bell_far", 0.8f, 0.8f);
                 }
+                rollCall(players);
                 if (effectiveChapter(d) >= CH_DEPTHS && (!d.flag("ending_echo") || d.nights % 2 == 0)) siege(server, d);
                 ow.setWeatherParameters(0, 5200, true, true); // the sky joins in
             }
@@ -1095,6 +1096,30 @@ public final class StoryManager {
 
     private static boolean blackoutActive;
 
+    /** «Перекличка»: the squad is read out in chat. One name is read twice. */
+    private static void rollCall(List<ServerPlayer> players) {
+        if (players.isEmpty() || !Config.FAKE_CHAT.get()) return;
+        List<String> names = new ArrayList<>();
+        for (ServerPlayer p : players) names.add(p.getGameProfile().getName());
+        java.util.Collections.shuffle(names);
+        String twice = names.get(players.get(0).getRandom().nextInt(names.size()));
+        names.add(1 + players.get(0).getRandom().nextInt(names.size()), twice);
+        int t = 120;
+        Scheduler.schedule(t, () -> players.forEach(p -> {
+            if (!p.hasDisconnected()) p.sendSystemMessage(Component.literal("[Перекличка]").withStyle(ChatFormatting.DARK_RED));
+        }));
+        for (int i = 0; i < names.size(); i++) {
+            final String n = names.get(i);
+            final int num = i + 1;
+            Scheduler.schedule(t + 30 + i * 30, () -> players.forEach(p -> {
+                if (!p.hasDisconnected()) p.sendSystemMessage(Component.literal(num + ". " + n + " — здесь.").withStyle(ChatFormatting.GRAY));
+            }));
+        }
+        Scheduler.schedule(t + 60 + names.size() * 30, () -> players.forEach(p -> {
+            if (!p.hasDisconnected()) p.sendSystemMessage(Component.literal("Все на месте.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
+        }));
+    }
+
     /** Admin: replays a scripted scene. */
     public static boolean scene(MinecraftServer server, String name) {
         StoryData d = data(server);
@@ -1108,6 +1133,10 @@ public final class StoryManager {
                 boolean any = false;
                 for (ServerPlayer p : server.getPlayerList().getPlayers()) any |= d.flags.remove("house_seen_" + p.getUUID());
                 return any;
+            }
+            case "rollcall" -> {
+                rollCall(new ArrayList<>(server.getPlayerList().getPlayers()));
+                return true;
             }
             case "dream" -> {
                 boolean any = false;
