@@ -107,6 +107,15 @@ public final class ForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onEntityJoin(net.minecraftforge.event.entity.EntityJoinLevelEvent e) {
+        if (!e.getLevel().isClientSide && e.getEntity() instanceof net.minecraft.world.entity.Mob m && m.getTags().contains("echohorror_stare")) {
+            m.setNoAi(false);
+            m.setSilent(false);
+            m.removeTag("echohorror_stare");
+        }
+    }
+
+    @SubscribeEvent
     public static void onChat(ServerChatEvent e) {
         ServerPlayer p = e.getPlayer();
         ChatMemory.record(p.getUUID(), p.getGameProfile().getName(), e.getRawText());

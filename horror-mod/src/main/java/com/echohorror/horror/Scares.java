@@ -336,6 +336,36 @@ public final class Scares {
             Sanity.add(c.p, -4);
             return true;
         });
+        add("animals_stare", 1, 100, 3, 600, c -> c.night || c.underground, c -> {
+            // every animal around you stops, turns, and looks at you. silently.
+            List<net.minecraft.world.entity.animal.Animal> list = c.level.getEntitiesOfClass(net.minecraft.world.entity.animal.Animal.class,
+                    c.p.getBoundingBox().inflate(20), a -> !a.isNoAi() && a.hasLineOfSight(c.p));
+            if (list.size() < 2) return false;
+            for (net.minecraft.world.entity.animal.Animal an : list) {
+                an.setNoAi(true);
+                an.setSilent(true);
+                an.addTag("echohorror_stare"); // undone on load if the server stops mid-stare
+                for (int t = 0; t < 120; t += 5) {
+                    Scheduler.schedule(t, () -> {
+                        if (!an.isAlive() || c.p.hasDisconnected()) return;
+                        double dx = c.p.getX() - an.getX(), dz = c.p.getZ() - an.getZ();
+                        float yaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90F;
+                        an.setYRot(yaw);
+                        an.setYHeadRot(yaw);
+                        an.yBodyRot = yaw;
+                        an.setXRot((float) -(Mth.atan2(c.p.getEyeY() - an.getEyeY(), Math.sqrt(dx * dx + dz * dz)) * (180F / Math.PI)));
+                    });
+                }
+                Scheduler.schedule(130, () -> {
+                    if (!an.isAlive()) return;
+                    an.setNoAi(false);
+                    an.setSilent(false);
+                    an.removeTag("echohorror_stare");
+                });
+            }
+            Sanity.add(c.p, -3);
+            return true;
+        });
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {
