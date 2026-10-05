@@ -284,10 +284,12 @@ public final class StoryManager {
                 }
                 default -> {}
             }
+            locationAmbience(p, d);
             // one-time location titles
             if (d.in("village", pos) && d.setFlag("title_village")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Тихий Лог. Ни одного огня. Ни одной собаки.");
                 lisitsynLure(server, d);
+                spawnKuzmich(server, d);
             }
             if (d.in("depths", pos)) Achievements.award(p, "depths");
             if (d.in("depths", pos) && d.setFlag("title_depths")) {
@@ -307,6 +309,38 @@ public final class StoryManager {
                         .withStyle(ChatFormatting.DARK_RED));
             }
         }
+    }
+
+    /** Places have their own voices: static at the relay, generators in the Object, clicking in the Depths. */
+    private static void locationAmbience(ServerPlayer p, StoryData d) {
+        net.minecraft.util.RandomSource r = p.getRandom();
+        Vec3 pos = p.position();
+        BlockPos console = d.get("console");
+        if (console != null && pos.distanceToSqr(Vec3.atCenterOf(console)) < 18 * 18 && r.nextFloat() < 0.15f) {
+            HorrorUtil.playTo(p, "scare.static", Vec3.atCenterOf(console), 0.35f, 0.8f + r.nextFloat() * 0.3f);
+        }
+        if (d.in("depths", pos) && r.nextFloat() < 0.07f) {
+            HorrorUtil.playTo(p, "entity.crawler.click", pos.add(r.nextGaussian() * 18, -2, r.nextGaussian() * 18), 0.9f, 0.8f + r.nextFloat() * 0.3f);
+        }
+        if (d.in("bunker", pos) && d.flag("power_on") && r.nextFloat() < 0.12f) {
+            HorrorUtil.playTo(p, "story.power", pos.add(r.nextGaussian() * 8, 2, r.nextGaussian() * 8), 0.25f, 0.55f);
+        }
+        if (d.in("village", pos) && HorrorUtil.isNight(p.serverLevel()) && r.nextFloat() < 0.03f) {
+            BlockPos bell = d.get("bell");
+            if (bell != null) HorrorUtil.playTo(p, "story.bell_far", Vec3.atCenterOf(bell), 0.6f, 0.9f);
+        }
+    }
+
+    /** A survivor in the burned house. He is helpful. For a while. */
+    private static void spawnKuzmich(MinecraftServer server, StoryData d) {
+        BlockPos v = d.get("village");
+        if (v == null || !d.setFlag("kuzmich")) return;
+        ServerLevel level = server.overworld();
+        BlockPos at = v.offset(17, 0, 15); // inside the burned house
+        MimicEntity k = new MimicEntity(ModEntities.MIMIC.get(), level);
+        k.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 180f, 0f);
+        k.asSurvivor("Пётр Кузьмич");
+        level.addFreshEntity(k);
     }
 
     /** "It's me, Lisitsyn! In the church, quick!" It is not Lisitsyn. */

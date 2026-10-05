@@ -68,7 +68,9 @@ public class JournalScreen extends Screen {
         if (title.length > 1) g.drawString(font, title[1], l + 12, t + 20, 0x3A3430, false);
         g.drawString(font, "Цель:", l + 12, t + 36, 0x5A1010, false);
         int y = t + 47;
-        for (FormattedCharSequence line : font.split(Component.literal(ClientState.objective), 112)) {
+        String objective = ClientState.objective;
+        if (ClientState.sanity < 30 && (ClientState.time / 4) % 23 == 0) objective = "НЕ ДОВЕРЯЙ ИМ. ОНИ НЕ ТЕ, ЗА КОГО СЕБЯ ВЫДАЮТ. ОБЕРНИСЬ.";
+        for (FormattedCharSequence line : font.split(Component.literal(objective), 112)) {
             if (y > t + 128) break;
             g.drawString(font, line, l + 12, y, 0x2A2420, false);
             y += 9;

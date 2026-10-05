@@ -46,6 +46,42 @@ public class MimicEntity extends Monster {
     private String copiedName = "";
     private int talkCooldown = 200;
     private boolean daylightImmune;
+    private boolean npc;       // pretends to be a survivor and talks until it gives itself away
+    private int talks;
+
+    private static final String[] NPC_LINES = {
+            "Живой? Живой... Я — Пётр Кузьмич. Я тут один остался. Не ходите в церковь ночью: там колокол звонит сам.",
+            "Язык колокола Никодим искал, да не нашёл. Он у меня в подполе, в доме у колодца. Только не зови меня по имени, слышишь? Оно запоминает.",
+            "А ты ведь меня не узнал? А я тебя узнал. Голос у тебя хороший. Очень хороший голос."};
+
+    /** Turns this mimic into a "survivor" who talks to players. */
+    public MimicEntity asSurvivor(String name) {
+        npc = true;
+        daylightImmune = true;
+        setPersistenceRequired();
+        disguise(java.util.UUID.nameUUIDFromBytes(name.getBytes()), name);
+        return this;
+    }
+
+    @Override
+    protected net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
+        if (!npc || isRevealed() || hand != net.minecraft.world.InteractionHand.MAIN_HAND) return super.mobInteract(player, hand);
+        if (!level().isClientSide) {
+            String line = NPC_LINES[Math.min(talks, NPC_LINES.length - 1)];
+            player.sendSystemMessage(Component.translatable("chat.type.text", copiedName, line));
+            talks++;
+            if (talks >= NPC_LINES.length) {
+                net.minecraft.server.level.ServerLevel sl = (net.minecraft.server.level.ServerLevel) level();
+                com.echohorror.horror.Scheduler.schedule(50, () -> {
+                    if (isAlive() && !isRevealed()) {
+                        reveal();
+                        setTarget(player);
+                    }
+                });
+            }
+        }
+        return net.minecraft.world.InteractionResult.sidedSuccess(level().isClientSide);
+    }
 
     public MimicEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -116,7 +152,7 @@ public class MimicEntity extends Monster {
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         targetSelector.addGoal(1, new HurtByTargetGoal(this));
         targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, false, false,
-                p -> HorrorUtil.isSurvivalLike((Player) p)));
+                p -> HorrorUtil.isSurvivalLike((Player) p) && (!npc || isRevealed())));
     }
 
     /** Approaches slowly, stops at a "conversation" distance and just... stands there. */
@@ -143,8 +179,8 @@ public class MimicEntity extends Monster {
         if (level().isClientSide) return;
         LivingEntity t = getTarget();
         if (!isRevealed()) {
-            if (t != null && distanceTo(t) < 4.5 && hasLineOfSight(t)) reveal();
-            if (t instanceof ServerPlayer sp && --talkCooldown <= 0 && distanceTo(sp) < 40) {
+            if (!npc && t != null && distanceTo(t) < 4.5 && hasLineOfSight(t)) reveal();
+            if (!npc && t instanceof ServerPlayer sp && --talkCooldown <= 0 && distanceTo(sp) < 40) {
                 talkCooldown = 300 + random.nextInt(500);
                 speak(sp);
             }
@@ -211,6 +247,8 @@ public class MimicEntity extends Monster {
         tag.putString("CopiedName", copiedName);
         tag.putBoolean("Revealed", isRevealed());
         tag.putBoolean("DayImmune", daylightImmune);
+        tag.putBoolean("Npc", npc);
+        tag.putInt("Talks", talks);
     }
 
     @Override
@@ -218,6 +256,8 @@ public class MimicEntity extends Monster {
         super.readAdditionalSaveData(tag);
         copiedName = tag.getString("CopiedName");
         daylightImmune = tag.getBoolean("DayImmune");
+        npc = tag.getBoolean("Npc");
+        talks = tag.getInt("Talks");
         if (tag.hasUUID("Skin")) entityData.set(SKIN, Optional.of(tag.getUUID("Skin")));
         if (tag.getBoolean("Revealed")) {
             entityData.set(REVEALED, true);

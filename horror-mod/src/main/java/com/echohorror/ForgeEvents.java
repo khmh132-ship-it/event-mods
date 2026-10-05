@@ -207,6 +207,26 @@ public final class ForgeEvents {
         e.getAffectedBlocks().removeIf(pos -> isProtected(e.getLevel(), pos));
     }
 
+    /** The dead do not stay dead: a little later, something wearing your face waits where you fell. */
+    @SubscribeEvent
+    public static void onPlayerDeath(net.minecraftforge.event.entity.living.LivingDeathEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp) || !Config.HOSTILE_SPAWNS.get()) return;
+        StoryData d = StoryData.get(sp.server);
+        int ch = StoryManager.effectiveChapter(d);
+        if (ch < StoryManager.CH_VILLAGE || ch > StoryManager.CH_BELFRY) return;
+        net.minecraft.server.level.ServerLevel level = sp.serverLevel();
+        Vec3 where = sp.position();
+        java.util.UUID id = sp.getUUID();
+        String name = sp.getGameProfile().getName();
+        Scheduler.schedule(1200 + sp.getRandom().nextInt(1200), () -> {
+            if (!HorrorUtil.isNight(level) || d.in("arena", where)) return;
+            com.echohorror.entity.MimicEntity m = new com.echohorror.entity.MimicEntity(com.echohorror.registry.ModEntities.MIMIC.get(), level);
+            m.moveTo(where.x, where.y, where.z, sp.getRandom().nextFloat() * 360f, 0f);
+            m.disguise(id, name);
+            level.addFreshEntity(m);
+        });
+    }
+
     @SubscribeEvent
     public static void onCommands(RegisterCommandsEvent e) {
         EchoCommand.register(e.getDispatcher());
