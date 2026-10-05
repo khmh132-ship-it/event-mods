@@ -29,6 +29,7 @@ public final class HorrorDirector {
         long stalkDay = -1;
         long awaySince = -1;
         long homeDay = -100;
+        int storySeconds;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -59,6 +60,7 @@ public final class HorrorDirector {
             brokenMind(p, d, st);
             stalker(p, d, st, seconds);
             homecoming(p, d, st, seconds);
+            nameCall(p, d, st);
             if (seconds >= st.nextEvent && MusicBoxAura.protects(p)) st.nextEvent = seconds + 10;
             if (seconds >= st.nextEvent) {
                 runRandom(p, d, st, seconds);
@@ -131,6 +133,33 @@ public final class HorrorDirector {
         Scares.Ctx c = Scares.ctx(p, StoryData.get(p.server));
         if (!s.cond().test(c)) return false;
         return s.run().apply(c);
+    }
+
+    /** A few minutes into the story, at night, the locator picks up someone calling you by name. Once. */
+    private static void nameCall(ServerPlayer p, StoryData d, State st) {
+        st.storySeconds++;
+        if (st.storySeconds < 150 || d.chapter < StoryManager.CH_SIGNAL || d.chapter > StoryManager.CH_VILLAGE) return;
+        if (!HorrorUtil.isNight(p.serverLevel()) || p.isPassenger()) return;
+        net.minecraft.nbt.CompoundTag tag = Sanity.data(p);
+        if (tag.getBoolean("nameCall")) return;
+        tag.putBoolean("nameCall", true);
+        String name = p.getGameProfile().getName();
+        net.minecraft.world.item.ItemStack held = p.getMainHandItem();
+        String hand = held.isEmpty() ? "У тебя пустые руки." : "У тебя в руке " + held.getHoverName().getString().toLowerCase(java.util.Locale.ROOT) + ".";
+        Net.send(p, new com.echohorror.network.SoundSeqPacket.Builder()
+                .sound("radio.tune", 1, "[ пеленгатор в кармане вдруг оживает ]")
+                .sub("«..." + name + "...»", 70)
+                .sub("«" + name + ", приём. Ты меня слышишь?»", 80)
+                .sub("«Я тебя вижу. " + hand + "»", 90)
+                .sub("«Не оборачивайся.»", 90)
+                .sub("", 60)
+                .build());
+        Scheduler.schedule(330, () -> {
+            if (p.hasDisconnected()) return;
+            HorrorUtil.playTo(p, "scare.breath", HorrorUtil.behind(p, 0.9), 1f, 0.95f);
+            com.echohorror.entity.PhantomEntity.spawn(p, com.echohorror.entity.PhantomEntity.KIND_SHADE, com.echohorror.entity.PhantomEntity.MODE_BEHIND, HorrorUtil.behind(p, 1.6).subtract(0, 1.62, 0), 300);
+            Sanity.add(p, -6);
+        });
     }
 
     /** Coming home after a long trip: sometimes the house was not empty. */
