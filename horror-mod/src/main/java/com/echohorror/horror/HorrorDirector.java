@@ -65,10 +65,11 @@ public final class HorrorDirector {
     private static int interval(ServerPlayer p, StoryData d) {
         float sanity = Sanity.get(p);
         double base;
-        if (d.chapter == StoryManager.CH_NONE) base = 480;
-        else if (d.chapter == StoryManager.CH_SILENCE) base = 900;
+        int ch = StoryManager.effectiveChapter(d);
+        if (ch == StoryManager.CH_NONE) base = 480;
+        else if (ch == StoryManager.CH_SILENCE) base = 900;
         else {
-            float fear = Mth.clamp(0.35f * d.chapter / 6f + 0.65f * (1f - sanity / 100f), 0f, 1f);
+            float fear = Mth.clamp(0.35f * ch / 6f + 0.65f * (1f - sanity / 100f), 0f, 1f);
             base = Mth.lerp(fear, 110, 25);
             if (StoryManager.echoNight(d, p.level())) base *= 0.6;
         }
@@ -83,9 +84,9 @@ public final class HorrorDirector {
         int total = 0;
         boolean bossFight = d.chapter == StoryManager.CH_BELFRY && d.in("arena", p.position());
         for (Scares.Scare s : Scares.all()) {
-            if (d.chapter < s.minChapter() || c.sanity > s.maxSanity()) continue;
+            if (c.chapter < s.minChapter() || c.sanity > s.maxSanity()) continue;
             if (bossFight && DISRUPTIVE.contains(s.name())) continue;
-            if (d.chapter == StoryManager.CH_SILENCE && s.minChapter() > 1) continue;
+            if (c.chapter == StoryManager.CH_SILENCE && s.minChapter() > 1) continue;
             Long last = st.lastUse.get(s.name());
             if (last != null && seconds - last < s.cooldownSec()) continue;
             if (!s.cond().test(c)) continue;
@@ -131,7 +132,7 @@ public final class HorrorDirector {
      * The last time it is right behind you.
      */
     private static void stalker(ServerPlayer p, StoryData d, State st, long seconds) {
-        if (d.chapter < StoryManager.CH_RELAY || d.chapter >= StoryManager.CH_BELFRY) return;
+        if ((d.chapter < StoryManager.CH_RELAY || d.chapter >= StoryManager.CH_BELFRY) && !d.flag("ending_echo")) return;
         boolean night = HorrorUtil.isNight(p.serverLevel());
         long day = p.serverLevel().getDayTime() / 24000L;
         if (!night) {
@@ -219,7 +220,7 @@ public final class HorrorDirector {
         if (delta < 0) delta *= (0.6f + 0.12f * d.chapter) * Config.SANITY_DRAIN.get().floatValue();
         boolean silence = p.getInventory().contains(new ItemStack(ModItems.SILENCE.get()));
         if (silence) delta = Math.max(delta, 0.3f);
-        if (d.chapter == StoryManager.CH_SILENCE) delta = Math.max(delta, 0.15f);
+        if (StoryManager.effectiveChapter(d) == StoryManager.CH_SILENCE) delta = Math.max(delta, 0.15f);
         Sanity.add(p, delta);
         if (silence && Sanity.get(p) < 60) Sanity.set(p, 60);
     }

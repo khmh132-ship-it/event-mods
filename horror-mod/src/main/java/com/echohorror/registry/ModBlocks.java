@@ -27,5 +27,9 @@ public final class ModBlocks {
     public static final RegistryObject<Block> POWER_SWITCH = BLOCKS.register("power_switch",
             () -> new PowerSwitchBlock(story().lightLevel(s -> s.getValue(PowerSwitchBlock.ON) ? 7 : 0)));
 
+    public static final RegistryObject<Block> GREAT_BELL_ROPE = BLOCKS.register("great_bell_rope",
+            () -> new com.echohorror.block.BellRopeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOL)
+                    .strength(-1.0F, 3600000.0F).sound(SoundType.WOOL).noLootTable().noOcclusion().lightLevel(s -> 6)));
+
     private ModBlocks() {}
 }

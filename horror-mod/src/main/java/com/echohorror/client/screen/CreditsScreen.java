@@ -13,9 +13,15 @@ import java.util.List;
 public class CreditsScreen extends Screen {
     private final List<Object> lines = new ArrayList<>();
     private float scroll;
+    private final boolean echo;
 
     public CreditsScreen() {
-        super(Component.literal("Тишина"));
+        this(false);
+    }
+
+    public CreditsScreen(boolean echo) {
+        super(Component.literal(echo ? "Эхо" : "Тишина"));
+        this.echo = echo;
     }
 
     @Override
@@ -25,7 +31,7 @@ public class CreditsScreen extends Screen {
         lines.add(">Объект «Колокол»");
         lines.add("");
         lines.add("");
-        Notes.Note ending = Notes.get("ending");
+        Notes.Note ending = Notes.get(echo ? "ending_echo" : "ending");
         for (String p : ending.text().split("\n")) {
             if (p.isEmpty()) lines.add("");
             else lines.addAll(font.split(Component.literal(p), Math.min(280, width - 40)));
@@ -33,8 +39,8 @@ public class CreditsScreen extends Screen {
         String[] tail = {"", "", "", "#В ролях", "", "Сергей Лисицын — радист ретранслятора Р-7", "Таня — голос за дверью",
                 "Маша, 7 лет — та, что больше не разговаривает", "о. Никодим — звонарь", "Пётр Кузьмич — сосед",
                 "Группа «Шахтёр» — шестеро. Или семеро", "Зоя Козлова — Немая", "А. С. Воронов — руководитель объекта",
-                "Отголосок — все вы", "", "", "#Звук", "", "Всё, что вы слышали, было собрано из шума,", "синтезатора речи и ваших собственных голосов.",
-                "", "", "#Спасибо, что дослушали", "", "", "", "", "", "", "", "Сколько вас было в начале?", "", "", "", "", "", "",
+                "Отголосок — " + (echo ? "теперь вы" : "все вы"), "", "", "#Звук", "", "Всё, что вы слышали, было собрано из шума,", "синтезатора речи и ваших собственных голосов.",
+                "", "", "#Спасибо, что дослушали", "", "", "", "", "", "", "", echo ? "Сколько вас теперь?" : "Сколько вас было в начале?", "", "", "", "", "", "",
                 "(Esc — закрыть)"};
         for (String s : tail) lines.add(s);
         scroll = -height;

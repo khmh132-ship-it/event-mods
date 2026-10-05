@@ -34,7 +34,7 @@ public class NoteScreen extends Screen {
     protected void init() {
         lines.clear();
         if (note != null) {
-            for (String para : note.text().split("\n")) {
+            for (String para : personalize(note.text()).split("\n")) {
                 if (para.isEmpty()) {
                     lines.add(FormattedCharSequence.EMPTY);
                     continue;
@@ -48,6 +48,22 @@ public class NoteScreen extends Screen {
             if ((page + 1) * LINES < lines.size()) page++;
         }).bounds(l + W - 26, t + H + 4, 20, 16).build());
         addRenderableWidget(Button.builder(Component.literal("Закрыть"), b -> onClose()).bounds(l + W / 2 - 30, t + H + 4, 60, 16).build());
+    }
+
+    /** Some notes know who is reading them. */
+    static String personalize(String text) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        if (text.contains("{me}")) text = text.replace("{me}", mc.player != null ? mc.player.getGameProfile().getName() : "ты");
+        if (text.contains("{players}")) {
+            StringBuilder sb = new StringBuilder();
+            if (mc.getConnection() != null) {
+                for (net.minecraft.client.multiplayer.PlayerInfo pi : mc.getConnection().getOnlinePlayers()) {
+                    sb.append(pi.getProfile().getName()).append(" — ?? л.\n");
+                }
+            }
+            text = text.replace("{players}", sb.length() == 0 ? "(неразборчиво)" : sb.toString().trim());
+        }
+        return text;
     }
 
     @Override

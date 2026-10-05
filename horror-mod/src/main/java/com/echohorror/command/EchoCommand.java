@@ -78,6 +78,14 @@ public final class EchoCommand {
                     }
                     return 1;
                 })))
+                .then(Commands.literal("ending").then(Commands.argument("which", StringArgumentType.word())
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"silence", "echo"}, b))
+                        .executes(c -> {
+                            ServerPlayer p = c.getSource().getPlayerOrException();
+                            boolean ok = StoryManager.chooseEnding(p, StringArgumentType.getString(c, "which").equals("echo"));
+                            if (!ok) c.getSource().sendFailure(Component.literal("Концовку можно выбрать только после победы над Отголоском."));
+                            return ok ? 1 : 0;
+                        })))
                 .then(Commands.literal("note").then(Commands.argument("id", StringArgumentType.word())
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(Notes.all().keySet(), b))
                         .executes(c -> {

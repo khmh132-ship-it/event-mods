@@ -95,5 +95,7 @@
   "subtitles.echohorror.tape.tape1": "Магнитофонная запись",
   "subtitles.echohorror.tape.tape2": "Магнитофонная запись",
   "subtitles.echohorror.tape.tape3": "Магнитофонная запись",
-  "subtitles.echohorror.tape.tape4": "Магнитофонная запись"
+  "subtitles.echohorror.tape.tape4": "Магнитофонная запись",
+  "item.echohorror.echo_heart": "Сердце Эха",
+  "block.echohorror.great_bell_rope": "Верёвка Великого колокола"
 }

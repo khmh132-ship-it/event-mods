@@ -30,6 +30,7 @@ public class EchoHorror {
         ModItems.ITEMS.register(bus);
         ModEntities.ENTITIES.register(bus);
         ModTabs.TABS.register(bus);
+        com.echohorror.registry.ModLoot.MODIFIERS.register(bus);
         bus.addListener(ModEntities::onAttributes);
         bus.addListener(this::setup);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);

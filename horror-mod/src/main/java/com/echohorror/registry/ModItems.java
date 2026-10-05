@@ -38,6 +38,11 @@ public final class ModItems {
     public static final RegistryObject<Item> SILENCE = ITEMS.register("silence",
             () -> new SilenceItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
 
+    public static final RegistryObject<Item> ECHO_HEART = ITEMS.register("echo_heart",
+            () -> new EchoHeartItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
+    public static final RegistryObject<Item> GREAT_BELL_ROPE = ITEMS.register("great_bell_rope",
+            () -> new BlockItem(ModBlocks.GREAT_BELL_ROPE.get(), new Item.Properties()));
+
     public static final RegistryObject<Item> RADIO_CONSOLE = ITEMS.register("radio_console",
             () -> new BlockItem(ModBlocks.RADIO_CONSOLE.get(), new Item.Properties()));
     public static final RegistryObject<Item> SHARD_LOCK = ITEMS.register("shard_lock",

@@ -59,7 +59,7 @@ public final class Scares {
             this.p = p;
             this.level = p.serverLevel();
             this.d = d;
-            this.chapter = d.chapter;
+            this.chapter = com.echohorror.story.StoryManager.effectiveChapter(d);
             this.sanity = Sanity.get(p);
             this.night = HorrorUtil.isNight(level);
             this.underground = HorrorUtil.isUnderground(p);

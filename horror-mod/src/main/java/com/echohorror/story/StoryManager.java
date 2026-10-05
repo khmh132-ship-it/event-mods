@@ -72,9 +72,12 @@ public final class StoryManager {
                     + lockCount(d) + "/3).\nПолзуны слепы: двигайтесь пригнувшись.";
             case CH_OBJECT -> "Объект «Колокол». Восстановите питание: три рубильника (" + d.switchesOn.size() + "/3).\n"
                     + "НЕ ОТВОДИТЕ ВЗГЛЯД от Немой. Работайте парами.";
-            case CH_BELFRY -> d.flag("boss_spawned") ? "Звоните в колокола, чтобы оглушить Отголосок. Пока он оглушён — бейте.\nОдин колокол дважды подряд не сработает."
+            case CH_BELFRY -> d.flag("boss_dead")
+                    ? "Отголосок рассыпался. Выбор за вами.\nДёрнуть верёвку Великого колокола в центре зала — или поднять сердце Эха и послушать."
+                    : d.flag("boss_spawned") ? "Звоните в колокола, чтобы оглушить Отголосок. Пока он оглушён — бейте.\nОдин колокол дважды подряд не сработает."
                     : "Спуститесь в Звонницу. Заставьте Эхо замолчать.";
-            case CH_SILENCE -> "Тишина.\nСюжет завершён. Но эхо иногда возвращается.";
+            case CH_SILENCE -> d.flag("ending_echo") ? "Вы выбрали слушать.\nЭхо теперь говорит вашими голосами. Ночи больше не кончаются."
+                    : "Тишина.\nСюжет завершён. Но эхо иногда возвращается.";
             default -> "";
         };
     }
@@ -294,6 +297,7 @@ public final class StoryManager {
     }
 
     public static boolean echoNight(StoryData d, Level level) {
+        if (d.flag("ending_echo")) return HorrorUtil.isNight((ServerLevel) level);
         return d.chapter >= CH_VILLAGE && d.chapter < CH_SILENCE && HorrorUtil.isNight((ServerLevel) level) && d.nights % 3 == 0 && d.nights > 0;
     }
 
@@ -686,15 +690,73 @@ public final class StoryManager {
     public static void onBossDefeated(ServerLevel level, BlockPos pos) {
         MinecraftServer server = level.getServer();
         StoryData d = data(server);
-        if (d.chapter != CH_BELFRY) return;
-        d.notes.add("ending");
-        setChapter(server, CH_SILENCE);
+        if (d.chapter != CH_BELFRY || !d.setFlag("boss_dead")) return;
+        BlockPos center = d.get("arena") != null ? d.get("arena") : pos;
+        // the rope of the Great Bell comes down; the heart of the Echo is still beating on the floor
+        for (int y = 2; y <= 8; y++) level.setBlock(center.above(y), Blocks.CHAIN.defaultBlockState(), 3);
+        level.setBlock(center.above(1), com.echohorror.registry.ModBlocks.GREAT_BELL_ROPE.get().defaultBlockState(), 3);
+        level.setBlock(center, Blocks.AIR.defaultBlockState(), 3);
+        net.minecraft.world.entity.item.ItemEntity heart = new net.minecraft.world.entity.item.ItemEntity(level,
+                center.getX() + 2.5, center.getY() + 0.5, center.getZ() + 0.5, new ItemStack(ModItems.ECHO_HEART.get()));
+        heart.setUnlimitedLifetime();
+        heart.setGlowingTag(true);
+        heart.setDeltaMovement(0, 0.2, 0);
+        level.addFreshEntity(heart);
+        d.put("rope", center.above(1));
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Net.fx(p, Fx.MUSIC, "");
+            Sanity.add(p, 40f);
+            Net.fx(p, Fx.CHAPTER, "ВЫБОР|Позвонить — или послушать");
+            p.sendSystemMessage(Component.literal("Отголосок рассыпался. Над головой — Великий колокол, с него свисает верёвка.")
+                    .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+            p.sendSystemMessage(Component.literal("На полу что-то бьётся. Сердце Эха. Оно шепчет: «послушай меня. только один раз».")
+                    .withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
+            p.sendSystemMessage(Component.literal("Дёрнуть верёвку — заставить его замолчать навсегда. Поднести сердце к уху — ...")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+        syncAll(server);
+    }
+
+    /** The final choice. {@code listen} = the bad ending. Returns true if the choice was accepted. */
+    public static boolean chooseEnding(ServerPlayer chooser, boolean listen) {
+        MinecraftServer server = chooser.server;
+        StoryData d = data(server);
+        if (d.chapter != CH_BELFRY || !d.flag("boss_dead")) {
+            chooser.displayClientMessage(Component.literal(listen ? "Тишина в ответ." : "Верёвка не поддаётся. Ещё не время.")
+                    .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), true);
+            return false;
+        }
+        if (!d.setFlag("ending_chosen")) return false;
+        String name = chooser.getGameProfile().getName();
+        if (listen) endingEcho(server, d, name);
+        else endingSilence(server, d, name);
+        return true;
+    }
+
+    private static void endingSilence(MinecraftServer server, StoryData d, String name) {
+        d.setFlag("ending_silence");
+        d.notes.add("ending");
+        BlockPos rope = d.get("rope");
+        ServerLevel level = server.overworld();
+        if (rope != null) level.playSound(null, rope, ModSounds.get("story.bell"), SoundSource.BLOCKS, 10f, 0.5f);
+        // the heart dies with the sound
+        for (net.minecraft.world.entity.item.ItemEntity ie : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(rope != null ? rope : BlockPos.ZERO).inflate(40), e -> e.getItem().is(ModItems.ECHO_HEART.get()))) {
+            level.sendParticles(ParticleTypes.SCULK_SOUL, ie.getX(), ie.getY(), ie.getZ(), 30, 0.3, 0.3, 0.3, 0.05);
+            ie.discard();
+        }
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            p.getInventory().clearOrCountMatchingItems(st -> st.is(ModItems.ECHO_HEART.get()), -1, p.inventoryMenu.getCraftSlots());
+            p.sendSystemMessage(Component.literal(name + " дёрнул верёвку Великого колокола.").withStyle(ChatFormatting.GOLD));
+            Net.fx(p, Fx.WHITE_FLASH, 40);
+            Net.fx(p, Fx.SHAKE, 60, 2f, "");
+        }
+        setChapter(server, CH_SILENCE);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Sanity.set(p, 100f);
             give(p, new ItemStack(ModItems.SILENCE.get()));
             Net.send(p, new SoundSeqPacket.Builder()
-                    .sound("radio.tune", 80, "[ пеленгатор оживает в последний раз ]")
+                    .sound("radio.tune", 120, "[ пеленгатор оживает в последний раз ]")
                     .sound("radio.b_attention", 40, "«Внимание. Внимание. Говорит ретранслятор Р-7. Считаю.»")
                     .sound("radio.num0", 175, "«...ноль.»")
                     .sub("", 60)
@@ -703,7 +765,7 @@ public final class StoryManager {
                     .sub("", 60)
                     .build());
         }
-        Scheduler.schedule(700, () -> {
+        Scheduler.schedule(740, () -> {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                 Net.fx(p, Fx.CREDITS, 0);
                 Net.fx(p, Fx.MUSIC, "music.ending");
@@ -719,6 +781,52 @@ public final class StoryManager {
                 });
             }
         });
+    }
+
+    private static void endingEcho(MinecraftServer server, StoryData d, String name) {
+        d.setFlag("ending_echo");
+        d.notes.add("ending_echo");
+        BlockPos rope = d.get("rope");
+        ServerLevel level = server.overworld();
+        if (rope != null) {
+            level.setBlock(rope, Blocks.AIR.defaultBlockState(), 3); // the rope snaps
+            level.sendParticles(ParticleTypes.SCULK_SOUL, rope.getX() + 0.5, rope.getY() + 1, rope.getZ() + 0.5, 80, 1, 2, 1, 0.1);
+        }
+        int count = server.getPlayerList().getPlayerCount();
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.GLITCH, 40);
+            Net.fx(p, Fx.BLACKOUT, 30);
+            Net.fx(p, Fx.SHAKE, 80, 2.5f, "");
+            p.sendSystemMessage(Component.literal(name + " поднёс сердце Эха к уху.").withStyle(ChatFormatting.DARK_RED));
+            p.sendSystemMessage(Component.translatable("chat.type.text", name, "я слышу вас всех").withStyle(ChatFormatting.DARK_RED));
+        }
+        setChapter(server, CH_SILENCE);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Net.fx(p, Fx.CHAPTER, "ЭПИЛОГ|Эхо");
+            Sanity.set(p, 30f);
+            SoundSeqPacket.Builder b = new SoundSeqPacket.Builder()
+                    .sound("radio.b_heard", 40, "«Мы услышали вас.»")
+                    .sound("radio.b_attention", 140, "«Внимание. Внимание. Говорит ретранслятор Р-7. Считаю.»");
+            String[] words = {"ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять", "одиннадцать", "двенадцать"};
+            int delay = 175;
+            for (int i = 1; i <= Math.min(12, count + 4); i++) {
+                b.sound("radio.num" + i, delay, "«" + words[i] + "...»");
+                delay = 26;
+            }
+            b.sound("radio.b_more", 50, "«Вас стало больше.»").sub("«Нас стало больше.»", 70).sub("", 60);
+            Net.send(p, b.build());
+        }
+        Scheduler.schedule(820, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                Net.fx(p, Fx.CREDITS, 1);
+                Net.fx(p, Fx.MUSIC, "music.ending");
+            }
+        });
+    }
+
+    /** The bad ending never ends: the world keeps behaving as if the Belfry were still open. */
+    public static int effectiveChapter(StoryData d) {
+        return d.chapter == CH_SILENCE && d.flag("ending_echo") ? CH_BELFRY : d.chapter;
     }
 
     // =========================================================================================== admin
