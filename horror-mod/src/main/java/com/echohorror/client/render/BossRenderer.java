@@ -24,6 +24,8 @@ public class BossRenderer extends HumanoidMobRenderer<EchoBossEntity, PlayerMode
             float twitch = e.isStunned() ? 0.5f : 0.15f;
             head.zRot = Mth.sin(age * (e.isStunned() ? 2.3f : 0.3f)) * twitch;
             head.xRot += Mth.sin(age * 1.1f) * 0.05f;
+            rightArm.yScale = leftArm.yScale = 1.75f; // arms dragging on the floor
+            head.yScale = 0.85f;
             rightArm.zRot += 0.15f + Mth.sin(age * 0.2f) * 0.1f;
             leftArm.zRot -= 0.15f + Mth.cos(age * 0.2f) * 0.1f;
             if (e.isStunned()) {

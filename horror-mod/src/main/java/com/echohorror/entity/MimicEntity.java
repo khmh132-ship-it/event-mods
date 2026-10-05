@@ -218,6 +218,7 @@ public class MimicEntity extends Monster {
             if (p instanceof ServerPlayer sp && sp.distanceTo(this) < 16) {
                 Net.fx(sp, Fx.SHAKE, 25, 1.2f, "");
                 Net.fx(sp, Fx.GLITCH, 8);
+                com.echohorror.horror.Encounters.spotted(this, sp);
                 Sanity.add(sp, -8f);
             }
         }
@@ -268,5 +269,19 @@ public class MimicEntity extends Monster {
             entityData.set(REVEALED, true);
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.36);
         }
+    }
+
+    @Override
+    public void setTarget(@javax.annotation.Nullable net.minecraft.world.entity.LivingEntity t) {
+        net.minecraft.world.entity.LivingEntity old = getTarget();
+        super.setTarget(t);
+        if (!level().isClientSide && t instanceof net.minecraft.server.level.ServerPlayer sp && old != t && isRevealed()) com.echohorror.horror.Encounters.spotted(this, sp);
+    }
+
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity t) {
+        boolean r = super.doHurtTarget(t);
+        if (r && t instanceof net.minecraft.server.level.ServerPlayer sp) com.echohorror.horror.Encounters.struck(this, sp, com.echohorror.horror.Encounters.FACE_MIMIC);
+        return r;
     }
 }

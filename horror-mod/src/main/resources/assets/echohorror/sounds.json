@@ -795,5 +795,17 @@
     "stream": true
    }
   ]
+ },
+ "scare.spotted": {
+  "subtitle": "subtitles.echohorror.scare.spotted",
+  "sounds": [
+   "echohorror:scare/spotted"
+  ]
+ },
+ "scare.jumpscare": {
+  "subtitle": "subtitles.echohorror.scare.jumpscare",
+  "sounds": [
+   "echohorror:scare/jumpscare"
+  ]
  }
 }

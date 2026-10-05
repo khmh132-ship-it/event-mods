@@ -16,14 +16,38 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
 
     private final PlayerModel<PhantomEntity> wide, slim;
 
+    /** Watchers and shades are not built like people. */
+    static class PhantomModel extends PlayerModel<PhantomEntity> {
+        PhantomModel(net.minecraft.client.model.geom.ModelPart root, boolean slim) {
+            super(root, slim);
+        }
+
+        @Override
+        public void setupAnim(PhantomEntity e, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
+            super.setupAnim(e, limbSwing, limbAmount, age, headYaw, headPitch);
+            boolean wrong = e.getKind() == PhantomEntity.KIND_WATCHER || e.getKind() == PhantomEntity.KIND_SHADE;
+            rightArm.yScale = leftArm.yScale = wrong ? 1.6f : 1f;
+            head.y = wrong ? -1.5f : 0f;
+            if (wrong) {
+                rightArm.xRot = leftArm.xRot = 0f;   // they don't swing their arms
+                rightArm.zRot = 0.06f;
+                leftArm.zRot = -0.06f;
+                head.zRot = e.getKind() == PhantomEntity.KIND_WATCHER ? 0.12f : 0f;
+            }
+            hat.copyFrom(head);
+            rightSleeve.copyFrom(rightArm);
+            leftSleeve.copyFrom(leftArm);
+        }
+    }
+
     static ResourceLocation tex(String n) {
         return new ResourceLocation(EchoHorror.MODID, "textures/entity/" + n + ".png");
     }
 
     public PhantomRenderer(EntityRendererProvider.Context ctx) {
-        super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.0f);
+        super(ctx, new PhantomModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.0f);
         wide = model;
-        slim = new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        slim = new PhantomModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
         addLayer(new GlowLayer<>(this, e -> switch (e.getKind()) {
             case PhantomEntity.KIND_WATCHER -> WATCHER_EYES;
             case PhantomEntity.KIND_SHADE -> SHADE_EYES;
@@ -42,7 +66,7 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
     protected void scale(PhantomEntity e, PoseStack ps, float partial) {
         if (e.isSmall()) ps.scale(0.62f, 0.62f, 0.62f);
         switch (e.getKind()) {
-            case PhantomEntity.KIND_WATCHER -> ps.scale(0.85f, 1.32f, 0.85f);
+            case PhantomEntity.KIND_WATCHER -> ps.scale(0.68f, 1.55f, 0.68f);
             case PhantomEntity.KIND_SHADE -> ps.scale(0.95f, 1.08f, 0.95f);
             default -> ps.scale(0.9375f, 0.9375f, 0.9375f);
         }

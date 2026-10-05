@@ -21,9 +21,22 @@ public class MimicRenderer extends HumanoidMobRenderer<MimicEntity, PlayerModel<
         @Override
         public void setupAnim(MimicEntity e, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
             super.setupAnim(e, limbSwing, limbAmount, age, headYaw, headPitch);
-            if (!e.isRevealed()) return;
-            head.zRot = Mth.sin(age * 1.7f) * 0.35f + (e.getId() % 2 == 0 ? 0.6f : -0.6f);
-            head.xRot += Mth.sin(age * 3.1f) * 0.15f;
+            head.yScale = 1f;
+            head.y = 0f;
+            rightArm.yScale = leftArm.yScale = 1f;
+            if (!e.isRevealed()) {
+                hat.copyFrom(head);
+                rightSleeve.copyFrom(rightArm);
+                leftSleeve.copyFrom(leftArm);
+                return;
+            }
+            // jerky, like a film with frames missing
+            float t = (float) Math.floor(age * 6f) / 6f;
+            head.zRot = Mth.sin(t * 1.7f) * 0.45f + (e.getId() % 2 == 0 ? 0.6f : -0.6f);
+            head.xRot += Mth.sin(t * 3.1f) * 0.25f;
+            head.yScale = 1.3f;
+            head.y = -5f - Mth.sin(t * 0.7f) * 1.5f;   // the head has come loose from the neck
+            rightArm.yScale = leftArm.yScale = 1.7f;   // hands below the knees
             rightArm.xRot = -1.6f + Mth.cos(age * 0.9f) * 0.15f;
             leftArm.xRot = -1.6f + Mth.sin(age * 0.9f) * 0.15f;
             rightArm.zRot = -0.1f;
@@ -34,29 +47,32 @@ public class MimicRenderer extends HumanoidMobRenderer<MimicEntity, PlayerModel<
         }
     }
 
+    private static final ResourceLocation MASK = PhantomRenderer.tex("mimic_mask");
     private final PlayerModel<MimicEntity> wide, slim;
 
     public MimicRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new MimicModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         wide = model;
         slim = new MimicModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        addLayer(new MaskLayer<>(this, e -> e.isRevealed() ? MASK : null));
         addLayer(new GlowLayer<>(this, e -> e.isRevealed() ? PhantomRenderer.MIMIC_EYES : null));
     }
 
     @Override
     public void render(MimicEntity e, float yaw, float partial, PoseStack ps, MultiBufferSource buf, int light) {
-        model = !e.isRevealed() && Skins.of(e.getSkin().orElse(null)).slim() ? slim : wide;
+        model = Skins.of(e.getSkin().orElse(null)).slim() ? slim : wide;
         super.render(e, yaw, partial, ps, buf, light);
     }
 
     @Override
     protected void scale(MimicEntity e, PoseStack ps, float partial) {
-        if (e.isRevealed()) ps.scale(0.95f, 1.08f, 0.95f);
+        if (e.isRevealed()) ps.scale(0.88f, 1.25f, 0.88f);
         else ps.scale(0.9375f, 0.9375f, 0.9375f);
     }
 
     @Override
     public ResourceLocation getTextureLocation(MimicEntity e) {
-        return e.isRevealed() ? PhantomRenderer.MIMIC : Skins.of(e.getSkin().orElse(null)).texture();
+        // it keeps your face; only the eyes and the mouth are gone
+        return e.getSkin().isPresent() ? Skins.of(e.getSkin().get()).texture() : PhantomRenderer.MIMIC;
     }
 }

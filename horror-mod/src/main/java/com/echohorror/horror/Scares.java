@@ -525,8 +525,8 @@ public final class Scares {
             return true;
         });
         add("jumpscare", 2, 25, 2, 600, c -> Config.JUMPSCARES.get(), c -> {
-            Net.fx(c.p, Fx.JUMPSCARE, c.r.nextInt(3));
-            HorrorUtil.playAt(c.p, "scare.scream_near", 1f, 0.9f + c.r.nextFloat() * 0.2f);
+            Net.fx(c.p, Fx.JUMPSCARE, c.r.nextInt(4));
+            HorrorUtil.playAt(c.p, "scare.jumpscare", 2f, 0.9f + c.r.nextFloat() * 0.2f);
             Sanity.add(c.p, -6);
             return true;
         });

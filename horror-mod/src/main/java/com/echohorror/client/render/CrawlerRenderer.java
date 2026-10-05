@@ -21,18 +21,35 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
 
         @Override
         public void setupAnim(CrawlerEntity e, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
+            crouching = !e.onClimbable(); // vanilla's crouch pose bends the spine for us
             super.setupAnim(e, limbSwing, limbAmount, age, headYaw, headPitch);
-            if (e.onClimbable()) return;
-            float sw = limbSwing * 1.3f;
-            rightArm.xRot = (float) -Math.PI + Mth.cos(sw) * 0.9f * limbAmount;
-            leftArm.xRot = (float) -Math.PI + Mth.cos(sw + (float) Math.PI) * 0.9f * limbAmount;
-            rightArm.zRot = 0.25f;
-            leftArm.zRot = -0.25f;
-            rightLeg.xRot = Mth.cos(sw + (float) Math.PI) * 0.5f * limbAmount;
-            leftLeg.xRot = Mth.cos(sw) * 0.5f * limbAmount;
-            head.xRot = -1.2f + Mth.sin(age * 0.6f) * 0.08f;
-            head.zRot = Mth.sin(age * 0.23f) * 0.3f;
+            rightArm.yScale = leftArm.yScale = 1.75f;   // knuckles on the ground
+            rightLeg.yScale = leftLeg.yScale = 0.85f;
+            body.xScale = 0.8f;
+            float twitch = Mth.sin(age * 9.1f) * Mth.sin(age * 2.3f) > 0.85f ? 0.5f : 0f;
+            head.zRot = (float) Math.PI + Mth.sin(age * 0.23f) * 0.25f + twitch; // the face is upside down
+            head.yRot += twitch * 0.6f;
+            if (!e.onClimbable()) {
+                float sw = limbSwing * 1.1f;
+                body.xRot = 0.95f;
+                head.xRot = -0.9f + Mth.sin(age * 0.6f) * 0.08f; // craning up at you
+                head.y = 5.5f;
+                head.z = -3.5f;
+                rightArm.y = leftArm.y = 5.5f;
+                rightArm.z = leftArm.z = -2.5f;
+                rightArm.xRot = -0.35f + Mth.cos(sw) * 0.7f * limbAmount;            // walking on its hands
+                leftArm.xRot = -0.35f + Mth.cos(sw + (float) Math.PI) * 0.7f * limbAmount;
+                rightArm.zRot = 0.18f;
+                leftArm.zRot = -0.18f;
+                rightLeg.xRot = -0.6f + Mth.cos(sw + (float) Math.PI) * 0.5f * limbAmount;
+                leftLeg.xRot = -0.6f + Mth.cos(sw) * 0.5f * limbAmount;
+            }
+            copyOverlays();
+        }
+
+        private void copyOverlays() {
             hat.copyFrom(head);
+            jacket.copyFrom(body);
             rightSleeve.copyFrom(rightArm);
             leftSleeve.copyFrom(leftArm);
             rightPants.copyFrom(rightLeg);
@@ -42,20 +59,12 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
 
     public CrawlerRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new CrawlerModel(ctx.bakeLayer(ModelLayers.PLAYER)), 0.4f);
-    }
-
-    @Override
-    protected void setupRotations(CrawlerEntity e, PoseStack ps, float age, float yaw, float partial) {
-        super.setupRotations(e, ps, age, yaw, partial);
-        if (!e.onClimbable() && e.deathTime == 0) {
-            ps.mulPose(Axis.XP.rotationDegrees(-90f));
-            ps.translate(0.0F, -1.0F, 0.3F);
-        }
+        addLayer(new GlowLayer<>(this, e -> PhantomRenderer.tex("crawler_eyes")));
     }
 
     @Override
     protected void scale(CrawlerEntity e, PoseStack ps, float partial) {
-        ps.scale(0.9f, 1.05f, 0.9f);
+        ps.scale(0.95f, 0.95f, 0.95f);
     }
 
     @Override

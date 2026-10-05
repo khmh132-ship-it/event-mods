@@ -123,4 +123,18 @@ public class SilentEntity extends Monster {
     public boolean removeWhenFarAway(double d) {
         return false;
     }
+
+    @Override
+    public void setTarget(@javax.annotation.Nullable net.minecraft.world.entity.LivingEntity t) {
+        net.minecraft.world.entity.LivingEntity old = getTarget();
+        super.setTarget(t);
+        if (!level().isClientSide && t instanceof net.minecraft.server.level.ServerPlayer sp && old != t) com.echohorror.horror.Encounters.spotted(this, sp);
+    }
+
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity t) {
+        boolean r = super.doHurtTarget(t);
+        if (r && t instanceof net.minecraft.server.level.ServerPlayer sp) com.echohorror.horror.Encounters.struck(this, sp, com.echohorror.horror.Encounters.FACE_SILENT);
+        return r;
+    }
 }

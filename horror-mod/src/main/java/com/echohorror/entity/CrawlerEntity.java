@@ -137,4 +137,18 @@ public class CrawlerEntity extends Monster {
     protected void playStepSound(BlockPos pos, BlockState state) {
         playSound(SoundEvents.SPIDER_STEP, 0.15f, 0.6f);
     }
+
+    @Override
+    public void setTarget(@javax.annotation.Nullable net.minecraft.world.entity.LivingEntity t) {
+        net.minecraft.world.entity.LivingEntity old = getTarget();
+        super.setTarget(t);
+        if (!level().isClientSide && t instanceof net.minecraft.server.level.ServerPlayer sp && old != t) com.echohorror.horror.Encounters.spotted(this, sp);
+    }
+
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity t) {
+        boolean r = super.doHurtTarget(t);
+        if (r && t instanceof net.minecraft.server.level.ServerPlayer sp) com.echohorror.horror.Encounters.struck(this, sp, com.echohorror.horror.Encounters.FACE_HOLES);
+        return r;
+    }
 }

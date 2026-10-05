@@ -22,7 +22,8 @@ public final class HorrorOverlay {
     private static final ResourceLocation[] FACES = {
             new ResourceLocation(EchoHorror.MODID, "textures/gui/face1.png"),
             new ResourceLocation(EchoHorror.MODID, "textures/gui/face2.png"),
-            new ResourceLocation(EchoHorror.MODID, "textures/gui/face3.png")};
+            new ResourceLocation(EchoHorror.MODID, "textures/gui/face3.png"),
+            new ResourceLocation(EchoHorror.MODID, "textures/gui/face4.png")};
     private static final RandomSource R = RandomSource.create();
 
     private HorrorOverlay() {}
@@ -152,7 +153,7 @@ public final class HorrorOverlay {
             g.fill(0, 0, w, h, 0xFF000000);
             boolean calm = Config.REDUCE_FLASHING.get();
             if (calm) g.setColor(0.6f, 0.6f, 0.6f, 1f);
-            g.blit(FACES[Mth.clamp(ClientState.jumpscareFace, 0, 2)], (w - size) / 2 + jx, (h - size) / 2 + jy, size, size, 0, 0, 256, 256, 256, 256);
+            g.blit(FACES[Mth.clamp(ClientState.jumpscareFace, 0, FACES.length - 1)], (w - size) / 2 + jx, (h - size) / 2 + jy, size, size, 0, 0, 256, 256, 256, 256);
             g.setColor(1f, 1f, 1f, 1f);
             if (!calm && t % 3 == 0) g.fill(0, 0, w, h, 0x50FF0000);
         }

@@ -79,6 +79,7 @@ public final class ForgeEvents {
             FlashlightManager.remove(sp.server, sp.getUUID());
             HorrorDirector.forget(sp.getUUID());
             PathMemory.forget(sp.getUUID());
+            Encounters.forget(sp.getUUID());
         }
     }
 
