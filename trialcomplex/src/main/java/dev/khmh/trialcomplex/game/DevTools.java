@@ -25,7 +25,7 @@ public final class DevTools {
         for (int i = 0; i < rooms.size(); i++) {
             Room r = rooms.get(i);
             r.buildAll(lvl);
-            if (i + 1 < rooms.size()) Layout.buildConnector(lvl, r, rooms.get(i + 1), i + 1);
+            if (i + 1 < rooms.size()) Layout.buildConnector(lvl, r, rooms.get(i + 1), i + 1, rooms.size());
             TrialComplex.LOG.info("Построено: {} ({}) в {}", r.id, r.title, r.origin);
         }
         Room r0 = rooms.get(0);

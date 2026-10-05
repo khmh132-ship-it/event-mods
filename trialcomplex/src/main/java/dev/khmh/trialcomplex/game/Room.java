@@ -86,6 +86,16 @@ public abstract class Room {
         return v(2.5, 1, entryZ + 0.5);
     }
 
+    /** Куда возвращать игрока (по умолчанию — общий спавн комнаты). */
+    public Vec3 checkpoint(ServerPlayer p) {
+        return spawn();
+    }
+
+    /** Игрок упал ниже voidY. true — комната сама разобралась (телепорт/реплика). */
+    protected boolean onFall(ServerPlayer p) {
+        return false;
+    }
+
     public float spawnYaw() {
         return -90f;
     }
@@ -133,8 +143,10 @@ public abstract class Room {
 
     // ---------- жизненный цикл ----------
 
-    /** Комната «включилась» — игрок вошёл внутрь. firstTime=false после сброса. */
-    protected void onActivate(boolean firstTime) {}
+    /** Комната «включилась» — игрок вошёл внутрь. firstTime=false после сброса. По умолчанию — реплика id.intro. */
+    protected void onActivate(boolean firstTime) {
+        if (firstTime) say(id + ".intro");
+    }
 
     protected void onTick(long t) {}
 
@@ -161,6 +173,51 @@ public abstract class Room {
 
     protected Voice voice() {
         return cx.voice();
+    }
+
+    protected void say(String id) {
+        if (dev.khmh.trialcomplex.voice.VoiceLines.exists(id)) cx.voice().say(id);
+    }
+
+    protected void say(String id, Runnable after) {
+        cx.voice().say(dev.khmh.trialcomplex.voice.VoiceLines.exists(id) ? id : null, after);
+    }
+
+    /** Перебить и сказать случайную из группы (или саму реплику). */
+    protected void sayNow(String group, ServerPlayer about) {
+        String line = about != null ? cx.voice().pickFor(group, about) : cx.voice().pick(group);
+        cx.voice().interrupt(line);
+    }
+
+    protected java.util.List<ServerPlayer> players() {
+        return cx.players();
+    }
+
+    protected boolean isHost(ServerPlayer p) {
+        return cx.roles().isHost(p);
+    }
+
+    protected void set(BlockPos global, net.minecraft.world.level.block.state.BlockState s) {
+        cx.level().setBlock(global, s, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+    }
+
+    protected void setL(int x, int y, int z, net.minecraft.world.level.block.state.BlockState s) {
+        set(at(x, y, z), s);
+    }
+
+    protected void ding(boolean ok) {
+        BlockPos c = at(sx / 2, 2, sz / 2);
+        if (ok) cx.sound(c, net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(), 1f, 1.4f);
+        else cx.sound(c, net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), 1f, 0.5f);
+    }
+
+    /** Победный звук и реплика id.done, после неё — засчитать. */
+    protected void win() {
+        BlockPos c = at(sx / 2, 2, sz / 2);
+        cx.sound(c, net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 1f, 1f);
+        setObjective("");
+        String line = dev.khmh.trialcomplex.voice.VoiceLines.exists(id + ".done") ? id + ".done" : cx.voice().pick("done");
+        cx.voice().interrupt(line, this::solve);
     }
 
     protected ServerLevel level() {
@@ -209,6 +266,17 @@ public abstract class Room {
 
     public int hintCount() {
         return 3;
+    }
+
+    /** Куда поставить игрока до начала игры (только для первой комнаты). */
+    public void placeBeforeStart(ServerPlayer p) {
+        Vec3 s = spawn();
+        cx.teleport(p, s, spawnYaw(), 0f);
+    }
+
+    /** Для автотестов: привести головоломку в решённое состояние «честным» путём (если умеет). */
+    public String devSolve() {
+        return "unsupported";
     }
 
     /** Отладочная строка для /puzzle dev peek. */

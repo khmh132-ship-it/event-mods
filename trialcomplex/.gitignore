@@ -27,3 +27,4 @@ forge*changelog.txt
 
 # локальные кэши инструментов
 tools/voice/.cache
+__pycache__/

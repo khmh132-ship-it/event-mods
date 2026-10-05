@@ -59,8 +59,14 @@ public final class PuzzleCommand {
                         })))
                         .then(Commands.literal("peek").executes(c -> run(c, cx -> {
                             Room r = cx.current();
-                            String msg = "stage=" + cx.data().stage + " room=" + (r == null ? "-" : r.id + " active=" + r.isActive() + " " + r.debug());
+                            String msg = "stage=" + cx.data().stage + " room=" + (r == null ? "-" : r.id + " origin=" + r.origin().getX() + "," + r.origin().getY() + "," + r.origin().getZ()
+                                    + " spawn=" + String.format(java.util.Locale.ROOT, "%.2f,%.2f,%.2f", r.spawn().x, r.spawn().y, r.spawn().z) + " active=" + r.isActive() + " " + r.debug());
                             c.getSource().sendSuccess(() -> Component.literal("PEEK " + msg), false);
+                        })))
+                        .then(Commands.literal("solve").executes(c -> run(c, cx -> {
+                            Room r = cx.current();
+                            String res = r == null ? "-" : r.devSolve();
+                            c.getSource().sendSuccess(() -> Component.literal("PEEK SOLVE " + res), false);
                         })))
                         .then(Commands.literal("buildall").executes(c -> run(c, DevTools::buildAll)))
                         .then(Commands.literal("export").then(Commands.argument("room", StringArgumentType.word())

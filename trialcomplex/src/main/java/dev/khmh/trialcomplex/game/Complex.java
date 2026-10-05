@@ -51,6 +51,7 @@ public final class Complex {
     private boolean hudDirty = true;
     private long lastIdleTaunt, lastErrorLog = -1000;
     private boolean waitingAnnounced;
+    private final Set<Integer> digitsAnnounced = new HashSet<>();
 
     private record Task(long due, Room owner, int epoch, Runnable run) {}
 
@@ -156,6 +157,8 @@ public final class Complex {
             }
         }
 
+        if (tick % 10 == 0) checkDigitConnectors(ps);
+
         if (hudDirty || tick % 100 == 0) {
             hudDirty = false;
             for (ServerPlayer p : ps) sendHud(p);
@@ -176,6 +179,7 @@ public final class Complex {
         double voidY = cur != null ? cur.voidY() : 0;
         if (p.getY() < voidY) {
             data.inc(data.falls, roles.key(p));
+            if (cur != null && cur.isActive() && cur.onFall(p)) return;
             toCheckpoint(p);
             voice.sayGroupFor("fall", p);
             return;
@@ -217,6 +221,22 @@ public final class Complex {
         if (idle > 20 * 60 * 6 && tick - lastIdleTaunt > 20 * 60 * 5 && !voice.busy()) {
             lastIdleTaunt = tick;
             voice.sayGroup("idle");
+        }
+    }
+
+    /** Голос обращает внимание на шлюзы с цифрами пароля финала. */
+    private void checkDigitConnectors(List<ServerPlayer> ps) {
+        for (int i = 0; i + 1 < rooms.size(); i++) {
+            int k = Layout.digitConnector(i, rooms.size());
+            if (k < 0 || digitsAnnounced.contains(k)) continue;
+            Room a = rooms.get(i);
+            net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(a.at(a.sx, 0, a.exitZ - 2), a.at(a.sx + Layout.GAP, 5, a.exitZ + 3));
+            for (ServerPlayer p : ps)
+                if (box.contains(p.position())) {
+                    digitsAnnounced.add(k);
+                    voice.say("digit.notice." + (k + 1));
+                    break;
+                }
         }
     }
 
@@ -280,7 +300,7 @@ public final class Complex {
     public void toCheckpoint(ServerPlayer p) {
         Room r = current();
         if (r == null) r = rooms.get(rooms.size() - 1);
-        Vec3 s = r.spawn();
+        Vec3 s = r.checkpoint(p);
         p.teleportTo(level, s.x, s.y, s.z, r.spawnYaw(), 0f);
         p.setDeltaMovement(Vec3.ZERO);
         p.fallDistance = 0;
@@ -291,6 +311,17 @@ public final class Complex {
     public void teleport(ServerPlayer p, Vec3 pos, float yaw, float pitch) {
         p.teleportTo(level, pos.x, pos.y, pos.z, yaw, pitch);
         p.setDeltaMovement(Vec3.ZERO);
+        p.resetFallDistance();
+        lastFeet.remove(p.getUUID());
+    }
+
+    /**
+     * Бесшовный сдвиг игрока на вектор (скорость и взгляд сохраняются).
+     * ВАЖНО: ServerGamePacketListenerImpl.teleport принимает АБСОЛЮТНУЮ цель и сам считает дельту для пакета.
+     */
+    public void shift(ServerPlayer p, double dx, double dy, double dz) {
+        p.connection.teleport(p.getX() + dx, p.getY() + dy, p.getZ() + dz, p.getYRot(), p.getXRot(),
+                java.util.EnumSet.allOf(net.minecraft.world.entity.RelativeMovement.class));
         p.resetFallDistance();
         lastFeet.remove(p.getUUID());
     }
@@ -400,8 +431,8 @@ public final class Complex {
         lastFeet.remove(p.getUUID());
         if (!bypass(p)) p.setGameMode(GameType.ADVENTURE);
         Room r0 = rooms.get(0);
-        if (!data.started && r0 instanceof dev.khmh.trialcomplex.rooms.R00Wake wake) {
-            wake.placeInPod(p);
+        if (!data.started) {
+            r0.placeBeforeStart(p);
         } else if (data.started) {
             toCheckpoint(p);
         }
