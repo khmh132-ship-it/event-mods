@@ -817,6 +817,36 @@ public final class StoryManager {
     }
 
     // =========================================================================================== chapter 2: console
+    private static final java.util.Map<java.util.UUID, Long> CONSOLE_CD = new java.util.HashMap<>();
+
+    /** Later visits: the relay still talks. It tells you where to go. It also listens back. */
+    private static void consoleHint(ServerPlayer p, BlockPos pos, StoryData d) {
+        long now = p.level().getGameTime();
+        Long last = CONSOLE_CD.get(p.getUUID());
+        if (pendingTransitions > 0 || last != null && now - last < 1200) {
+            HorrorUtil.playTo(p, "scare.static", Vec3.atCenterOf(pos), 0.8f, 0.8f);
+            p.displayClientMessage(Component.literal("Из динамика — только дыхание.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC), true);
+            return;
+        }
+        CONSOLE_CD.put(p.getUUID(), now);
+        SoundSeqPacket.Builder b = new SoundSeqPacket.Builder()
+                .sound("radio.tune", 1, "[ щелчок тумблера. шипение эфира ]")
+                .sound("radio.b_attention", 60, "«Внимание. Внимание. Говорит ретранслятор Р-7.»");
+        int delay = 150;
+        for (String line : objective(d).split("\n")) {
+            if (line.isBlank()) continue;
+            b.sub("«" + line + "»", delay);
+            delay = 90;
+        }
+        boolean wrong = p.getRandom().nextFloat() < 0.25f;
+        if (wrong) b.sub("«...а теперь обернись.»", 90);
+        b.sound("radio.b_end", 90, "«Конец связи.»").sub("", 60);
+        Net.send(p, b.build());
+        if (wrong) Scheduler.schedule(150 + 90 * 4, () -> {
+            if (!p.hasDisconnected()) HorrorUtil.playTo(p, "scare.breath", HorrorUtil.behind(p, 0.8), 1f, 0.9f);
+        });
+    }
+
     public static void onConsoleUse(ServerPlayer p, BlockPos pos) {
         MinecraftServer server = p.server;
         StoryData d = data(server);
@@ -827,8 +857,7 @@ public final class StoryManager {
         }
         ServerLevel level = p.serverLevel();
         if (d.chapter > CH_RELAY || d.flag("console_used")) {
-            HorrorUtil.playTo(p, "scare.static", Vec3.atCenterOf(pos), 0.8f, 0.8f);
-            p.displayClientMessage(Component.literal("Из динамика — только дыхание.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC), true);
+            consoleHint(p, pos, d);
             return;
         }
         if (!HorrorUtil.isNight(level)) {
