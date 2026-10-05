@@ -27,6 +27,7 @@ public class StoryData extends SavedData {
 
     public int chapter;
     public long lastCountDay = -1;
+    public long echoDay = -1;
     public int nights;
     public final Map<String, BlockPos> pos = new HashMap<>();
     public final Map<String, List<BlockPos>> lists = new HashMap<>();
@@ -78,6 +79,7 @@ public class StoryData extends SavedData {
     public CompoundTag save(CompoundTag tag) {
         tag.putInt("chapter", chapter);
         tag.putLong("lastCountDay", lastCountDay);
+        tag.putLong("echoDay", echoDay);
         tag.putInt("nights", nights);
         CompoundTag p = new CompoundTag();
         pos.forEach((k, v) -> p.put(k, NbtUtils.writeBlockPos(v)));
@@ -109,6 +111,7 @@ public class StoryData extends SavedData {
         StoryData d = new StoryData();
         d.chapter = tag.getInt("chapter");
         d.lastCountDay = tag.getLong("lastCountDay");
+        d.echoDay = tag.contains("echoDay") ? tag.getLong("echoDay") : -1;
         d.nights = tag.getInt("nights");
         CompoundTag p = tag.getCompound("pos");
         for (String k : p.getAllKeys()) d.pos.put(k, NbtUtils.readBlockPos(p.getCompound(k)));

@@ -52,6 +52,8 @@ public final class SoundSequencer {
         Minecraft mc = Minecraft.getInstance();
         if (music != null) mc.getSoundManager().stop(music);
         music = null;
+        musicName = sound == null ? "" : sound;
+        musicOrphanTicks = 0;
         if (sound != null && !sound.isEmpty()) {
             music = flat(sound, 0.8f, true);
             mc.getMusicManager().stopPlaying();
@@ -59,8 +61,15 @@ public final class SoundSequencer {
         }
     }
 
+    private static String musicName = "";
+    private static int musicOrphanTicks;
+
     public static void tick() {
         Minecraft mc = Minecraft.getInstance();
+        // boss music outlives the fight (players fled, died, reset): fade it after 10 seconds away
+        if (music != null && "music.finale".equals(musicName) && !ClientState.bossFight()) {
+            if (++musicOrphanTicks > 200) music(null);
+        } else musicOrphanTicks = 0;
         if (music != null) {
             if (!mc.getSoundManager().isActive(music)) mc.getSoundManager().play(music);
             mc.getMusicManager().stopPlaying();

@@ -239,6 +239,7 @@ public class EchoBossEntity extends Monster {
     private void onBellRung(BlockPos bp, List<ServerPlayer> players) {
         long now = level().getGameTime();
         Long used = bellUsed.get(bp);
+        if (used != null && now - used < 10) return; // the same ring seen on consecutive ticks
         if (used != null && now - used < 600) {
             for (ServerPlayer sp : players) {
                 sp.displayClientMessage(Component.literal("Этот колокол ещё дрожит. Звоните в другой!").withStyle(ChatFormatting.GOLD), true);

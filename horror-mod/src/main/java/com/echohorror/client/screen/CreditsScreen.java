@@ -68,7 +68,6 @@ public class CreditsScreen extends Screen {
                         g.pose().scale(3, 3, 1);
                         g.drawCenteredString(font, s.substring(1), 0, 0, s.equals(">ЭХО") ? 0xD0D0D0 : 0x8A1A1A);
                         g.pose().popPose();
-                        y += 22;
                     } else if (s.startsWith("#")) {
                         g.drawCenteredString(font, s.substring(1), width / 2, iy, 0x9A2020);
                     } else if (!s.isEmpty()) {
@@ -76,6 +75,7 @@ public class CreditsScreen extends Screen {
                     }
                 }
             }
+            if (o instanceof String s0 && s0.startsWith(">")) y += 22; // titles are tall, on screen or not
             y += 12;
         }
         super.render(g, mx, my, pt);

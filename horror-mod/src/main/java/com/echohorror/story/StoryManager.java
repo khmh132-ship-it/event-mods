@@ -39,6 +39,23 @@ public final class StoryManager {
     public static final int CH_NONE = 0, CH_SIGNAL = 1, CH_RELAY = 2, CH_VILLAGE = 3, CH_DEPTHS = 4, CH_OBJECT = 5, CH_BELFRY = 6, CH_SILENCE = 7;
 
     private static int firstPlayerTicks;
+    /** Chapter changes waiting in the (in-memory) scheduler; if the server stops meanwhile, recover() finishes them. */
+    private static int pendingTransitions;
+    private static boolean bossRespawnPending;
+
+    private static void beginTransition() {
+        pendingTransitions++;
+    }
+
+    private static void endTransition() {
+        pendingTransitions = Math.max(0, pendingTransitions - 1);
+    }
+
+    public static void onServerStopping() {
+        pendingTransitions = 0;
+        bossRespawnPending = false;
+        firstPlayerTicks = 0;
+    }
 
     private StoryManager() {}
 
@@ -233,12 +250,14 @@ public final class StoryManager {
             return;
         }
         for (ServerPlayer p : players) giveKit(p);
+        if (pendingTransitions == 0) recover(server, d);
 
         // nightly count at midnight
         long day = ow.getDayTime() / 24000L;
         if (d.chapter >= CH_RELAY && effectiveChapter(d) < CH_SILENCE && HorrorUtil.isMidnight(ow) && d.lastCountDay != day) {
             d.lastCountDay = day;
             d.nights++;
+            if (d.nights % 3 == 0) d.echoDay = day;
             d.setDirty();
             int count = players.size();
             for (ServerPlayer p : players) {
@@ -344,6 +363,31 @@ public final class StoryManager {
         }
     }
 
+    /** Finishes a chapter change that was lost (server stopped during a scripted scene). */
+    private static void recover(MinecraftServer server, StoryData d) {
+        BlockPos near = d.get("origin") != null ? d.get("origin") : server.overworld().getSharedSpawnPos();
+        ServerLevel level = server.overworld();
+        if (d.chapter == CH_RELAY && d.flag("console_used")) {
+            EchoHorror.LOG.info("Recovering lost transition -> village");
+            ensureBuilt(server, CH_VILLAGE, near);
+            setChapter(server, CH_VILLAGE);
+        } else if (d.chapter == CH_VILLAGE && d.flag("bell_rung")) {
+            EchoHorror.LOG.info("Recovering lost transition -> depths");
+            ensureBuilt(server, CH_DEPTHS, near);
+            setChapter(server, CH_DEPTHS);
+        } else if (d.chapter == CH_DEPTHS && d.flag("gate_open")) {
+            EchoHorror.LOG.info("Recovering lost transition -> object");
+            for (BlockPos g : d.list("gate")) level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
+            setChapter(server, CH_OBJECT);
+        } else if (d.chapter == CH_OBJECT && (d.flag("power_on") || d.switchesOn.size() >= 3)) {
+            EchoHorror.LOG.info("Recovering lost transition -> belfry");
+            d.setFlag("power_on");
+            for (BlockPos lamp : d.list("lamps")) level.setBlock(lamp, Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+            for (BlockPos g : d.list("belfry_door")) level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
+            setChapter(server, CH_BELFRY);
+        }
+    }
+
     /** Places have their own voices: static at the relay, generators in the Object, clicking in the Depths. */
     private static void locationAmbience(ServerPlayer p, StoryData d) {
         net.minecraft.util.RandomSource r = p.getRandom();
@@ -411,7 +455,8 @@ public final class StoryManager {
 
     public static boolean echoNight(StoryData d, Level level) {
         if (d.flag("ending_echo")) return HorrorUtil.isNight((ServerLevel) level);
-        return d.chapter >= CH_VILLAGE && d.chapter < CH_SILENCE && HorrorUtil.isNight((ServerLevel) level) && d.nights % 3 == 0 && d.nights > 0;
+        return d.chapter >= CH_VILLAGE && d.chapter < CH_SILENCE && HorrorUtil.isNight((ServerLevel) level)
+                && d.echoDay >= 0 && level.getDayTime() / 24000L == d.echoDay;
     }
 
     private static boolean hasLocator(ServerPlayer p) {
@@ -434,7 +479,16 @@ public final class StoryManager {
                 BlockPos best = null;
                 double bd = Double.MAX_VALUE;
                 for (BlockPos c : d.list("shard_chests")) {
-                    BlockEntity be = p.level().getBlockEntity(c);
+                    ServerLevel ow = p.server.overworld();
+                    if (!ow.isLoaded(c)) {
+                        double dd = c.distSqr(p.blockPosition());
+                        if (dd < bd) {
+                            bd = dd;
+                            best = c;
+                        }
+                        continue;
+                    }
+                    BlockEntity be = ow.getBlockEntity(c);
                     if (be instanceof Container cont && cont.hasAnyOf(java.util.Set.of(ModItems.ECHO_SHARD.get()))) {
                         double dd = c.distSqr(p.blockPosition());
                         if (dd < bd) {
@@ -575,6 +629,7 @@ public final class StoryManager {
             return;
         }
         d.setFlag("console_used");
+        beginTransition();
         syncAll(server);
         List<ServerPlayer> near = new ArrayList<>();
         for (ServerPlayer o : server.getPlayerList().getPlayers()) if (o.level() == level && o.distanceTo(p) < 48) near.add(o);
@@ -616,7 +671,11 @@ public final class StoryManager {
             Scheduler.schedule(80, () -> {
                 for (ServerPlayer o : near) if (!o.hasDisconnected()) HorrorUtil.playAt(o, "voice.laugh", 0.6f, 0.9f);
             });
-            Scheduler.schedule(160, () -> setChapter(server, CH_VILLAGE));
+            Scheduler.schedule(160, () -> {
+                if (data(server).get("bell") == null) ensureBuilt(server, CH_VILLAGE, server.overworld().getSharedSpawnPos());
+                setChapter(server, CH_VILLAGE);
+                endTransition();
+            });
         });
     }
 
@@ -666,6 +725,7 @@ public final class StoryManager {
     private static void bellEvent(MinecraftServer server, BlockPos bellPos) {
         StoryData d = data(server);
         ServerLevel level = server.overworld();
+        beginTransition();
         level.playSound(null, bellPos, ModSounds.get("story.bell"), SoundSource.BLOCKS, 8f, 0.8f);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Net.fx(p, Fx.SHAKE, 60, 1.5f, "");
@@ -689,6 +749,7 @@ public final class StoryManager {
             }
             broadcast(server, Component.literal("Из колодца тянет тёплым воздухом. Крышка сорвана изнутри.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
             setChapter(server, CH_DEPTHS);
+            endTransition();
         });
     }
 
@@ -700,6 +761,7 @@ public final class StoryManager {
         broadcast(server, Component.literal("Печать: " + n + "/3").withStyle(ChatFormatting.GOLD));
         syncAll(server);
         if (n < 3 || !d.setFlag("gate_open")) return;
+        beginTransition();
         ServerLevel level = p.serverLevel();
         List<BlockPos> gate = new ArrayList<>(d.list("gate"));
         level.playSound(null, pos, ModSounds.get("story.door_open"), SoundSource.BLOCKS, 4f, 0.8f);
@@ -713,7 +775,10 @@ public final class StoryManager {
         for (ServerPlayer o : server.getPlayerList().getPlayers()) {
             Net.send(o, new SoundSeqPacket.Builder().sound("radio.b_deeper", 80, "«Глубже. Спускайтесь глубже. Мы ждём.»").sub("", 120).build());
         }
-        Scheduler.schedule(120, () -> setChapter(server, CH_OBJECT));
+        Scheduler.schedule(120, () -> {
+            setChapter(server, CH_OBJECT);
+            endTransition();
+        });
     }
 
     private static void ambush(ServerPlayer p, int count) {
@@ -759,6 +824,7 @@ public final class StoryManager {
             if (d.in("bunker", o.position())) Net.fx(o, Fx.FLICKER, 40);
         }
         if (d.switchesOn.size() < 3 || d.chapter != CH_OBJECT || !d.setFlag("power_on")) return;
+        beginTransition();
         for (BlockPos lamp : d.list("lamps")) level.setBlock(lamp, Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
         List<BlockPos> door = new ArrayList<>(d.list("belfry_door"));
         for (int i = 0; i < door.size(); i++) {
@@ -771,7 +837,10 @@ public final class StoryManager {
             if (d.in("bunker", o.position()) || o.distanceTo(p) < 64) Net.send(o, tape);
         }
         d.notes.add("tape4");
-        Scheduler.schedule(660, () -> setChapter(server, CH_BELFRY));
+        Scheduler.schedule(660, () -> {
+            setChapter(server, CH_BELFRY);
+            endTransition();
+        });
     }
 
     // =========================================================================================== chapter 6: belfry
@@ -795,14 +864,15 @@ public final class StoryManager {
             return;
         }
         // safety: boss vanished (e.g. removed by a command) while the fight is unfinished
-        if (p.tickCount % 200 == 0 && d.chapter == CH_BELFRY) {
+        if (level.getGameTime() % 200 < 20 && d.chapter == CH_BELFRY && !bossRespawnPending) {
             StoryData.Box box = d.regions.get("arena");
-            if (box != null && !d.flag("boss_dead") && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty() && d.setFlag("boss_respawn_check")) {
+            if (box != null && !d.flag("boss_dead") && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty()) {
+                bossRespawnPending = true;
                 Scheduler.schedule(200, () -> {
                     if (d.chapter == CH_BELFRY && !d.flag("boss_dead") && level.getEntitiesOfClass(EchoBossEntity.class, box.aabb().inflate(16)).isEmpty()) {
                         EchoBossEntity.spawn(level, arena);
                     }
-                    d.flags.remove("boss_respawn_check");
+                    bossRespawnPending = false;
                 });
             }
         }
@@ -986,12 +1056,16 @@ public final class StoryManager {
             for (BlockPos lamp : d.list("lamps")) level.setBlock(lamp, Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
             for (BlockPos g : d.list("belfry_door")) level.setBlock(g, Blocks.AIR.defaultBlockState(), 3);
         }
-        if (ch >= CH_RELAY) d.setFlag("console_used");
+        if (ch >= CH_VILLAGE) d.setFlag("console_used");
         d.setDirty();
     }
 
     public static void reset(MinecraftServer server) {
         StoryData d = data(server);
+        Scheduler.clear();
+        pendingTransitions = 0;
+        bossRespawnPending = false;
+        d.echoDay = -1;
         d.chapter = 0;
         d.pos.clear();
         d.lists.clear();

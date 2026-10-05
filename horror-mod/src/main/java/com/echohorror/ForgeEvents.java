@@ -235,6 +235,7 @@ public final class ForgeEvents {
     @SubscribeEvent
     public static void onStopping(ServerStoppingEvent e) {
         FlashlightManager.clearAll(e.getServer());
+        StoryManager.onServerStopping();
         Scheduler.clear();
         ChatMemory.clear();
     }
