@@ -51,6 +51,7 @@ public final class HorrorDirector {
             Net.send(p, new StatePacket(Sanity.get(p), d.chapter, flags));
 
             if (d.chapter == StoryManager.CH_NONE || !HorrorUtil.isSurvivalLike(p) || !p.isAlive()) continue;
+            if (seconds % 4 == 0 && Scares.horrorNearby(p, 10)) Net.fx(p, com.echohorror.network.Fx.HEARTBEAT, 100);
             State st = STATES.computeIfAbsent(p.getUUID(), k -> new State());
             if (st.nextEvent == 0) st.nextEvent = seconds + 20 + p.getRandom().nextInt(30);
             brokenMind(p, d, st);

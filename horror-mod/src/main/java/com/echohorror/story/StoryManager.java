@@ -253,6 +253,7 @@ public final class StoryManager {
                     p.sendSystemMessage(Component.literal("Ночь Эха. Небо слушает.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC));
                     HorrorUtil.playAt(p, "story.bell_far", 0.8f, 0.8f);
                 }
+                if (effectiveChapter(d) >= CH_DEPTHS && (!d.flag("ending_echo") || d.nights % 2 == 0)) siege(server, d);
             }
         }
 
@@ -308,6 +309,38 @@ public final class StoryManager {
                 p.sendSystemMessage(Component.literal("[ЭХО] Сюжет ещё не начат. Чтобы начать: /echo start (точка старта — там, где вы стоите).")
                         .withStyle(ChatFormatting.DARK_RED));
             }
+        }
+    }
+
+    /** Echo night siege: three waves of the blind and the borrowed come out of the dark around every player. */
+    public static void siege(MinecraftServer server, StoryData d) {
+        if (!Config.HOSTILE_SPAWNS.get()) return;
+        for (int wave = 0; wave < 3; wave++) {
+            final int w = wave;
+            Scheduler.schedule(300 + wave * 1300, () -> {
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                    if (p.level() != server.overworld() || !HorrorUtil.isSurvivalLike(p) || !p.isAlive()) continue;
+                    if (d.in("depths", p.position()) || d.in("bunker", p.position()) || d.in("arena", p.position())) continue;
+                    if (!HorrorUtil.isNight(p.serverLevel())) continue;
+                    ServerLevel level = p.serverLevel();
+                    int crawlers = 2 + w;
+                    for (int i = 0; i < crawlers; i++) {
+                        HorrorUtil.spotAround(p, 18, 30, p.getRandom().nextInt(360), 30, true).ifPresent(s -> {
+                            CrawlerEntity c = new CrawlerEntity(ModEntities.CRAWLER.get(), level);
+                            c.moveTo(s.x, s.y, s.z, level.random.nextFloat() * 360, 0);
+                            c.setTarget(p);
+                            level.addFreshEntity(c);
+                        });
+                    }
+                    if (w == 2) {
+                        List<ServerPlayer> faces = server.getPlayerList().getPlayers();
+                        HorrorUtil.spotAround(p, 20, 30, 180, 90, true).ifPresent(s ->
+                                MimicEntity.spawnAs(level, s, faces.get(level.random.nextInt(faces.size()))));
+                    }
+                    if (w == 0) Net.fx(p, Fx.SUBTITLE, 80, 0, "Из темноты что-то идёт. Много.");
+                    HorrorUtil.playTo(p, "entity.crawler.click", HorrorUtil.behind(p, 14), 2f, 0.8f);
+                }
+            });
         }
     }
 

@@ -78,6 +78,11 @@ public final class EchoCommand {
                     }
                     return 1;
                 })))
+                .then(Commands.literal("siege").executes(c -> {
+                    StoryManager.siege(c.getSource().getServer(), StoryData.get(c.getSource().getServer()));
+                    c.getSource().sendSuccess(() -> Component.literal("Ночь Эха: из темноты идут три волны."), true);
+                    return 1;
+                }))
                 .then(Commands.literal("ending").then(Commands.argument("which", StringArgumentType.word())
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"silence", "echo"}, b))
                         .executes(c -> {
