@@ -95,7 +95,7 @@ public class RBridge extends Room {
     }
 
     private BlockState railX() {
-        return Blocks.IRON_BARS.defaultBlockState().setValue(IronBarsBlock.NORTH, true).setValue(IronBarsBlock.SOUTH, true);
+        return Blocks.GLASS_PANE.defaultBlockState().setValue(IronBarsBlock.NORTH, true).setValue(IronBarsBlock.SOUTH, true);
     }
 
     @Override

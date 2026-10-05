@@ -64,7 +64,7 @@ public final class ClientEvents {
         List<FormattedCharSequence> lines = f.split(Component.literal(ClientState.subtitle), Math.min(320, w - 40));
         int lineH = 10;
         int total = lines.size() * lineH + 12;
-        int top = h - 72 - total;
+        int top = h - 48 - total; // сразу над полоской здоровья, чтобы не закрывать середину экрана
         int maxW = f.width("ГОЛОС");
         for (var l : lines) maxW = Math.max(maxW, f.width(l));
         int cx = w / 2;

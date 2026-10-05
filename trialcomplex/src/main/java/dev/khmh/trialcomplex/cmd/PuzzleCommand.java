@@ -68,6 +68,13 @@ public final class PuzzleCommand {
                             String res = r == null ? "-" : r.devSolve();
                             c.getSource().sendSuccess(() -> Component.literal("PEEK SOLVE " + res), false);
                         })))
+                        .then(Commands.literal("rebuild").executes(c -> run(c, cx -> {
+                            Room r = cx.current();
+                            if (r == null) return;
+                            new dev.khmh.trialcomplex.build.Builder(cx.level(), r.origin(), 0).clear(1, 1, 1, r.sx - 2, r.sy - 2, r.sz - 2);
+                            r.buildAll(cx.level());
+                            cx.resetRoom(r, false);
+                        })))
                         .then(Commands.literal("buildall").executes(c -> run(c, DevTools::buildAll)))
                         .then(Commands.literal("export").then(Commands.argument("room", StringArgumentType.word())
                                 .executes(c -> run(c, cx -> {
