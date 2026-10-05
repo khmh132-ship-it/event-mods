@@ -1,7 +1,6 @@
 package dev.khmh.trialcomplex.rooms;
 
 import dev.khmh.trialcomplex.build.Builder;
-import dev.khmh.trialcomplex.build.Palette;
 import dev.khmh.trialcomplex.game.Room;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -52,8 +51,8 @@ public class RDoors extends Room {
 
     @Override
     protected void build(Builder b) {
-        Palette rock = Palette.of(Blocks.END_STONE_BRICKS, 4, Blocks.PURPUR_BLOCK, 1);
-        b.fill(0, 0, 0, sx - 1, sy - 1, sz - 1, rock);
+        // стены одинаковые везде: после бесшовного переноса в другой коридор ничего не должно «прыгнуть»
+        b.fill(0, 0, 0, sx - 1, sy - 1, sz - 1, Blocks.END_STONE_BRICKS);
         // зал
         b.clear(11, 1, 11, 19, 5, 19);
         for (int x = 11; x <= 19; x++)
@@ -75,6 +74,7 @@ public class RDoors extends Room {
             for (int v = -2; v <= 2; v += 4) for (int y = 1; y <= 5; y++) { int[] c = cell(d, 0, v); b.set(c[0], y, c[1], FRAME[d]); }
             for (int v = -1; v <= 1; v++) { int[] c = cell(d, 0, v); b.set(c[0], 5, c[1], FRAME[d]); }
         }
+        for (int d = 0; d < 4; d++) decorate(b, d);
         if (level == 4) b.sign(13, 3, 11, net.minecraft.core.Direction.SOUTH, DyeColor.WHITE, "ВЕТЕР. ЗВОН.", "ТИШИНА.", "ПО ОЧЕРЕДИ.", "");
         else b.sign(13, 3, 11, net.minecraft.core.Direction.SOUTH, DyeColor.WHITE, "ИДИТЕ ТУДА,", level == 3 ? "ГДЕ НЕТ ВЕТРА" : level == 2 ? "ОТКУДА ЗВЕНИТ" : "ОТКУДА ДУЕТ", level == 2 ? "" : "ВЕТЕР", "");
     }
@@ -84,6 +84,39 @@ public class RDoors extends Room {
         b.set(c[0], 0, c[1], u == 0 ? Blocks.PURPUR_BLOCK : Blocks.END_STONE_BRICKS);
         for (int y = 1; y <= 4; y++) b.set(c[0], y, c[1], Blocks.AIR);
         b.set(c[0], 5, c[1], Blocks.PURPUR_BLOCK);
+    }
+
+    private void at(Builder b, int d, int u, int v, int y, net.minecraft.world.level.block.state.BlockState s) {
+        int[] c = cell(d, u, v);
+        b.set(c[0], y, c[1], s);
+    }
+
+    /** Одинаковый декор в каждом коридоре (в координатах коридора, поэтому все четыре совпадают при повороте). */
+    private void decorate(Builder b, int d) {
+        net.minecraft.core.Direction out = net.minecraft.core.Direction.fromDelta(O[d][0], 0, O[d][1]);
+        var runner = Blocks.PURPUR_BLOCK.defaultBlockState();
+        for (int u = 1; u <= 4; u++) at(b, d, u, 0, 0, runner);
+        for (int v = 0; v <= 8; v++) at(b, d, 5, v, 0, runner);
+        for (int u = 6; u <= 9; u++) at(b, d, u, 8, 0, runner);
+        // пилястры
+        var pillar = Blocks.PURPUR_PILLAR.defaultBlockState();
+        for (int y = 1; y <= 4; y++) {
+            for (int v : new int[]{1, 4}) at(b, d, 7, v, y, pillar);
+            for (int v : new int[]{4, 7}) at(b, d, 3, v, y, pillar);
+            at(b, d, 4, -2, y, pillar);
+        }
+        // фонари на ножках у стен
+        var lantern = Blocks.SOUL_LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true);
+        at(b, d, 5, 1, 4, lantern);
+        at(b, d, 5, 7, 4, lantern);
+        // хорус в мёртвых углах
+        for (int[] c : new int[][]{{6, -1}, {4, 9}}) {
+            at(b, d, c[0], c[1], 1, Blocks.CHORUS_PLANT.defaultBlockState().setValue(net.minecraft.world.level.block.ChorusPlantBlock.DOWN, true).setValue(net.minecraft.world.level.block.ChorusPlantBlock.UP, true));
+            at(b, d, c[0], c[1], 2, Blocks.CHORUS_FLOWER.defaultBlockState().setValue(net.minecraft.world.level.block.ChorusFlowerBlock.AGE, 5));
+        }
+        // табличка на внутренней стене середины
+        int[] sc = cell(d, 4, 3);
+        b.sign(sc[0], 3, sc[1], out, DyeColor.PURPLE, "", "ВЫ ТУТ", "УЖЕ БЫЛИ?", "");
     }
 
     private void light(Builder b, int d, int u, int v) {

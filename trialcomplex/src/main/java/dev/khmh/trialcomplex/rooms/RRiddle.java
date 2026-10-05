@@ -22,7 +22,13 @@ public class RRiddle extends Room {
     private static final Block[][] ANSWERS = {
             {Blocks.LANTERN, Blocks.SPRUCE_LEAVES, Blocks.ANVIL, Blocks.AIR, Blocks.BELL},
             {Blocks.TNT, Blocks.BEEHIVE, Blocks.CAULDRON, Blocks.MELON, Blocks.BOOKSHELF},
-            {Blocks.CAMPFIRE, Blocks.HAY_BLOCK, Blocks.COMPOSTER, Blocks.PUMPKIN, Blocks.JUKEBOX},
+            {Blocks.CHEST, Blocks.COMPOSTER, Blocks.FLOWER_POT, Blocks.CAKE, Blocks.JUKEBOX},
+    };
+    /** Ловушки: похожие ответы, которые всегда стоят рядом с правильным. */
+    private static final Block[][][] DECOYS = {
+            {{Blocks.BELL, Blocks.CAMPFIRE}, {Blocks.MELON, Blocks.HAY_BLOCK}, {Blocks.BELL, Blocks.CAULDRON}, {Blocks.CAULDRON, Blocks.FLOWER_POT}, {Blocks.LANTERN, Blocks.JUKEBOX}},
+            {{Blocks.CAMPFIRE, Blocks.ANVIL}, {Blocks.FLOWER_POT, Blocks.HAY_BLOCK}, {Blocks.COMPOSTER, Blocks.FLOWER_POT}, {Blocks.PUMPKIN, Blocks.CAKE}, {Blocks.CHEST, Blocks.JUKEBOX}},
+            {{Blocks.BEEHIVE, Blocks.BOOKSHELF}, {Blocks.CAULDRON, Blocks.FLOWER_POT}, {Blocks.COMPOSTER, Blocks.AIR}, {Blocks.MELON, Blocks.PUMPKIN}, {Blocks.BELL, Blocks.CHEST}},
     };
     private static final int PADS = 6;
 
@@ -63,8 +69,9 @@ public class RRiddle extends Room {
         Block ans = ANSWERS[level - 1][q];
         List<Block> opts = new ArrayList<>();
         opts.add(ans);
+        for (Block d : DECOYS[level - 1][q]) if (!opts.contains(d)) opts.add(d);
         List<Block> pool = new ArrayList<>(List.of(POOL));
-        pool.remove(ans);
+        pool.removeAll(opts);
         Collections.shuffle(pool, new Random(rnd.nextLong()));
         for (Block bl : pool) { if (opts.size() >= PADS) break; opts.add(bl); }
         Collections.shuffle(opts, new Random(rnd.nextLong()));
@@ -96,12 +103,21 @@ public class RRiddle extends Room {
         }
         asking = false;
         clearOptions();
-        setObjective("Загадка " + (q + 1) + "/" + ANSWERS[level - 1].length + ". Встаньте вдвоём на золото перед ответом.");
+        setObjective("Загадка " + (q + 1) + "/" + ANSWERS[level - 1].length + ": «" + riddleText(q) + "» Ответ — встаньте вдвоём на золото перед тумбой.");
         say(id + ".q" + (q + 1), () -> {
             showOptions();
             asking = true;
             holdPad = -1;
         });
+    }
+
+    /** Текст загадки без «Загадка вторая.» в начале. */
+    private String riddleText(int q) {
+        var line = dev.khmh.trialcomplex.voice.VoiceLines.get(id + ".q" + (q + 1));
+        if (line == null) return "";
+        String t = line.text().replaceAll("\\[\\[([^|\\]]*)\\|\\|[^\\]]*\\]\\]", "$1");
+        int i = t.indexOf(". ");
+        return i > 0 && i < 20 ? t.substring(i + 2) : t;
     }
 
     private int padOf(ServerPlayer p) {

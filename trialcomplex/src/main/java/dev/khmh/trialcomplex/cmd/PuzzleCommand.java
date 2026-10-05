@@ -60,7 +60,7 @@ public final class PuzzleCommand {
                         .then(Commands.literal("peek").executes(c -> run(c, cx -> {
                             Room r = cx.current();
                             String msg = "stage=" + cx.data().stage + " room=" + (r == null ? "-" : r.id + " origin=" + r.origin().getX() + "," + r.origin().getY() + "," + r.origin().getZ()
-                                    + " spawn=" + String.format(java.util.Locale.ROOT, "%.2f,%.2f,%.2f", r.spawn().x, r.spawn().y, r.spawn().z) + " size=" + r.sx + "," + r.sy + "," + r.sz + " active=" + r.isActive() + " " + r.debug());
+                                    + " spawn=" + String.format(java.util.Locale.ROOT, "%.2f,%.2f,%.2f", r.spawn().x, r.spawn().y, r.spawn().z) + " size=" + r.sx + "," + r.sy + "," + r.sz + " active=" + r.isActive() + " voice=" + cx.voice().lastSaid() + " " + r.debug());
                             c.getSource().sendSuccess(() -> Component.literal("PEEK " + msg), false);
                         })))
                         .then(Commands.literal("solve").executes(c -> run(c, cx -> {
