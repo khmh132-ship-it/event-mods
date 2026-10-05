@@ -99,6 +99,31 @@ def fitted(rel, text, voice, process, pitch=1.0, noise=0.667, noise_w=0.8, base_
     return y
 
 
+def whisperize(x):
+    """Keep the formants, throw away the pitch: random STFT phase turns a voice into a breath."""
+    f, t, Z = signal.stft(x, g.SR, nperseg=512)
+    mag = np.abs(Z)
+    ph = np.exp(1j * g.rng.uniform(-np.pi, np.pi, Z.shape))
+    _, y = signal.istft(mag * ph, g.SR, nperseg=512)
+    return g.norm(g.hp(y, 300), 0.9)
+
+
+def whisper_n(text, deep=False):
+    v = whisperize(say(text, g.rng.choice([IRINA, DENIS, DMITRI]), 1.1, 0.8, 1.0))
+    layers = [(0.0, v, 1.0), (0.08, g.resample(v, 0.94), 0.35)]
+    if deep:
+        layers.append((0.0, g.resample(say(text, RUSLAN, 1.25), 0.72), 0.3))
+    return g.reverb(g.mix(*layers), 1.6, 0.3, 4000)
+
+
+def chorus_n(text):
+    """Every voice it has ever copied, saying the same words almost together."""
+    layers = []
+    for i, (vc, p) in enumerate([(RUSLAN, 0.9), (DENIS, 0.8), (IRINA, 1.0), (DMITRI, 0.72), (IRINA, 1.25)]):
+        layers.append((0.0 if i == 0 else g.rng.uniform(0.02, 0.06), g.resample(say(text, vc, 1.15), p), 1.0 if i == 0 else 0.28))
+    return g.reverb(g.bp(g.mix(*layers), 90, 6500), 2.5, 0.3, 3000)
+
+
 def main():
     # ---- the woman on the radio who counts
     numbers = ['ноль', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять', 'десять',
@@ -208,6 +233,17 @@ def main():
     babble = say('ты где. иди сюда. всё нормально. иди сюда. ты где.', DENIS, 1.1, 0.9, 1.0)
     babble = g.resample(babble, 0.92)
     g.save('entity/mimic_idle', g.reverb(g.lp(babble, 3000), 1.5, 0.4), 0.7)
+    # ---- whispers from the dark
+    phrases = ['обернись', 'я тебя вижу', 'не спи', 'оно рядом', 'ты здесь один', 'иди к нам', 'мы тебя слышим',
+               'тише. тише.', 'он не настоящий', 'посмотри наверх', 'ты уже один из нас', 'не смотри на него',
+               'открой дверь', 'почему ты не отвечаешь', 'мы были здесь всегда', 'сзади']
+    for i, ph in enumerate(phrases):
+        g.save(f'whisper/w{i + 1}', whisper_n(ph, deep=(i % 3 == 0)), 0.8)
+    # ---- the reflection speaks
+    for i, line in enumerate(['Я — это вы.', 'Мы — всё, что вы сказали.', 'Не звони.', 'Останься с нами.', 'Тише.']):
+        g.save(f'entity/boss_voice{i + 1}', chorus_n(line), 0.85)
+    laugh = g.resample(say('ха. ха. ха. ха.', RUSLAN, 1.3, 0.9, 1.0), 0.72)
+    g.save('voice/laugh', g.reverb(laugh, 2.5, 0.45), 0.8)
     print('done')
 
 
