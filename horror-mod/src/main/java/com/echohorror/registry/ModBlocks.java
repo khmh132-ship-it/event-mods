@@ -31,5 +31,8 @@ public final class ModBlocks {
             () -> new com.echohorror.block.BellRopeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOL)
                     .strength(-1.0F, 3600000.0F).sound(SoundType.WOOL).noLootTable().noOcclusion().lightLevel(s -> 6)));
 
+    public static final RegistryObject<Block> SEALED_DOOR = BLOCKS.register("sealed_door",
+            () -> new Block(story().sound(SoundType.NETHERITE_BLOCK)));
+
     private ModBlocks() {}
 }

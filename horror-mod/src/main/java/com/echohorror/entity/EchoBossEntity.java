@@ -68,6 +68,7 @@ public class EchoBossEntity extends Monster {
     private int stunTicks, stunImmune;
     private float shriekCd = 160, summonCd = 260, teleportCd = 300;
     private int voiceCd = 100, hintCd, lonelyTicks;
+    private float damageThisStun;
 
     public EchoBossEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -232,6 +233,7 @@ public class EchoBossEntity extends Monster {
         if (isStunned() || stunImmune > 0) return;
         bellUsed.put(bp, now);
         stunTicks = phase == 3 ? 120 : 170;
+        damageThisStun = 0;
         entityData.set(STUNNED, true);
         getNavigation().stop();
         level().playSound(null, blockPosition(), ModSounds.get("entity.boss.stun"), SoundSource.HOSTILE, 4f, 1f);
@@ -327,7 +329,22 @@ public class EchoBossEntity extends Monster {
             }
             return false;
         }
-        return super.hurt(source, amount * 1.0f);
+        // every ring only cracks it so far: a full stun can take at most a sixth of its life
+        float cap = getMaxHealth() * 0.17f;
+        if (damageThisStun >= cap) return false;
+        float dealt = Math.min(amount, cap - damageThisStun + 0.01f);
+        boolean r = super.hurt(source, dealt);
+        if (r) {
+            damageThisStun += dealt;
+            if (damageThisStun >= cap && !level().isClientSide) {
+                stunTicks = Math.min(stunTicks, 10);
+                for (ServerPlayer sp : arenaPlayers()) {
+                    sp.displayClientMessage(Component.literal("Звон стих. Оно снова слышит себя — нужен другой колокол.")
+                            .withStyle(ChatFormatting.GOLD), true);
+                }
+            }
+        }
+        return r;
     }
 
     @Override

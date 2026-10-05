@@ -774,7 +774,7 @@ public final class Structures {
         gate.clear();
         for (int x = -1; x <= 1; x++)
             for (int y = 0; y <= 2; y++) {
-                b.set(x, y, 34, Blocks.IRON_BLOCK);
+                b.set(x, y, 34, ModBlocks.SEALED_DOOR.get().defaultBlockState());
                 gate.add(b.at(x, y, 34));
             }
         b.set(2, 0, 33, Blocks.POLISHED_DEEPSLATE);
@@ -887,7 +887,7 @@ public final class Structures {
         door.clear();
         for (int x = -1; x <= 1; x++)
             for (int y = 0; y <= 2; y++) {
-                b.set(x, y, 91, Blocks.IRON_BLOCK);
+                b.set(x, y, 91, ModBlocks.SEALED_DOOR.get().defaultBlockState());
                 door.add(b.at(x, y, 91));
             }
         b.sign(-2, 2, 90, Direction.NORTH, "ЗВОННИЦА", "питание", "отключено");
@@ -986,6 +986,8 @@ public final class Structures {
         for (int y = 15; y <= 17; y++) ar.set(0, y, 0, Blocks.CHAIN);
         d.put("arena", a);
         d.region("arena", ar.box(-R - 1, -2, -R - 1, R + 1, 17, R + 1));
+        d.region("stairs", b.box(-3, -23, 90, 3, 5, 112));
+        d.region("gatewall", b.box(-5, -2, 32, 5, 6, 35));
         b.finish();
         ar.finish();
     }

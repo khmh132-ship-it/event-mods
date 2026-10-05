@@ -180,6 +180,33 @@ public final class ForgeEvents {
         }
     }
 
+    private static final String[] PROTECTED = {"bunker", "arena", "stairs", "gatewall"};
+
+    private static boolean isProtected(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+        if (!(level instanceof net.minecraft.server.level.ServerLevel sl) || sl.dimension() != net.minecraft.world.level.Level.OVERWORLD) return false;
+        StoryData d = StoryData.get(sl.getServer());
+        if (d.chapter == StoryManager.CH_NONE) return false;
+        Vec3 c = Vec3.atCenterOf(pos);
+        for (String r : PROTECTED) if (d.in(r, c)) return true;
+        return false;
+    }
+
+    /** The Object and the Belfry cannot be dug around: the story has to be walked, not tunnelled. */
+    @SubscribeEvent
+    public static void onBreak(net.minecraftforge.event.level.BlockEvent.BreakEvent e) {
+        if (e.getPlayer() == null || e.getPlayer().isCreative()) return;
+        if (e.getLevel() instanceof net.minecraft.world.level.Level lvl && isProtected(lvl, e.getPos())) {
+            e.setCanceled(true);
+            e.getPlayer().displayClientMessage(Component.literal("Стены объекта не поддаются. Будто кто-то держит их изнутри.")
+                    .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onExplosion(net.minecraftforge.event.level.ExplosionEvent.Detonate e) {
+        e.getAffectedBlocks().removeIf(pos -> isProtected(e.getLevel(), pos));
+    }
+
     @SubscribeEvent
     public static void onCommands(RegisterCommandsEvent e) {
         EchoCommand.register(e.getDispatcher());

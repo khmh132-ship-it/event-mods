@@ -43,6 +43,8 @@ public final class ModItems {
     public static final RegistryObject<Item> GREAT_BELL_ROPE = ITEMS.register("great_bell_rope",
             () -> new BlockItem(ModBlocks.GREAT_BELL_ROPE.get(), new Item.Properties()));
 
+    public static final RegistryObject<Item> SEALED_DOOR = ITEMS.register("sealed_door",
+            () -> new BlockItem(ModBlocks.SEALED_DOOR.get(), new Item.Properties()));
     public static final RegistryObject<Item> RADIO_CONSOLE = ITEMS.register("radio_console",
             () -> new BlockItem(ModBlocks.RADIO_CONSOLE.get(), new Item.Properties()));
     public static final RegistryObject<Item> SHARD_LOCK = ITEMS.register("shard_lock",
