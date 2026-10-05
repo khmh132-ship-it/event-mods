@@ -320,6 +320,22 @@ public final class Scares {
         add("second_house", com.echohorror.story.StoryManager.CH_DEPTHS, 100, 1, 99999, c -> c.night && !c.underground && Config.WORLD_TAMPERING.get()
                 && c.p.getRespawnPosition() != null && c.p.getRespawnDimension() == c.level.dimension()
                 && c.p.getRespawnPosition().distSqr(c.p.blockPosition()) < 40 * 40 && c.d.get("house_" + c.p.getUUID()) == null, Scares::secondHouse);
+        add("beam_figure", 1, 100, 4, 400, c -> (c.night || c.underground) && litFlashlight(c.p), c -> {
+            // something stands at the end of your flashlight beam, then steps out of the light
+            Vec3 eye = c.p.getEyePosition();
+            Vec3 end = eye.add(c.p.getLookAngle().scale(18));
+            net.minecraft.world.phys.BlockHitResult hit = c.level.clip(new net.minecraft.world.level.ClipContext(eye, end,
+                    net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, c.p));
+            Vec3 at = hit.getLocation().subtract(c.p.getLookAngle().scale(1.2));
+            if (at.distanceTo(eye) < 8) return false;
+            Optional<BlockPos> g = HorrorUtil.ground(c.level, Mth.floor(at.x), Mth.floor(at.z), Mth.floor(at.y) + 1, 3, 5);
+            if (g.isEmpty()) return false;
+            PhantomEntity.spawn(c.p, c.r.nextBoolean() ? PhantomEntity.KIND_SHADE : PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_WALK_AWAY,
+                    Vec3.atBottomCenterOf(g.get()), 200);
+            HorrorUtil.playTo(c.p, "scare.stinger", Vec3.atCenterOf(g.get()), 0.5f, 1.3f);
+            Sanity.add(c.p, -4);
+            return true;
+        });
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {
@@ -701,6 +717,12 @@ public final class Scares {
         }
         Sanity.add(c.p, -4);
         return true;
+    }
+
+    private static boolean litFlashlight(ServerPlayer p) {
+        for (ItemStack st : new ItemStack[]{p.getMainHandItem(), p.getOffhandItem()})
+            if (st.is(ModItems.FLASHLIGHT.get()) && com.echohorror.item.FlashlightItem.isOn(st) && !com.echohorror.item.FlashlightItem.isEmpty(st)) return true;
+        return false;
     }
 
     /** The Echo builds itself a copy of your home in the woods. Not quite right. You are already inside. */
