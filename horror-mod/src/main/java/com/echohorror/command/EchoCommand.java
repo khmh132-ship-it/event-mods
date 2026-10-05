@@ -23,6 +23,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Collection;
 
 /** /echo — admin tools for the event host. */
@@ -83,6 +85,15 @@ public final class EchoCommand {
                     c.getSource().sendSuccess(() -> Component.literal("Ночь Эха: из темноты идут три волны."), true);
                     return 1;
                 }))
+                .then(Commands.literal("scene").then(Commands.argument("which", StringArgumentType.word())
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"lineup", "blackout"}, b))
+                        .executes(c -> {
+                            String w = StringArgumentType.getString(c, "which");
+                            boolean ok = StoryManager.scene(c.getSource().getServer(), w);
+                            if (ok) c.getSource().sendSuccess(() -> Component.literal("Сцена: " + w), true);
+                            else c.getSource().sendFailure(Component.literal("Нельзя запустить сейчас: " + w));
+                            return ok ? 1 : 0;
+                        })))
                 .then(Commands.literal("ending").then(Commands.argument("which", StringArgumentType.word())
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(new String[]{"silence", "echo"}, b))
                         .executes(c -> {
@@ -123,7 +134,14 @@ public final class EchoCommand {
         sb.append("Флаги: ").append(String.join(", ", d.flags));
         c.getSource().sendSuccess(() -> Component.literal(sb.toString()).withStyle(ChatFormatting.GRAY), false);
         ServerPlayer p = c.getSource().getPlayer();
-        if (p != null) c.getSource().sendSuccess(() -> Component.literal("Ваш рассудок: " + Math.round(Sanity.get(p))), false);
+        if (p != null) {
+            c.getSource().sendSuccess(() -> Component.literal("Ваш рассудок: " + Math.round(Sanity.get(p))), false);
+            List<String> in = new ArrayList<>();
+            d.regions.forEach((k, box) -> {
+                if (box.contains(p.position())) in.add(k);
+            });
+            c.getSource().sendSuccess(() -> Component.literal("Вы в зонах: " + (in.isEmpty() ? "—" : String.join(", ", in))), false);
+        }
         return 1;
     }
 

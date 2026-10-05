@@ -567,5 +567,23 @@
     "stream": true
    }
   ]
+ },
+ "story.siren": {
+  "subtitle": "subtitles.echohorror.story.siren",
+  "sounds": [
+   {
+    "name": "echohorror:story/siren",
+    "stream": true
+   }
+  ]
+ },
+ "voice.bunker_alarm": {
+  "subtitle": "subtitles.echohorror.voice.bunker_alarm",
+  "sounds": [
+   {
+    "name": "echohorror:voice/bunker_alarm",
+    "stream": true
+   }
+  ]
  }
 }

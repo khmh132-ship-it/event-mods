@@ -7,6 +7,7 @@ import com.echohorror.entity.EchoBossEntity;
 import com.echohorror.entity.MimicEntity;
 import com.echohorror.entity.PhantomEntity;
 import com.echohorror.horror.HorrorUtil;
+import com.echohorror.horror.MusicBoxAura;
 import com.echohorror.horror.Sanity;
 import com.echohorror.horror.Scheduler;
 import com.echohorror.item.NoteItem;
@@ -59,6 +60,7 @@ public final class StoryManager {
         bossRespawnPending = false;
         campsPending = false;
         pioneerPending = false;
+        blackoutActive = false;
         firstPlayerTicks = 0;
     }
 
@@ -283,6 +285,7 @@ public final class StoryManager {
         }
 
         if (d.chapter >= CH_RELAY && !campsPending && d.get("camp2") == null) buildCamps(server, d);
+        if (d.flag("blackout") && !d.flag("blackout_end") && !blackoutActive) endBlackout(ow, d);
         if (d.chapter >= CH_VILLAGE && !pioneerPending && d.get("pioneer") == null && d.get("village") != null) {
             pioneerPending = true;
             Scheduler.schedule(100, () -> {
@@ -324,6 +327,7 @@ public final class StoryManager {
                 default -> {}
             }
             locationAmbience(p, d);
+            pioneerAmbience(p, d);
             for (int k = 0; k < 3; k++) {
                 if (d.in("camp" + k, pos) && d.setFlag("camp_seen" + k)) campScene(p, k);
             }
@@ -518,6 +522,27 @@ public final class StoryManager {
                             Vec3.atBottomCenterOf(bell.below(2)).add(0.6, 0, 0), 240).vanishDistance(12).watchLimit(50);
                 }
             }
+        }
+    }
+
+    /** At night the camp is never quite empty. */
+    private static void pioneerAmbience(ServerPlayer p, StoryData d) {
+        BlockPos camp = d.get("pioneer");
+        if (camp == null || !d.in("pioneer", p.position()) || !HorrorUtil.isNight(p.serverLevel()) || MusicBoxAura.protects(p)) return;
+        net.minecraft.util.RandomSource r = p.getRandom();
+        float roll = r.nextFloat();
+        if (roll < 0.025f) {
+            HorrorUtil.playTo(p, "voice.laugh", Vec3.atCenterOf(camp).add(r.nextGaussian() * 12, 1, r.nextGaussian() * 12), 0.7f, 1.4f);
+        } else if (roll < 0.035f) {
+            // a child in a cabin doorway
+            BlockPos door = camp.offset(r.nextBoolean() ? -10 : 10, 0, 0);
+            if (p.position().distanceToSqr(Vec3.atBottomCenterOf(door)) > 10 * 10)
+                PhantomEntity.spawn(p, PhantomEntity.KIND_SHADE, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(door), 400).small()
+                        .vanishDistance(8).watchLimit(40);
+        } else if (roll < 0.04f) {
+            HorrorUtil.playTo(p, "voice.camp_children", Vec3.atCenterOf(camp).add(0, 1, 0), 0.5f, 0.9f);
+        } else if (roll < 0.045f && d.get("pioneer_speaker") != null) {
+            HorrorUtil.playTo(p, "story.camp_horn", Vec3.atCenterOf(d.get("pioneer_speaker")), 1.2f, 0.85f);
         }
     }
 
@@ -968,6 +993,107 @@ public final class StoryManager {
             setChapter(server, CH_BELFRY);
             endTransition();
         });
+        Scheduler.schedule(760, () -> blackout(server, d));
+    }
+
+    private static boolean blackoutActive;
+
+    /** Admin: replays a scripted scene. */
+    public static boolean scene(MinecraftServer server, String name) {
+        StoryData d = data(server);
+        switch (name) {
+            case "lineup" -> {
+                if (d.get("pioneer") == null) return false;
+                lineup(server, d);
+                return true;
+            }
+            case "blackout" -> {
+                if (blackoutActive || d.get("depths") == null) return false;
+                d.flags.remove("blackout");
+                d.flags.remove("blackout_end");
+                blackout(server, d);
+                return d.flag("blackout");
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private static void setLamps(ServerLevel level, List<BlockPos> lamps, boolean on) {
+        for (BlockPos l : lamps) level.setBlock(l, on ? Blocks.REDSTONE_BLOCK.defaultBlockState() : Blocks.STONE.defaultBlockState(), 3);
+    }
+
+    /** Обесточивание: the lights die, the siren wails, and the blind ones come out. Sneak to the stairs. */
+    private static void blackout(MinecraftServer server, StoryData d) {
+        ServerLevel level = server.overworld();
+        BlockPos origin = d.get("depths");
+        List<ServerPlayer> inside = new ArrayList<>();
+        for (ServerPlayer p : level.players()) if (!p.isSpectator() && d.in("bunker", p.position())) inside.add(p);
+        if (origin == null || inside.isEmpty() || !d.setFlag("blackout")) {
+            EchoHorror.LOG.info("Blackout skipped: origin={}, inside={}, players={}", origin, inside.size(), level.players().size());
+            d.setFlag("blackout_end");
+            return;
+        }
+        blackoutActive = true;
+        List<BlockPos> lamps = new ArrayList<>(d.list("lamps"));
+        for (int i = 0; i < 7; i++) {
+            final boolean on = i % 2 == 1 && i < 6;
+            Scheduler.schedule(i * 4, () -> setLamps(level, lamps, on));
+        }
+        Vec3 corridor = Vec3.atCenterOf(origin.offset(0, 2, 62));
+        for (ServerPlayer p : inside) {
+            Net.fx(p, Fx.FLICKER, 30);
+            Scheduler.schedule(26, () -> {
+                Net.fx(p, Fx.BLACKOUT, 20);
+                Net.fx(p, Fx.SUBTITLE, 120, 0, "Свет погас. Не шуми. К лестнице — пригнувшись.");
+            });
+        }
+        for (int k = 0; k < 4; k++) {
+            Scheduler.schedule(30 + k * 340, () -> {
+                if (!blackoutActive) return;
+                for (ServerPlayer p : level.players())
+                    if (d.in("bunker", p.position()) || d.in("stairs", p.position())) HorrorUtil.playTo(p, "story.siren", corridor, 4f, 0.9f);
+            });
+        }
+        Scheduler.schedule(110, () -> {
+            for (ServerPlayer p : level.players())
+                if (d.in("bunker", p.position())) HorrorUtil.playTo(p, "voice.bunker_alarm", corridor, 4f, 1f);
+        });
+        // they come from the entrance, behind you
+        if (Config.HOSTILE_SPAWNS.get()) {
+            int n = 2 + inside.size();
+            int[][] spots = {{0, 40}, {7, 44}, {-7, 44}, {0, 50}, {6, 62}, {-10, 62}};
+            Scheduler.schedule(140, () -> {
+                for (int i = 0; i < n; i++) {
+                    int[] sp = spots[i % spots.length];
+                    CrawlerEntity c = new CrawlerEntity(ModEntities.CRAWLER.get(), level);
+                    BlockPos at = origin.offset(sp[0], 0, sp[1]);
+                    c.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360, 0);
+                    c.setPersistenceRequired();
+                    level.addFreshEntity(c);
+                }
+                for (ServerPlayer p : level.players())
+                    if (d.in("bunker", p.position())) HorrorUtil.playTo(p, "entity.crawler.click", corridor.add(0, -1, -14), 2f, 0.8f);
+            });
+        }
+        // lights come back once nobody is left upstairs, or after a minute and a half
+        for (int t = 200; t <= 1800; t += 40) {
+            final boolean last = t >= 1800;
+            Scheduler.schedule(t, () -> {
+                if (!blackoutActive) return;
+                boolean anyone = false;
+                for (ServerPlayer p : level.players()) if (!p.isSpectator() && p.isAlive() && d.in("bunker", p.position())) anyone = true;
+                if (anyone && !last) return;
+                endBlackout(level, d);
+            });
+        }
+    }
+
+    private static void endBlackout(ServerLevel level, StoryData d) {
+        blackoutActive = false;
+        setLamps(level, d.list("lamps"), true);
+        d.setFlag("blackout_end");
     }
 
     // =========================================================================================== chapter 6: belfry
