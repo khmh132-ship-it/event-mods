@@ -80,6 +80,26 @@ public final class HorrorOverlay {
         }
 
         Font font = mc.font;
+        // a dream: black, then slow grey words
+        if (ClientState.dreamTicks > 0) {
+            int age = ClientState.dreamMax - ClientState.dreamTicks;
+            float bg = Math.min(1f, Math.min(age / 20f, ClientState.dreamTicks / 30f));
+            g.fill(0, 0, w, h, ((int) (bg * 255) << 24));
+            float ta = Mth.clamp(Math.min((age - 25) / 30f, (ClientState.dreamTicks - 10) / 30f), 0f, 1f);
+            if (ta > 0.02f) {
+                int col = ((int) (ta * 255) << 24) | 0xB8B0A8;
+                List<net.minecraft.util.FormattedCharSequence> lines = new java.util.ArrayList<>();
+                for (String para : ClientState.dream.split("\n")) {
+                    lines.addAll(font.split(net.minecraft.network.chat.Component.literal(para).withStyle(net.minecraft.ChatFormatting.ITALIC), Math.min(w - 40, 300)));
+                    lines.add(net.minecraft.util.FormattedCharSequence.EMPTY);
+                }
+                int y = h / 2 - lines.size() * 5;
+                for (net.minecraft.util.FormattedCharSequence l : lines) {
+                    g.drawString(font, l, (w - font.width(l)) / 2, y, col, false);
+                    y += 10;
+                }
+            }
+        }
         // subliminal text
         if (ClientState.screenTextTicks > 0) {
             g.pose().pushPose();

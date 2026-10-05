@@ -19,6 +19,7 @@ public final class Fx {
     public static final int MUSIC = 15;          // text = sound name ("" = stop)
     public static final int SUBTITLE = 16;       // text, arg = ticks
     public static final int STOP_SEQUENCE = 17;
+    public static final int DREAM = 18;          // text (lines split by \n), arg = ticks
 
     private Fx() {}
 }

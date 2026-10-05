@@ -1029,6 +1029,11 @@ public final class StoryManager {
                 lineup(server, d);
                 return true;
             }
+            case "dream" -> {
+                boolean any = false;
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) any |= Dreams.tryDream(p, d);
+                return any;
+            }
             case "blackout" -> {
                 if (blackoutActive || d.get("depths") == null) return false;
                 d.flags.remove("blackout");

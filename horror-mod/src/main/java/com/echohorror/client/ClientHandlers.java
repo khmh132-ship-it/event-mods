@@ -78,6 +78,10 @@ public final class ClientHandlers {
                 ClientState.subtitleTicks = Math.max(20, p.arg());
             }
             case Fx.STOP_SEQUENCE -> SoundSequencer.stopAll();
+            case Fx.DREAM -> {
+                ClientState.dream = p.text();
+                ClientState.dreamTicks = ClientState.dreamMax = Math.max(40, p.arg());
+            }
             default -> {}
         }
     }

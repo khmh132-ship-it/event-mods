@@ -22,6 +22,8 @@ public final class ClientState {
     public static String chapterTitle = "", chapterSub = "";
     public static int chapterTicks;
     public static String subtitle = "";
+    public static String dream = "";
+    public static int dreamTicks, dreamMax;
     public static int subtitleTicks;
     public static long time;
     /** 0..1: something unseen-but-visible is staring at you right now. */
@@ -40,6 +42,7 @@ public final class ClientState {
         jumpscare = -1;
         screenTextTicks = chapterTicks = subtitleTicks = 0;
         subtitle = "";
+        dreamTicks = 0;
     }
 
     public static void tick() {
@@ -54,6 +57,7 @@ public final class ClientState {
         if (screenTextTicks > 0) screenTextTicks--;
         if (chapterTicks > 0) chapterTicks--;
         if (subtitleTicks > 0 && --subtitleTicks == 0) subtitle = "";
+        if (dreamTicks > 0) dreamTicks--;
         if (jumpscare >= 0 && ++jumpscare > 16) jumpscare = -1;
     }
 

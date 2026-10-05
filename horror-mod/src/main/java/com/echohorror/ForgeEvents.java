@@ -153,8 +153,9 @@ public final class ForgeEvents {
     public static void onWake(PlayerWakeUpEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp) || e.wakeImmediately()) return;
         StoryData d = StoryData.get(sp.server);
-        if (d.chapter < StoryManager.CH_RELAY || d.chapter == StoryManager.CH_SILENCE) return;
-        if (sp.getRandom().nextFloat() > 0.45f) return;
+        if (d.chapter < StoryManager.CH_SIGNAL || d.chapter == StoryManager.CH_SILENCE) return;
+        if (sp.getRandom().nextFloat() < 0.6f && com.echohorror.story.Dreams.tryDream(sp, d)) return;
+        if (d.chapter < StoryManager.CH_RELAY || sp.getRandom().nextFloat() > 0.45f) return;
         // sleep paralysis
         sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 6, false, false));
         sp.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 50, 0, false, false));
