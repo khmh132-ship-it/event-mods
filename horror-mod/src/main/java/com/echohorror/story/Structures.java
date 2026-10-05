@@ -488,6 +488,114 @@ public final class Structures {
         b.cobwebs(x1 + 1, 2, z1 + 1, x2 - 1, 5, z2 - 1, 0.06f);
     }
 
+    /** Пионерлагерь «Звёздочка»: two cabins, a medical hut, the line-up square with its flagpole and a loudspeaker. */
+    public static void buildPioneerCamp(ServerLevel level, BlockPos site, StoryData d) {
+        EchoHorror.LOG.info("Building the pioneer camp at {}", site);
+        B b = new B(level, site);
+        b.prepare(-21, -19, 21, 17, 10, Blocks.GRASS_BLOCK, Blocks.GRASS_BLOCK, Blocks.GRASS_BLOCK, Blocks.COARSE_DIRT);
+        // the line-up square
+        for (int x = -7; x <= 7; x++)
+            for (int z = -7; z <= 7; z++)
+                if (x * x + z * z <= 42) b.set(x, -1, z, b.pick(Blocks.GRAVEL, Blocks.DIRT_PATH, Blocks.DIRT_PATH, Blocks.COARSE_DIRT));
+        for (int z = 7; z <= 16; z++) b.set(0, -1, z, b.pick(Blocks.DIRT_PATH, Blocks.GRAVEL));
+        // flagpole with a torn red flag
+        b.set(0, -1, 0, Blocks.STONE_BRICKS);
+        for (int y = 0; y <= 8; y++) b.setC(0, y, 0, Blocks.IRON_BARS);
+        b.set(1, 8, 0, Blocks.RED_WOOL);
+        b.set(2, 8, 0, Blocks.RED_WOOL);
+        b.set(1, 7, 0, Blocks.RED_WOOL);
+        b.set(3, 8, 0, Blocks.RED_CARPET);
+        // the loudspeaker
+        for (int y = 0; y <= 4; y++) b.setC(6, y, -6, Blocks.SPRUCE_FENCE);
+        b.set(6, 5, -6, Blocks.HOPPER);
+        b.set(6, 6, -6, Blocks.GRAY_CONCRETE);
+        d.put("pioneer_speaker", b.at(6, 5, -6));
+        // benches around the square
+        for (int[] bc : new int[][]{{-9, -3}, {-9, 3}, {9, -3}, {9, 3}}) {
+            b.set(bc[0], 0, bc[1], b.stairs(Blocks.SPRUCE_STAIRS, bc[0] < 0 ? Direction.WEST : Direction.EAST));
+            b.set(bc[0], 0, bc[1] + 1, b.stairs(Blocks.SPRUCE_STAIRS, bc[0] < 0 ? Direction.WEST : Direction.EAST));
+        }
+        // the bugler: a plaster pioneer on a plinth, missing his head
+        b.set(-5, 0, 10, Blocks.STONE_BRICKS);
+        b.set(-5, 1, 10, Blocks.WHITE_CONCRETE);
+        b.set(-5, 2, 10, Blocks.WHITE_CONCRETE);
+        b.setC(-4, 2, 10, Blocks.WHITE_CONCRETE_POWDER);
+        b.set(-5, 0, 11, Blocks.WHITE_CONCRETE_POWDER);
+        // gate with the camp's name
+        for (int y = 0; y <= 4; y++) {
+            b.set(-3, y, 16, Blocks.STRIPPED_BIRCH_LOG);
+            b.set(3, y, 16, Blocks.STRIPPED_BIRCH_LOG);
+        }
+        for (int x = -3; x <= 3; x++) b.set(x, 5, 16, Blocks.BIRCH_SLAB);
+        b.set(0, 4, 16, Blocks.BIRCH_PLANKS);
+        b.sign(0, 4, 17, Direction.SOUTH, "П/Л", "«ЗВЁЗДОЧКА»", "", "добро пожаловать");
+        for (int x = -20; x <= 20; x++) {
+            if (Math.abs(x) <= 3 || b.r.nextFloat() < 0.3f) continue;
+            b.setC(x, 0, 16, Blocks.BIRCH_FENCE);
+        }
+        // two cabins
+        cabin(b, -19, -6, true);
+        cabin(b, 11, -6, false);
+        b.chest(-15, 0, -5, Direction.SOUTH, note("camp_counselor1"), it(ModItems.PILLS.get(), 2), it(Items.BREAD, 3));
+        b.chest(15, 0, -5, Direction.SOUTH, note("camp_list"), it(ModItems.BATTERY.get(), 2), it(Items.CANDLE, 3));
+        // medical hut
+        Block[] white = {Blocks.WHITE_CONCRETE, Blocks.WHITE_CONCRETE, Blocks.WHITE_TERRACOTTA, Blocks.CALCITE};
+        for (int x = -5; x <= 5; x++)
+            for (int z = -18; z <= -11; z++) {
+                b.set(x, -1, z, Blocks.WHITE_CONCRETE);
+                for (int y = 0; y <= 3; y++) {
+                    boolean edge = x == -5 || x == 5 || z == -18 || z == -11;
+                    b.set(x, y, z, edge ? b.pick(white) : Blocks.AIR.defaultBlockState());
+                }
+                b.set(x, 4, z, Blocks.SMOOTH_STONE_SLAB);
+            }
+        b.door(0, 0, -11, Blocks.BIRCH_DOOR, Direction.SOUTH, false);
+        b.set(-1, 3, -11, Blocks.RED_WOOL); // the red cross over the door
+        b.set(1, 3, -11, Blocks.RED_WOOL);
+        b.set(0, 3, -11, Blocks.RED_WOOL);
+        b.set(0, 4, -11, Blocks.RED_WOOL);
+        for (int x : new int[]{-3, 3}) b.setC(x, 1, -11, Blocks.GLASS_PANE);
+        b.setC(-5, 1, -15, Blocks.GLASS_PANE);
+        b.setC(5, 1, -15, Blocks.GLASS_PANE);
+        b.bed(-3, 0, -16, Direction.NORTH, Blocks.WHITE_BED);
+        b.set(3, 0, -17, Blocks.BREWING_STAND);
+        b.set(4, 0, -17, Blocks.CAULDRON);
+        b.set(-4, 0, -12, Blocks.WHITE_CARPET);
+        BlockPos box = b.chest(-2, 0, -17, Direction.EAST, it(ModItems.MUSIC_BOX.get(), 1), note("camp_masha"), note("camp_counselor2"),
+                it(ModItems.PILLS.get(), 1));
+        d.put("pioneer_box", box);
+        b.cobwebs(-4, 2, -17, 4, 3, -12, 0.12f);
+        b.finish();
+        d.put("pioneer", site);
+        d.region("pioneer", b.box(-22, -3, -20, 22, 12, 18));
+        d.region("medpunkt", b.box(-5, -1, -18, 5, 4, -11));
+        d.setDirty();
+    }
+
+    /** A camp cabin with bunk rows along its long walls. */
+    private static void cabin(B b, int x1, int z1, boolean doorEast) {
+        int x2 = x1 + 8, z2 = z1 + 12;
+        Block[] wall = {Blocks.BIRCH_PLANKS, Blocks.BIRCH_PLANKS, Blocks.STRIPPED_BIRCH_LOG, Blocks.LIGHT_BLUE_TERRACOTTA};
+        for (int x = x1; x <= x2; x++)
+            for (int z = z1; z <= z2; z++) {
+                b.set(x, -1, z, Blocks.SPRUCE_PLANKS);
+                for (int y = 0; y <= 3; y++) {
+                    boolean edge = x == x1 || x == x2 || z == z1 || z == z2;
+                    b.set(x, y, z, edge ? b.pick(wall) : Blocks.AIR.defaultBlockState());
+                }
+                b.set(x, 4, z, b.r.nextFloat() < 0.06f ? Blocks.AIR : Blocks.DARK_OAK_SLAB);
+            }
+        int dx = doorEast ? x2 : x1;
+        b.door(dx, 0, z1 + 6, Blocks.BIRCH_DOOR, doorEast ? Direction.EAST : Direction.WEST, true);
+        for (int z = z1 + 2; z <= z2 - 2; z += 3) {
+            b.setC(x1, 1, z, Blocks.GLASS_PANE);
+            b.setC(x2, 1, z, Blocks.GLASS_PANE);
+            b.bed(x1 + 2, 0, z, Direction.WEST, Blocks.WHITE_BED);
+            b.bed(x2 - 2, 0, z, Direction.EAST, Blocks.WHITE_BED);
+        }
+        b.cobwebs(x1 + 1, 2, z1 + 1, x2 - 1, 3, z2 - 1, 0.07f);
+    }
+
     /** Optional places along the way: 0 = geologists' camp, 1 = cordon post, 2 = Tanya's car. */
     public static void buildCamp(ServerLevel level, BlockPos site, StoryData d, int kind) {
         EchoHorror.LOG.info("Building side location {} at {}", kind, site);

@@ -52,11 +52,13 @@ public final class StoryManager {
     }
 
     private static boolean campsPending;
+    private static boolean pioneerPending;
 
     public static void onServerStopping() {
         pendingTransitions = 0;
         bossRespawnPending = false;
         campsPending = false;
+        pioneerPending = false;
         firstPlayerTicks = 0;
     }
 
@@ -281,6 +283,17 @@ public final class StoryManager {
         }
 
         if (d.chapter >= CH_RELAY && !campsPending && d.get("camp2") == null) buildCamps(server, d);
+        if (d.chapter >= CH_VILLAGE && !pioneerPending && d.get("pioneer") == null && d.get("village") != null) {
+            pioneerPending = true;
+            Scheduler.schedule(100, () -> {
+                pioneerPending = false;
+                if (d.get("pioneer") != null) return;
+                BlockPos v = d.get("village");
+                List<BlockPos> avoid = new ArrayList<>(d.pos.values());
+                BlockPos site = Structures.findSite(ow, v, 150, 18, ow.random.nextDouble() * Math.PI * 2, avoid);
+                Structures.buildPioneerCamp(ow, site, d);
+            });
+        }
 
         for (ServerPlayer p : players) {
             if (p.level() != ow || p.isSpectator()) continue;
@@ -313,6 +326,15 @@ public final class StoryManager {
             locationAmbience(p, d);
             for (int k = 0; k < 3; k++) {
                 if (d.in("camp" + k, pos) && d.setFlag("camp_seen" + k)) campScene(p, k);
+            }
+            if (d.in("pioneer", pos)) {
+                if (d.setFlag("pioneer_seen")) {
+                    Net.fx(p, Fx.SUBTITLE, 100, 0, "Пионерлагерь «Звёздочка». Вторая смена, 1986. Качели ещё качаются.");
+                    Scheduler.schedule(80, () -> HorrorUtil.playTo(p, "voice.laugh", HorrorUtil.behind(p, 14), 0.8f, 1.35f));
+                }
+                if (!d.flag("lineup") && p.getInventory().contains(new ItemStack(ModItems.MUSIC_BOX.get())) && d.setFlag("lineup")) {
+                    lineup(server, d);
+                }
             }
             // one-time location titles
             if (d.in("village", pos) && d.setFlag("title_village")) {
@@ -385,6 +407,45 @@ public final class StoryManager {
             });
             default -> Scheduler.schedule(60, () -> HorrorUtil.playTo(p, "scare.knock", p.position().add(1, 1, 0), 1f, 1.1f));
         }
+    }
+
+    /** «Всем отрядам — на линейку». Someone took Masha's music box out of the medical hut. */
+    private static void lineup(MinecraftServer server, StoryData d) {
+        ServerLevel level = server.overworld();
+        BlockPos speaker = d.get("pioneer_speaker");
+        BlockPos flag = d.get("pioneer");
+        if (speaker == null || flag == null) return;
+        Vec3 sp = Vec3.atCenterOf(speaker), center = Vec3.atBottomCenterOf(flag);
+        java.util.function.Consumer<java.util.function.Consumer<ServerPlayer>> near = act -> {
+            for (ServerPlayer p : level.players())
+                if (!p.isSpectator() && p.position().distanceTo(center) < 90) act.accept(p);
+        };
+        near.accept(p -> {
+            HorrorUtil.playTo(p, "story.camp_horn", sp, 4f, 1f);
+            Net.fx(p, Fx.FLICKER, 30);
+        });
+        Scheduler.schedule(170, () -> near.accept(p -> HorrorUtil.playTo(p, "voice.camp_lineup", sp, 4f, 1f)));
+        Scheduler.schedule(260, () -> near.accept(p -> {
+            // thirty-something children in a ring around the flagpole, facing each other
+            int n = 16;
+            for (int i = 0; i < n; i++) {
+                double a = i * Math.PI * 2 / n;
+                int x = Mth.floor(center.x + Math.cos(a) * 5), z = Mth.floor(center.z + Math.sin(a) * 5);
+                java.util.Optional<BlockPos> g = HorrorUtil.ground(level, x, z, flag.getY() + 1, 3, 4);
+                if (g.isEmpty()) continue;
+                PhantomEntity.spawn(p, PhantomEntity.KIND_SHADE, PhantomEntity.MODE_CIRCLE, Vec3.atBottomCenterOf(g.get()), 1400)
+                        .small().anchor(center, i == 0).turnAfter(330);
+            }
+            Net.fx(p, Fx.SUBTITLE, 90, 0, "Они стоят кругом у флагштока. Лицом друг к другу.");
+        }));
+        Scheduler.schedule(330, () -> near.accept(p -> HorrorUtil.playTo(p, "voice.camp_children", center.add(0, 1, 0), 2.5f, 1f)));
+        Scheduler.schedule(470, () -> near.accept(p -> Net.fx(p, Fx.SUBTITLE, 70, 0, "Тридцать один. Тридцать два. Тридцать три.")));
+        Scheduler.schedule(600, () -> {
+            near.accept(p -> {
+                Achievements.award(p, "lineup");
+                Sanity.add(p, -10);
+            });
+        });
     }
 
     /** Three optional places scattered around the relay: lore, supplies and a little scene each. */
@@ -587,7 +648,18 @@ public final class StoryManager {
         String strength = "▮".repeat(bars) + "▯".repeat(5 - bars);
         String vert = Math.abs(dy) > 6 ? (dy < 0 ? "  ▼ ниже" : "  ▲ выше") : "";
         String text = dist < 8 && Math.abs(dy) < 6 ? "◉ ИСТОЧНИК РЯДОМ  " + strength : arrow + "  " + (int) dist + " м  " + strength + vert;
-        for (int k = 0; k < 3; k++) {
+        BlockPos pc = d.get("pioneer");
+        boolean pioneerPing = false;
+        if (pc != null && !d.flag("pioneer_seen")) {
+            double cdx = pc.getX() + 0.5 - p.getX(), cdz = pc.getZ() + 0.5 - p.getZ();
+            double cd = Math.sqrt(cdx * cdx + cdz * cdz);
+            if (cd < 220) {
+                float crel = Mth.wrapDegrees((float) (Mth.atan2(cdz, cdx) * (180F / Math.PI)) - 90F - p.getYRot());
+                text += "   · детский голос " + arrows[Math.floorMod(Math.round(crel / 45f), 8)] + " " + (int) cd + " м";
+                pioneerPing = true;
+            }
+        }
+        for (int k = 0; k < 3 && !pioneerPing; k++) {
             BlockPos c = d.get("camp" + k);
             if (c == null || d.flag("camp_seen" + k)) continue;
             double cdx = c.getX() + 0.5 - p.getX(), cdz = c.getZ() + 0.5 - p.getZ();
@@ -1121,6 +1193,7 @@ public final class StoryManager {
         pendingTransitions = 0;
         bossRespawnPending = false;
         campsPending = false;
+        pioneerPending = false;
         d.echoDay = -1;
         d.chapter = 0;
         d.pos.clear();

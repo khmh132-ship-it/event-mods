@@ -88,6 +88,7 @@ public final class ModSounds {
             "tape.tape6",
             "tape.tape7",
             "voice.call",
+            "story.camp_horn", "voice.camp_lineup", "voice.camp_children", "item.music_box_play",
             "voice.child",
             "voice.help",
             "voice.laugh",

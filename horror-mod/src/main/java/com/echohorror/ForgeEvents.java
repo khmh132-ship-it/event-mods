@@ -45,6 +45,7 @@ public final class ForgeEvents {
         if (ticks % 2 == 0) {
             FlashlightManager.tick(server, ticks);
             PathMemory.tick(server);
+            if (ticks % 10 == 0) MusicBoxAura.tick(server);
         }
         if (ticks % 20 == 0) {
             try {
@@ -244,5 +245,6 @@ public final class ForgeEvents {
         ChatMemory.clear();
         PathMemory.clear();
         VoiceNoise.clear();
+        MusicBoxAura.clear();
     }
 }

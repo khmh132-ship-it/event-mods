@@ -36,6 +36,7 @@ public class PhantomEntity extends PathfinderMob {
 
     private static final EntityDataAccessor<Integer> KIND = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Optional<UUID>> SKIN = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Boolean> SMALL = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.BOOLEAN);
 
     private UUID target;
     private int mode;
@@ -49,6 +50,7 @@ public class PhantomEntity extends PathfinderMob {
     private Vec3 anchor;      // circle centre / procession destination
     private boolean leader;   // the one that screams
     private int turnTicks = -1;
+    private int turnDelay = -1;
     private java.util.List<com.echohorror.horror.PathMemory.Sample> path; // MODE_REPLAY: the target's own trail
     private int pathIdx;
 
@@ -119,6 +121,22 @@ public class PhantomEntity extends PathfinderMob {
         return this;
     }
 
+    /** A child. */
+    public PhantomEntity small() {
+        entityData.set(SMALL, true);
+        return this;
+    }
+
+    public boolean isSmall() {
+        return entityData.get(SMALL);
+    }
+
+    /** MODE_CIRCLE: turn to the target after this many ticks instead of when it comes close. */
+    public PhantomEntity turnAfter(int ticks) {
+        this.turnDelay = ticks;
+        return this;
+    }
+
     public PhantomEntity withJumpscare() {
         this.jumpscare = true;
         return this;
@@ -129,6 +147,7 @@ public class PhantomEntity extends PathfinderMob {
         super.defineSynchedData();
         entityData.define(KIND, 0);
         entityData.define(SKIN, Optional.empty());
+        entityData.define(SMALL, false);
     }
 
     public int getKind() {
@@ -202,7 +221,7 @@ public class PhantomEntity extends PathfinderMob {
                 getNavigation().stop();
                 if (turnTicks < 0) {
                     if (anchor != null) faceTarget(anchor);
-                    if (dist < 20) turnTicks = 0;
+                    if (turnDelay > 0 ? --turnDelay == 0 : dist < 20) turnTicks = 0;
                 } else {
                     faceTarget(t);
                     if (++turnTicks > 30) vanish(t, leader);

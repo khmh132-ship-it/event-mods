@@ -493,6 +493,20 @@ def it_clapper(p, d):
     d.rectangle((7, 0, 10, 1), fill=(60, 60, 60, 255))
 
 
+def it_music_box(p, d):
+    d.rectangle((2, 7, 13, 14), fill=(110, 50, 40, 255))      # lacquered box
+    d.rectangle((2, 7, 13, 8), fill=(150, 75, 55, 255))
+    d.polygon([(2, 7), (5, 2), (14, 2), (13, 7)], fill=(130, 60, 48, 255))  # open lid
+    d.rectangle((6, 3, 11, 5), fill=(200, 200, 210, 255))       # mirror inside the lid
+    p[8, 4] = (90, 90, 100, 255)
+    for x in (5, 8, 11):
+        p[x, 11] = (225, 190, 90, 255)                           # gold flowers
+    p[14, 10] = p[15, 10] = (200, 180, 120, 255)                 # winding key
+    p[15, 9] = p[15, 11] = (200, 180, 120, 255)
+    p[7, 6] = (240, 220, 230, 255)                               # tiny ballerina
+    p[7, 5] = (240, 220, 230, 255)
+
+
 def it_shard(p, d):
     d.polygon([(8, 1), (12, 6), (10, 14), (5, 12), (4, 5)], fill=(160, 110, 50, 255))
     d.polygon([(8, 3), (10, 6), (9, 11), (6, 10)], fill=(210, 160, 80, 255))
@@ -583,6 +597,7 @@ def main():
     icon(it_pills, 'pills')
     icon(it_clapper, 'bell_clapper')
     icon(it_shard, 'echo_shard')
+    icon(it_music_box, 'music_box')
     icon(it_silence, 'silence')
     block_tex('console_side', (70, 76, 68))
     block_tex('console_top', (60, 64, 58), lambda p, d: d.rectangle((0, 0, 15, 15), outline=(40, 44, 40, 255)))

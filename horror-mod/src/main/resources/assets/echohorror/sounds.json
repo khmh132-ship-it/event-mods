@@ -534,5 +534,38 @@
     "stream": true
    }
   ]
+ },
+ "story.camp_horn": {
+  "subtitle": "subtitles.echohorror.story.camp_horn",
+  "sounds": [
+   {
+    "name": "echohorror:story/camp_horn",
+    "stream": true
+   }
+  ]
+ },
+ "voice.camp_lineup": {
+  "subtitle": "subtitles.echohorror.voice.camp_lineup",
+  "sounds": [
+   {
+    "name": "echohorror:voice/camp_lineup",
+    "stream": true
+   }
+  ]
+ },
+ "voice.camp_children": {
+  "subtitle": "subtitles.echohorror.voice.camp_children",
+  "sounds": [
+   "echohorror:voice/camp_children"
+  ]
+ },
+ "item.music_box_play": {
+  "subtitle": "subtitles.echohorror.item.music_box_play",
+  "sounds": [
+   {
+    "name": "echohorror:item/music_box_play",
+    "stream": true
+   }
+  ]
  }
 }

@@ -59,6 +59,7 @@ public final class HorrorDirector {
             brokenMind(p, d, st);
             stalker(p, d, st, seconds);
             homecoming(p, d, st, seconds);
+            if (seconds >= st.nextEvent && MusicBoxAura.protects(p)) st.nextEvent = seconds + 10;
             if (seconds >= st.nextEvent) {
                 runRandom(p, d, st, seconds);
                 st.nextEvent = seconds + interval(p, d);

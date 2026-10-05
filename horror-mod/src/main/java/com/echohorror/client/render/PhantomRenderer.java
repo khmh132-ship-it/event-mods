@@ -40,6 +40,7 @@ public class PhantomRenderer extends HumanoidMobRenderer<PhantomEntity, PlayerMo
 
     @Override
     protected void scale(PhantomEntity e, PoseStack ps, float partial) {
+        if (e.isSmall()) ps.scale(0.62f, 0.62f, 0.62f);
         switch (e.getKind()) {
             case PhantomEntity.KIND_WATCHER -> ps.scale(0.85f, 1.32f, 0.85f);
             case PhantomEntity.KIND_SHADE -> ps.scale(0.95f, 1.08f, 0.95f);

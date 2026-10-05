@@ -102,5 +102,11 @@
   "item.echohorror.handbell": "Ручной колокольчик",
   "subtitles.echohorror.tape.tape5": "Магнитофонная запись",
   "subtitles.echohorror.tape.tape6": "Магнитофонная запись",
-  "subtitles.echohorror.tape.tape7": "Магнитофонная запись"
+  "subtitles.echohorror.tape.tape7": "Магнитофонная запись",
+  "subtitles.echohorror.story.camp_horn": "Горн трубит сбор",
+  "subtitles.echohorror.voice.camp_lineup": "Репродуктор: «Всем отрядам — на линейку»",
+  "subtitles.echohorror.voice.camp_children": "Дети считают хором",
+  "subtitles.echohorror.item.music_box_play": "Играет музыкальная шкатулка",
+  "item.echohorror.music_box": "Музыкальная шкатулка Маши",
+  "item.echohorror.music_box.desc": "Играет колыбельную. Эхо не умеет её повторить."
 }
