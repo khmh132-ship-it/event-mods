@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "echohorror:music_box"
+    },
+    "title": "Колыбельная",
+    "description": "Убаюкать Эхо шкатулкой Маши",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "echohorror:echo/boss"
+}

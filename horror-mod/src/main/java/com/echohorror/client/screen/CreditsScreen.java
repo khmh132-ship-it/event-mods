@@ -13,15 +13,17 @@ import java.util.List;
 public class CreditsScreen extends Screen {
     private final List<Object> lines = new ArrayList<>();
     private float scroll;
-    private final boolean echo;
+    private final boolean echo, lullaby;
 
     public CreditsScreen() {
-        this(false);
+        this(0);
     }
 
-    public CreditsScreen(boolean echo) {
-        super(Component.literal(echo ? "Эхо" : "Тишина"));
-        this.echo = echo;
+    /** 0 = silence, 1 = echo, 2 = lullaby. */
+    public CreditsScreen(int kind) {
+        super(Component.literal(kind == 1 ? "Эхо" : kind == 2 ? "Колыбельная" : "Тишина"));
+        this.echo = kind == 1;
+        this.lullaby = kind == 2;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class CreditsScreen extends Screen {
         lines.add(">Объект «Колокол»");
         lines.add("");
         lines.add("");
-        Notes.Note ending = Notes.get(echo ? "ending_echo" : "ending");
+        Notes.Note ending = Notes.get(echo ? "ending_echo" : lullaby ? "ending_lullaby" : "ending");
         for (String p : ending.text().split("\n")) {
             if (p.isEmpty()) lines.add("");
             else lines.addAll(font.split(Component.literal(p), Math.min(280, width - 40)));
@@ -39,8 +41,8 @@ public class CreditsScreen extends Screen {
         String[] tail = {"", "", "", "#В ролях", "", "Сергей Лисицын — радист ретранслятора Р-7", "Таня — голос за дверью",
                 "Маша, 7 лет — та, что больше не разговаривает", "о. Никодим — звонарь", "Пётр Кузьмич — сосед",
                 "Группа «Шахтёр» — шестеро. Или семеро", "Зоя Козлова — Немая", "А. С. Воронов — руководитель объекта",
-                "Отголосок — " + (echo ? "теперь вы" : "все вы"), "", "", "#Звук", "", "Всё, что вы слышали, было собрано из шума,", "синтезатора речи и ваших собственных голосов.",
-                "", "", "#Спасибо, что дослушали", "", "", "", "", "", "", "", echo ? "Сколько вас теперь?" : "Сколько вас было в начале?", "", "", "", "", "", "",
+                "Отголосок — " + (echo ? "теперь вы" : lullaby ? "спит" : "все вы"), "", "", "#Звук", "", "Всё, что вы слышали, было собрано из шума,", "синтезатора речи и ваших собственных голосов.",
+                "", "", "#Спасибо, что дослушали", "", "", "", "", "", "", "", echo ? "Сколько вас теперь?" : lullaby ? "Тише. Не разбудите." : "Сколько вас было в начале?", "", "", "", "", "", "",
                 "(Esc — закрыть)"};
         for (String s : tail) lines.add(s);
         scroll = -height;

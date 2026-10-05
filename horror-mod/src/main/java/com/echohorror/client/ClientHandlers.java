@@ -55,7 +55,7 @@ public final class ClientHandlers {
             case Fx.BLACKOUT -> ClientState.blackout = p.arg();
             case Fx.FLICKER -> ClientState.flicker = calm ? 0 : p.arg();
             case Fx.GLITCH -> ClientState.glitch = calm ? Math.min(3, p.arg()) : p.arg();
-            case Fx.CREDITS -> mc.setScreen(new CreditsScreen(p.arg() == 1));
+            case Fx.CREDITS -> mc.setScreen(new CreditsScreen(p.arg()));
             case Fx.CHAPTER -> {
                 String[] parts = p.text().split("\\|", 2);
                 ClientState.chapterTitle = parts[0];

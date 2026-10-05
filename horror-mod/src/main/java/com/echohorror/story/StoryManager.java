@@ -101,6 +101,7 @@ public final class StoryManager {
                     : d.flag("boss_spawned") ? "Звоните в колокола, чтобы оглушить Отголосок. Пока он оглушён — бейте.\nОдин колокол дважды подряд не сработает."
                     : "Спуститесь в Звонницу. Заставьте Эхо замолчать.";
             case CH_SILENCE -> d.flag("ending_echo") ? "Вы выбрали слушать.\nЭхо теперь говорит вашими голосами. Ночи больше не кончаются."
+                    : d.flag("ending_lullaby") ? "Эхо спит.\nЗаводите шкатулку по ночам. Не шумите."
                     : "Тишина.\nСюжет завершён. Но эхо иногда возвращается.";
             default -> "";
         };
@@ -350,6 +351,11 @@ public final class StoryManager {
             }
             locationAmbience(p, d);
             pioneerAmbience(p, d);
+            if (d.flag("ending_lullaby") && HorrorUtil.isNight(p.serverLevel()) && p.getRandom().nextFloat() < 0.0012f) {
+                // it sleeps. it doesn't sleep well.
+                HorrorUtil.playTo(p, "scare.music_box", p.position().add(0, -6, 0), 0.25f, 0.8f);
+                Net.fx(p, Fx.SUBTITLE, 80, 0, "Где-то очень глубоко кто-то ворочается во сне.");
+            }
             for (int k = 0; k < 3; k++) {
                 if (d.in("camp" + k, pos) && d.setFlag("camp_seen" + k)) campScene(p, k);
             }
@@ -1253,6 +1259,57 @@ public final class StoryManager {
                     if (!p.hasDisconnected())
                         p.sendSystemMessage(Component.translatable("multiplayer.player.joined", "Эхо").withStyle(ChatFormatting.YELLOW));
                 });
+            }
+        });
+    }
+
+    /** Secret ending: Masha's music box played over the Echo's heart. It doesn't die. It falls asleep. */
+    public static boolean tryLullaby(ServerPlayer p) {
+        StoryData d = data(p.server);
+        if (d.chapter != CH_BELFRY || !d.flag("boss_dead") || !d.in("arena", p.position()) || !d.setFlag("ending_chosen")) return false;
+        endingLullaby(p.server, d, p.getGameProfile().getName());
+        return true;
+    }
+
+    private static void endingLullaby(MinecraftServer server, StoryData d, String name) {
+        d.setFlag("ending_lullaby");
+        d.setFlag("ending_silence");
+        Achievements.awardAll(server, "ending_lullaby");
+        d.notes.add("ending_lullaby");
+        ServerLevel level = server.overworld();
+        BlockPos arena = d.get("arena");
+        // the heart beats slower and slower, then stops glowing
+        for (net.minecraft.world.entity.item.ItemEntity ie : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(arena != null ? arena : BlockPos.ZERO).inflate(48), e -> e.getItem().is(ModItems.ECHO_HEART.get()))) {
+            for (int i = 0; i < 6; i++) {
+                final int k = i;
+                Scheduler.schedule(i * (20 + i * 12), () -> {
+                    if (ie.isAlive()) level.sendParticles(ParticleTypes.SCULK_SOUL, ie.getX(), ie.getY() + 0.3, ie.getZ(), 12 - k * 2, 0.2, 0.2, 0.2, 0.01);
+                });
+            }
+            Scheduler.schedule(380, ie::discard);
+        }
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            p.getInventory().clearOrCountMatchingItems(st -> st.is(ModItems.ECHO_HEART.get()), -1, p.inventoryMenu.getCraftSlots());
+            p.sendSystemMessage(Component.literal(name + " завёл шкатулку Маши над сердцем Эха.").withStyle(ChatFormatting.GOLD));
+            Net.send(p, new SoundSeqPacket.Builder()
+                    .sub("[ шкатулка играет ]", 120)
+                    .sub("Сердце бьётся всё медленнее.", 100)
+                    .sub("Эхо пытается повторить колыбельную. У него почти получается.", 120)
+                    .sub("[ тихо ]", 80)
+                    .build());
+        }
+        Scheduler.schedule(400, () -> {
+            setChapter(server, CH_SILENCE);
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                Net.fx(p, Fx.CHAPTER, "ЭПИЛОГ|Колыбельная");
+                Sanity.set(p, 100f);
+            }
+        });
+        Scheduler.schedule(560, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                Net.fx(p, Fx.CREDITS, 2);
+                Net.fx(p, Fx.MUSIC, "music.ending");
             }
         });
     }

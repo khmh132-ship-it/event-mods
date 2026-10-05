@@ -34,6 +34,10 @@ public class MusicBoxItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (level instanceof ServerLevel sl && player instanceof ServerPlayer sp) {
             sl.playSound(null, sp, ModSounds.get("item.music_box_play"), SoundSource.PLAYERS, 1.2f, 1.0f);
+            if (com.echohorror.story.StoryManager.tryLullaby(sp)) {
+                player.getCooldowns().addCooldown(this, 20 * 150);
+                return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+            }
             MusicBoxAura.start(sp, PLAY_TICKS);
             sp.displayClientMessage(Component.literal("Шкатулка играет. Вокруг становится тихо.").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC), true);
             com.echohorror.story.Achievements.award(sp, "lullaby");
