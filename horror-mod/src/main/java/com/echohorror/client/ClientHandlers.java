@@ -19,6 +19,7 @@ public final class ClientHandlers {
         ClientState.chapter = p.chapter();
         ClientState.objective = p.objective();
         ClientState.notes = p.notes();
+        ClientState.places = p.places();
         if (p.open()) Minecraft.getInstance().setScreen(new JournalScreen());
     }
 

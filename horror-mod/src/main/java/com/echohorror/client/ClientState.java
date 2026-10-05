@@ -11,6 +11,7 @@ public final class ClientState {
 
     public static String objective = "";
     public static List<String> notes = new ArrayList<>();
+    public static List<String> places = new ArrayList<>();
 
     // effect timers (client ticks)
     public static int blackout, flicker, glitch, whiteFlash, whiteFlashMax, heartbeat, fog, shake;
@@ -34,6 +35,7 @@ public final class ClientState {
         flags = 0;
         objective = "";
         notes = new ArrayList<>();
+        places = new ArrayList<>();
         blackout = flicker = glitch = whiteFlash = heartbeat = fog = shake = 0;
         jumpscare = -1;
         screenTextTicks = chapterTicks = subtitleTicks = 0;

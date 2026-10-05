@@ -113,7 +113,29 @@ public final class StoryManager {
     // =========================================================================================== sync
     public static void sendJournal(ServerPlayer p, boolean open) {
         StoryData d = data(p.server);
-        Net.send(p, new JournalPacket(open, d.chapter, objective(d), new ArrayList<>(d.notes)));
+        Net.send(p, new JournalPacket(open, d.chapter, objective(d), new ArrayList<>(d.notes), places(p, d)));
+    }
+
+    /** Places the group has found, for the journal's map page. */
+    private static List<String> places(ServerPlayer p, StoryData d) {
+        List<String> out = new ArrayList<>();
+        java.util.function.BiConsumer<String, BlockPos> add = (name, pos) -> {
+            if (pos != null) out.add(name + "|" + pos.getX() + "|" + pos.getY() + "|" + pos.getZ());
+        };
+        if (d.chapter >= CH_RELAY) add.accept("Ретранслятор Р-7", d.get("radio"));
+        String[] camps = {"Лагерь геологов", "Пост оцепления", "Машина Тани"};
+        for (int k = 0; k < 3; k++) if (d.flag("camp_seen" + k)) add.accept(camps[k], d.get("camp" + k));
+        if (d.flag("title_village")) {
+            add.accept("Тихий Лог", d.get("village"));
+            add.accept("Церковь и колокол", d.get("bell"));
+        }
+        if (d.flag("pioneer_seen")) add.accept("Лагерь «Звёздочка»", d.get("pioneer"));
+        if (d.flag("title_depths")) add.accept("Колодец → Глубина", d.get("well"));
+        if (d.flag("title_bunker")) add.accept("Объект «Колокол»", d.get("bunker"));
+        if (d.flag("boss_spawned")) add.accept("Звонница", d.get("arena"));
+        BlockPos home = p.getRespawnPosition();
+        if (home != null && p.getRespawnDimension() == net.minecraft.world.level.Level.OVERWORLD) add.accept("Ваша кровать", home);
+        return out;
     }
 
     public static void syncAll(MinecraftServer server) {

@@ -11,6 +11,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderNameTagEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -52,9 +53,11 @@ public final class WrongFriends {
         return (40f - sanity) / 40f * (float) Mth.clamp((0.9 - dot) / 0.3, 0, 1);
     }
 
-    @SubscribeEvent
+    // LOWEST: we must be the last to see Pre, so nobody cancels it after we pushed the pose (Post would never come)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPre(RenderPlayerEvent.Pre e) {
         Player p = e.getEntity();
+        if (e.isCanceled()) return;
         float w = wrongness(p, e.getPartialTick());
         if (w <= 0.05f) return;
         Saved s = new Saved();
