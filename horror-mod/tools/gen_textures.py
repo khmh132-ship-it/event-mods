@@ -507,6 +507,19 @@ def it_music_box(p, d):
     p[7, 5] = (240, 220, 230, 255)
 
 
+def it_tuning_fork(p, d):
+    for y in range(1, 9):
+        p[5, y] = p[10, y] = (175, 180, 190, 255)           # tines
+        p[6, y] = p[11, y] = (120, 125, 135, 255)
+    d.line((5, 9, 11, 9), fill=(150, 155, 165, 255))         # bow
+    p[6, 10] = p[10, 10] = (150, 155, 165, 255)
+    d.line((8, 10, 8, 15), fill=(110, 115, 125, 255))        # stem
+    p[7, 11] = (150, 155, 165, 255)
+    p[8, 15] = (160, 110, 210, 255)                           # amethyst knob
+    p[7, 14] = p[9, 14] = (130, 90, 180, 255)
+    p[4, 3] = p[12, 5] = (230, 230, 255, 160)                 # it hums
+
+
 def it_shard(p, d):
     d.polygon([(8, 1), (12, 6), (10, 14), (5, 12), (4, 5)], fill=(160, 110, 50, 255))
     d.polygon([(8, 3), (10, 6), (9, 11), (6, 10)], fill=(210, 160, 80, 255))
@@ -598,6 +611,7 @@ def main():
     icon(it_clapper, 'bell_clapper')
     icon(it_shard, 'echo_shard')
     icon(it_music_box, 'music_box')
+    icon(it_tuning_fork, 'tuning_fork')
     icon(it_silence, 'silence')
     block_tex('console_side', (70, 76, 68))
     block_tex('console_top', (60, 64, 58), lambda p, d: d.rectangle((0, 0, 15, 15), outline=(40, 44, 40, 255)))

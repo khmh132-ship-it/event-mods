@@ -615,7 +615,7 @@ public final class Structures {
                 b.set(-3, 0, 3, Blocks.BONE_BLOCK);
                 b.set(-2, 0, 3, Blocks.SKELETON_SKULL);
                 b.chest(-3, 0, -1, Direction.EAST, note("lore_geologist"), it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1),
-                        it(Items.COMPASS, 1));
+                        it(Items.COMPASS, 1), it(ModItems.TUNING_FORK.get(), 1));
                 b.standingSign(4, 0, 3, 6, "ПАРТИЯ №4", "не отвечайте", "на позывные");
             }
             case 1 -> { // cordon post: sandbags, a barrier, a toppled tower

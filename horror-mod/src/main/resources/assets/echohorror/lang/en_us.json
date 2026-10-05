@@ -108,7 +108,7 @@
   "subtitles.echohorror.voice.camp_children": "Дети считают хором",
   "subtitles.echohorror.item.music_box_play": "Играет музыкальная шкатулка",
   "item.echohorror.music_box": "Музыкальная шкатулка Маши",
-  "item.echohorror.music_box.desc": "Играет колыбельную. Эхо не умеет её повторить.",
   "subtitles.echohorror.story.siren": "Воет сирена",
-  "subtitles.echohorror.voice.bunker_alarm": "Громкоговоритель: «Объект изолируется»"
+  "subtitles.echohorror.voice.bunker_alarm": "Громкоговоритель: «Объект изолируется»",
+  "item.echohorror.tuning_fork": "Камертон"
 }

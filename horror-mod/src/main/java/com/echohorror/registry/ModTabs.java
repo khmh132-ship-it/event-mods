@@ -25,6 +25,7 @@ public final class ModTabs {
                 out.accept(ModItems.PILLS.get());
                 out.accept(ModItems.HANDBELL.get());
                 out.accept(ModItems.MUSIC_BOX.get());
+                out.accept(ModItems.TUNING_FORK.get());
                 out.accept(ModItems.BELL_CLAPPER.get());
                 out.accept(ModItems.ECHO_SHARD.get());
                 out.accept(ModItems.SILENCE.get());

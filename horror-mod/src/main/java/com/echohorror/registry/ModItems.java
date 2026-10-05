@@ -42,6 +42,8 @@ public final class ModItems {
             () -> new HandbellItem(new Item.Properties().durability(24).rarity(Rarity.UNCOMMON)));
     public static final RegistryObject<Item> MUSIC_BOX = ITEMS.register("music_box",
             () -> new com.echohorror.item.MusicBoxItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE).fireResistant()));
+    public static final RegistryObject<Item> TUNING_FORK = ITEMS.register("tuning_fork",
+            () -> new com.echohorror.item.TuningForkItem(new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
     public static final RegistryObject<Item> ECHO_HEART = ITEMS.register("echo_heart",
             () -> new EchoHeartItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
     public static final RegistryObject<Item> GREAT_BELL_ROPE = ITEMS.register("great_bell_rope",
