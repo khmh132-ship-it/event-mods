@@ -23,6 +23,8 @@ public final class ClientState {
     public static String subtitle = "";
     public static int subtitleTicks;
     public static long time;
+    /** 0..1: something unseen-but-visible is staring at you right now. */
+    public static float watched;
 
     private ClientState() {}
 

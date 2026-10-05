@@ -42,7 +42,7 @@ public final class HorrorOverlay {
             float fear = 1f - s / 100f;
             float pulse = 0f;
             if (ClientState.heartbeat > 0 || s < 20) pulse = (float) Math.pow(Math.max(0, Math.sin(ClientState.time * (s < 10 ? 0.5 : 0.3))), 8) * 0.25f;
-            float va = Mth.clamp(fear * 0.95f + (ClientState.deep() ? 0.2f : 0f) + pulse, 0f, 1f);
+            float va = Mth.clamp(fear * 0.95f + (ClientState.deep() ? 0.2f : 0f) + pulse + ClientState.watched * 0.6f, 0f, 1f);
             if (va > 0.02f) {
                 g.setColor(ClientState.echoNight() ? 0.35f : 0f, 0f, 0f, va);
                 g.blit(VIGNETTE, 0, 0, w, h, 0, 0, 256, 256, 256, 256);

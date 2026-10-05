@@ -273,6 +273,7 @@ public final class StoryManager {
                     HorrorUtil.playAt(p, "story.bell_far", 0.8f, 0.8f);
                 }
                 if (effectiveChapter(d) >= CH_DEPTHS && (!d.flag("ending_echo") || d.nights % 2 == 0)) siege(server, d);
+                ow.setWeatherParameters(0, 5200, true, true); // the sky joins in
             }
         }
 

@@ -26,6 +26,7 @@ public final class ClientEvents {
         ClientState.tick();
         SoundSequencer.tick();
         ambience(mc);
+        updateWatched(mc);
         if (mc.isPaused()) return;
         boolean beat = ClientState.heartbeat > 0 || (ClientState.chapter > 0 && ClientState.sanity < 15);
         if (beat && --heartbeatCd <= 0) {
@@ -36,6 +37,27 @@ public final class ClientEvents {
     }
 
     private static AmbientLoop ambient;
+    private static int tinnitusCd;
+
+    /** Is one of the visions in your field of view? You may not have noticed it yet. Your body has. */
+    private static void updateWatched(Minecraft mc) {
+        float target = 0f;
+        net.minecraft.world.phys.Vec3 eye = mc.player.getEyePosition();
+        net.minecraft.world.phys.Vec3 look = mc.player.getViewVector(1f);
+        for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+            if (!(e instanceof com.echohorror.entity.PhantomEntity)) continue;
+            net.minecraft.world.phys.Vec3 to = e.position().add(0, 1.5, 0).subtract(eye);
+            double dist = to.length();
+            if (dist > 64 || dist < 0.5) continue;
+            double dot = look.dot(to.normalize());
+            if (dot > 0.75) target = Math.max(target, (float) ((dot - 0.75) / 0.25) * (float) Math.min(1.0, 24.0 / dist));
+        }
+        ClientState.watched += (Mth.clamp(target, 0f, 1f) - ClientState.watched) * 0.1f;
+        if (ClientState.watched > 0.5f && --tinnitusCd <= 0) {
+            tinnitusCd = 200;
+            mc.getSoundManager().play(SoundSequencer.flat("scare.tinnitus", 0.25f, false));
+        }
+    }
 
     /** Chooses the background drone: the depths breathe, the night hums, the day is silent. */
     private static void ambience(Minecraft mc) {
