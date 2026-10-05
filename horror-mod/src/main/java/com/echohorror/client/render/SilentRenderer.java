@@ -23,13 +23,13 @@ public class SilentRenderer extends HumanoidMobRenderer<SilentEntity, PlayerMode
             // each one is frozen in its own broken pose
             float v = (e.getId() * 0.618f) % 1f;
             head.yRot = 0.2f * (v - 0.5f);
-            head.xRot = 0.35f;
-            head.zRot = 0.5f + 0.25f * v;        // the neck is broken
+            head.xRot = 0.3f;                     // looking down at you
+            head.zRot = 0.12f + 0.12f * v;       // only slightly wrong
             head.yScale = 1.15f;
             head.y = -2.5f;                       // a gap where the neck should be
-            body.xRot = 0.12f;
+            body.xRot = 0.06f;
             body.yRot = 0f;
-            rightArm.xRot = -0.25f - 0.6f * v;    // one hand slowly reaching
+            rightArm.xRot = -1.05f - 0.3f * v;    // one hand reaching for you
             rightArm.yRot = -0.1f;
             rightArm.zRot = 0.05f;
             leftArm.xRot = 0.1f;
@@ -58,7 +58,7 @@ public class SilentRenderer extends HumanoidMobRenderer<SilentEntity, PlayerMode
 
     @Override
     protected void scale(SilentEntity e, PoseStack ps, float partial) {
-        ps.scale(0.78f, 1.22f, 0.78f); // too tall, too thin
+        ps.scale(0.88f, 1.38f, 0.88f); // too tall, too thin
     }
 
     @Override

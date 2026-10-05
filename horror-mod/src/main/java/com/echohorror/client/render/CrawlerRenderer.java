@@ -30,20 +30,20 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
             rightLeg.yScale = leftLeg.yScale = 0.85f;
             body.xScale = 0.72f;
             float twitch = Mth.sin(age * 9.1f) * Mth.sin(age * 2.3f) > 0.85f ? 0.5f : 0f;
-            head.zRot = 1.4f + Mth.sin(age * 0.23f) * 0.2f + twitch; // the head lies on its shoulder, sideways
+            head.zRot = 0.18f + Mth.sin(age * 0.23f) * 0.08f + twitch; // straight at you, twitching
             head.yRot += twitch * 0.6f;
             if (!e.onClimbable()) {
                 float sw = limbSwing * 1.1f;
-                body.xRot = 0.95f;
-                head.xRot = -0.75f + Mth.sin(age * 0.6f) * 0.08f; // craning up to stare at you
+                body.xRot = 0.65f;                    // shoulders up, ready to lunge
+                head.xRot = -0.55f + Mth.sin(age * 0.6f) * 0.05f; // staring right at you
                 head.y = 5.5f;
                 head.z = -3.5f;
                 rightArm.y = leftArm.y = 5.5f;
                 rightArm.z = leftArm.z = -2.5f;
                 rightArm.xRot = -0.35f + Mth.cos(sw) * 0.7f * limbAmount;            // walking on its hands
                 leftArm.xRot = -0.35f + Mth.cos(sw + (float) Math.PI) * 0.7f * limbAmount;
-                rightArm.zRot = 0.18f;
-                leftArm.zRot = -0.18f;
+                rightArm.zRot = 0.42f;                // spread wide like a predator
+                leftArm.zRot = -0.42f;
                 rightLeg.xRot = -0.6f + Mth.cos(sw + (float) Math.PI) * 0.5f * limbAmount;
                 leftLeg.xRot = -0.6f + Mth.cos(sw) * 0.5f * limbAmount;
             }
@@ -67,7 +67,7 @@ public class CrawlerRenderer extends HumanoidMobRenderer<CrawlerEntity, PlayerMo
 
     @Override
     protected void scale(CrawlerEntity e, PoseStack ps, float partial) {
-        ps.scale(0.95f, 0.95f, 0.95f);
+        ps.scale(1.4f, 1.4f, 1.4f); // bigger than you think
     }
 
     @Override
