@@ -264,16 +264,15 @@ public final class StoryManager {
         if (d.chapter == CH_NONE) {
             firstPlayerTicks += 20;
             if (!Config.AUTO_START.get() && firstPlayerTicks % 6000 == 20) dormantHint(server);
-            if (Config.AUTO_START.get() && firstPlayerTicks >= 600) {
+            long t = ow.getDayTime() % 24000L;
+            boolean evening = t >= 11000 && t < 23500; // the first sunset (or any later dark)
+            boolean frozenClock = !ow.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DAYLIGHT);
+            // the day belongs to the players; the story begins with the first sunset
+            if (Config.AUTO_START.get() && firstPlayerTicks >= 600 && (evening || frozenClock && firstPlayerTicks >= 12000)) {
                 ServerPlayer first = players.get(0);
-                // the sun goes down faster than it should
-                long t = ow.getDayTime() % 24000L;
-                if (t < 11500 || t > 23500) {
-                    long base = ow.getDayTime() - t;
-                    ow.setDayTime(base + (t > 23500 ? 24000L : 0L) + 11500L);
-                }
+                if (!evening) ow.setDayTime(ow.getDayTime() - t + 11500L); // the clock is stopped: make it dusk
                 for (ServerPlayer p : players) {
-                    p.sendSystemMessage(Component.literal("Солнце садится быстрее, чем должно.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+                    p.sendSystemMessage(Component.literal("Солнце садится. В эфире что-то оживает.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }
                 start(server, first.level() == ow ? first.blockPosition() : ow.getSharedSpawnPos());
             }
