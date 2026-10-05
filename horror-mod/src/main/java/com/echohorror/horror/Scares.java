@@ -376,6 +376,21 @@ public final class Scares {
             Sanity.add(c.p, -2);
             return true;
         });
+        add("radio_snippet", 1, 100, 3, 500, c -> (c.night || c.underground)
+                && c.p.getInventory().contains(new ItemStack(ModItems.LOCATOR.get())), c -> {
+            // somebody else's transmission, cut off mid-sentence
+            String[] subs = {"«...кто-нибудь слышит? Приём. Кто-нибудь...»", "«...нас осталось трое. Нет. Четверо. Нас стало четверо...»",
+                    "«...не выходите к колодцу. Повторяю, не выходите...»", "«...он стоит у окна. Уже второй час...»",
+                    "«...это не я. Если услышите меня утром — это не я...»", "«...мама, забери меня. Мама...»"};
+            int i = c.r.nextInt(subs.length);
+            Net.send(c.p, new SoundSeqPacket.Builder()
+                    .sound("radio.tune", 1, "[ пеленгатор ловит чужую волну ]")
+                    .sound("radio.snip" + (i + 1), 30, subs[i])
+                    .sub("", 100)
+                    .build());
+            Sanity.add(c.p, -2);
+            return true;
+        });
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {

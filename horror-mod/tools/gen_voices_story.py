@@ -49,6 +49,15 @@ def main():
         r = g.resample(v, 0.97 + 0.02 * i)
         wrong = r * (1 + 0.15 * np.sin(2 * np.pi * 7 * np.arange(len(r)) / g.SR))  # a tremor that isn't quite human
         g.save(f'voice/mimic{i + 1}', g.reverb(g.lp(wrong, 4500), 1.6, 0.3, 3000), 0.8)
+    # fragments of other people's transmissions the locator picks up at night
+    snippets = [('...кто-нибудь слышит? Приём. Кто-нибудь...', n.DENIS), ('...нас осталось трое. Нет. Четверо. Нас стало четверо...', n.DMITRI),
+                ('...не выходите к колодцу. Повторяю, не выходите...', n.IRINA), ('...он стоит у окна. Уже второй час...', n.RUSLAN),
+                ('...это не я. Если услышите меня утром — это не я...', n.DENIS), ('...мама, забери меня. Мама...', n.IRINA)]
+    for i, (t, vc) in enumerate(snippets):
+        v = n.say(t, vc, 1.0, 0.8, 1.0)
+        if vc == n.IRINA and i == 5:
+            v = g.resample(v, 1.28)
+        g.save(f'radio/snip{i + 1}', n.radio_l(g.pad_silence(v, 0.3, 0.4), 0.12), 0.75)
     lis = n.say('Сюда! Я в церкви! Быстрее, пока оно не вернулось!', n.DENIS, 0.9, 0.8, 1.0)
     g.save('voice/lis_call', g.reverb(g.lp(lis, 5000), 2.2, 0.35, 3000), 0.8)
     why = n.say('Почему ты не идёшь ко мне? Почему ты не идёшь ко мне. Почему.', n.DENIS, 1.15, 0.9, 1.0)

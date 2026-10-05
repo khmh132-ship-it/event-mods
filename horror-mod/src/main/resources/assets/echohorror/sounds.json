@@ -750,5 +750,41 @@
   "sounds": [
    "echohorror:voice/mimic5"
   ]
+ },
+ "radio.snip1": {
+  "subtitle": "subtitles.echohorror.radio.snip1",
+  "sounds": [
+   "echohorror:radio/snip1"
+  ]
+ },
+ "radio.snip2": {
+  "subtitle": "subtitles.echohorror.radio.snip2",
+  "sounds": [
+   "echohorror:radio/snip2"
+  ]
+ },
+ "radio.snip3": {
+  "subtitle": "subtitles.echohorror.radio.snip3",
+  "sounds": [
+   "echohorror:radio/snip3"
+  ]
+ },
+ "radio.snip4": {
+  "subtitle": "subtitles.echohorror.radio.snip4",
+  "sounds": [
+   "echohorror:radio/snip4"
+  ]
+ },
+ "radio.snip5": {
+  "subtitle": "subtitles.echohorror.radio.snip5",
+  "sounds": [
+   "echohorror:radio/snip5"
+  ]
+ },
+ "radio.snip6": {
+  "subtitle": "subtitles.echohorror.radio.snip6",
+  "sounds": [
+   "echohorror:radio/snip6"
+  ]
  }
 }
