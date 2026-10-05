@@ -13,6 +13,7 @@ public final class ModLoot {
 
     static {
         MODIFIERS.register("lore_notes", LoreNoteModifier.CODEC);
+        MODIFIERS.register("tacz_guns", com.echohorror.loot.TaczLootModifier.CODEC);
     }
 
     private ModLoot() {}

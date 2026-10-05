@@ -16,6 +16,7 @@ public final class Config {
     public static final ForgeConfigSpec.BooleanValue JUMPSCARES;
     public static final ForgeConfigSpec.BooleanValue VOICE_MIMIC;
     public static final ForgeConfigSpec.BooleanValue VOICE_HEARD;
+    public static final ForgeConfigSpec.BooleanValue TACZ;
     public static final ForgeConfigSpec.BooleanValue HOSTILE_SPAWNS;
 
     public static final ForgeConfigSpec.BooleanValue REDUCE_FLASHING;
@@ -43,6 +44,8 @@ public final class Config {
         VOICE_MIMIC = b.comment("Эхо записывает голоса игроков (Simple Voice Chat) и повторяет их. Записи хранятся только в памяти.")
                 .define("voiceMimic", true);
         VOICE_HEARD = b.comment("Твари в Глубине и бункере слышат голосовой чат (шёпот — нет)").define("voiceAttracts", true);
+        TACZ = b.comment("Если стоит TACZ: оружие нельзя скрафтить, только найти (пистолет и двустволка); крафтятся только их патроны")
+                .define("taczIntegration", true);
         HOSTILE_SPAWNS = b.comment("Появление враждебных существ Эха").define("hostileSpawns", true);
         b.pop();
         SPEC = b.build();

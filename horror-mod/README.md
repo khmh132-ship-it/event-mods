@@ -106,6 +106,13 @@
 Пугалки, отнимающие управление (фальшивые экраны, скримеры, разворот камеры), не срабатывают, пока игрок в транспорте,
 в полёте или в бою.
 
+## Оружие (если стоит TACZ)
+
+Оружие нельзя скрафтить — только найти: **пистолет CZ75** (9 мм) у солдат на посту оцепления, **двустволка**
+(12 калибр) в казарме бункера, патроны — в лагере геологов, погребе Тихого Лога и у шахтёров в Глубине. В обычных
+сундуках мира изредка лежит пистолет или двустволка, чаще — патроны. В оружейном столе TACZ остаются только два
+рецепта: патроны 9 мм и 12 калибра. Выстрелы громкие — Ползуны придут на звук. Отключается `taczIntegration = false`.
+
 ## Крафты
 
 | Предмет | Рецепт |
@@ -137,7 +144,7 @@
 ## Настройки
 
 `config/echohorror-common.toml` (сервер): `autoStartOnJoin`, `locationDistance`, `intensity`, `sanityDrain`, `fakeScreens`,
-`fakeChat`, `worldTampering`, `jumpscares`, `voiceMimic`, `voiceAttracts`, `hostileSpawns`.
+`fakeChat`, `worldTampering`, `jumpscares`, `voiceMimic`, `voiceAttracts`, `taczIntegration`, `hostileSpawns`.
 `config/echohorror-client.toml` (игрок): `reduceFlashing` (для фоточувствительных), `screenEffects`.
 
 ## Что нового (дневная доработка)

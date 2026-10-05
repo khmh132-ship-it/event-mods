@@ -265,6 +265,16 @@ public final class ForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onStarted(net.minecraftforge.event.server.ServerStartedEvent e) {
+        com.echohorror.compat.TaczCompat.filterRecipes(e.getServer());
+    }
+
+    @SubscribeEvent
+    public static void onDatapackSync(net.minecraftforge.event.OnDatapackSyncEvent e) {
+        if (e.getPlayer() == null) com.echohorror.compat.TaczCompat.filterRecipes(e.getPlayerList().getServer()); // after /reload
+    }
+
+    @SubscribeEvent
     public static void onStopping(ServerStoppingEvent e) {
         FlashlightManager.clearAll(e.getServer());
         StoryManager.onServerStopping();

@@ -634,7 +634,8 @@ public final class Structures {
                 b.set(-3, 0, 3, Blocks.BONE_BLOCK);
                 b.set(-2, 0, 3, Blocks.SKELETON_SKULL);
                 b.chest(-3, 0, -1, Direction.EAST, note("lore_geologist"), it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1),
-                        it(Items.COMPASS, 1), it(ModItems.TUNING_FORK.get(), 1));
+                        it(Items.COMPASS, 1), it(ModItems.TUNING_FORK.get(), 1),
+                        com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_PISTOL, 12));
                 b.standingSign(4, 0, 3, 6, "ПАРТИЯ №4", "не отвечайте", "на позывные");
             }
             case 1 -> { // cordon post: sandbags, a barrier, a toppled tower
@@ -647,7 +648,8 @@ public final class Structures {
                 b.setC(1, 0, -3, Blocks.OAK_FENCE);
                 b.set(0, 1, -3, Blocks.STRIPPED_OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
                 for (int z = 0; z <= 4; z++) b.set(3, 0, z, Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
-                b.barrel(-3, 0, 1, note("lore_soldier"), it(ModItems.BATTERY.get(), 3), it(Items.ARROW, 16));
+                b.barrel(-3, 0, 1, note("lore_soldier"), it(ModItems.BATTERY.get(), 3), it(Items.ARROW, 16),
+                        com.echohorror.compat.TaczCompat.gun(com.echohorror.compat.TaczCompat.PISTOL, 4), com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_PISTOL, 24));
                 b.barrel(-3, 0, 2, it(ModItems.PILLS.get(), 1), it(Items.BREAD, 4));
                 b.standingSign(0, 0, -5, 8, "СТОЙ!", "ЗАПРЕТНАЯ ЗОНА", "ОГОНЬ БЕЗ", "ПРЕДУПРЕЖДЕНИЯ");
                 b.set(1, 0, 1, Blocks.REDSTONE_WIRE);
@@ -734,7 +736,8 @@ public final class Structures {
                 new Block[]{Blocks.COBBLESTONE, Blocks.DIRT, Blocks.COARSE_DIRT}, new Block[]{Blocks.SPRUCE_PLANKS});
         b.set(16, -1, -16, Blocks.SPRUCE_TRAPDOOR.defaultBlockState().setValue(TrapDoorBlock.HALF, Half.TOP));
         b.ladder(16, -6, -2, -16, Direction.SOUTH);
-        BlockPos clapperChest = b.chest(18, -6, -13, Direction.WEST, it(ModItems.BELL_CLAPPER.get(), 1), note("priest2"), it(ModItems.PILLS.get(), 2));
+        BlockPos clapperChest = b.chest(18, -6, -13, Direction.WEST, it(ModItems.BELL_CLAPPER.get(), 1), note("priest2"), it(ModItems.PILLS.get(), 2),
+                com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_SHOTGUN, 6));
         b.set(14, -6, -13, Blocks.BONE_BLOCK);
         b.set(14, -6, -14, Blocks.SKELETON_SKULL);
         for (int i = 0; i < 6; i++) b.set(14 + b.r.nextInt(5), -6, -16 + b.r.nextInt(4), Blocks.REDSTONE_WIRE);
@@ -936,7 +939,8 @@ public final class Structures {
         }
         b.fill(-1, 0, -1, 1, 6, -1, Blocks.COBBLED_DEEPSLATE);
         b.ladder(0, 0, top, 0, Direction.SOUTH);
-        b.chest(4, 0, 3, Direction.WEST, note("miner1"), it(ModItems.BATTERY.get(), 3), it(ModItems.PILLS.get(), 1), it(Items.TORCH, 8));
+        b.chest(4, 0, 3, Direction.WEST, note("miner1"), it(ModItems.BATTERY.get(), 3), it(ModItems.PILLS.get(), 1), it(Items.TORCH, 8),
+                com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_SHOTGUN, 6), com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_PISTOL, 10));
         b.set(-4, 0, 3, Blocks.BONE_BLOCK);
         b.sign(3, 1, -5, Direction.SOUTH, "ЗАПАД", "ВОСТОК", "СЕВЕР", "↓ ОБЪЕКТ — ЮГ");
         b.set(3, 1, -6, Blocks.COBBLED_DEEPSLATE);
@@ -1025,7 +1029,8 @@ public final class Structures {
         b.bed(-10, 0, 43, Direction.EAST, Blocks.WHITE_BED);
         b.bed(-10, 0, 46, Direction.EAST, Blocks.RED_BED);
         b.barrel(-4, 0, 47, note("protocol"), it(ModItems.BATTERY.get(), 3), it(Items.BREAD, 4));
-        b.barrel(-4, 0, 41, it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1), it(ModItems.HANDBELL.get(), 1));
+        b.barrel(-4, 0, 41, it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1), it(ModItems.HANDBELL.get(), 1),
+                com.echohorror.compat.TaczCompat.gun(com.echohorror.compat.TaczCompat.SHOTGUN, 0), com.echohorror.compat.TaczCompat.ammo(com.echohorror.compat.TaczCompat.AMMO_SHOTGUN, 10));
         b.set(-6, 0, 47, Blocks.RED_CARPET);
         b.set(-7, 0, 47, Blocks.REDSTONE_WIRE);
 
