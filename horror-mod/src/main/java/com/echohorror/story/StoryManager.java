@@ -360,7 +360,14 @@ public final class StoryManager {
         }
         if (d.in("village", pos) && HorrorUtil.isNight(p.serverLevel()) && r.nextFloat() < 0.03f) {
             BlockPos bell = d.get("bell");
-            if (bell != null) HorrorUtil.playTo(p, "story.bell_far", Vec3.atCenterOf(bell), 0.6f, 0.9f);
+            if (bell != null) {
+                HorrorUtil.playTo(p, "story.bell_far", Vec3.atCenterOf(bell), 0.6f, 0.9f);
+                // the bell-ringer is still up there
+                if (d.chapter <= CH_VILLAGE && pos.distanceToSqr(Vec3.atCenterOf(bell)) > 20 * 20 && r.nextBoolean()) {
+                    PhantomEntity.spawn(p, PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_STARE,
+                            Vec3.atBottomCenterOf(bell.below(2)).add(0.6, 0, 0), 240).vanishDistance(12).watchLimit(50);
+                }
+            }
         }
     }
 

@@ -249,6 +249,24 @@ public final class Scares {
             Sanity.add(c.p, -5);
             return true;
         });
+        add("echo_steps", 1, 100, 5, 300, c -> c.night || c.underground, c -> {
+            // your own footsteps, half a second late, from behind — only while you walk
+            final Vec3[] last = {c.p.position()};
+            for (int i = 0; i < 16; i++) {
+                Scheduler.schedule(10 + i * 9, () -> {
+                    if (c.p.hasDisconnected()) return;
+                    Vec3 now = c.p.position();
+                    boolean moved = now.distanceToSqr(last[0]) > 0.5;
+                    last[0] = now;
+                    if (!moved) return;
+                    BlockState st = c.level.getBlockState(c.p.blockPosition().below());
+                    Scheduler.schedule(8, () -> HorrorUtil.playTo(c.p, st.getSoundType().getStepSound(),
+                            HorrorUtil.behind(c.p, 3).subtract(0, 1.5, 0), 0.45f, 0.95f));
+                });
+            }
+            Sanity.add(c.p, -2);
+            return true;
+        });
         add("window_face", 2, 100, 6, 300, c -> !c.p.level().canSeeSky(c.p.blockPosition()), Scares::windowFace);
         add("dig_below", 2, 90, 3, 400, c -> true, c -> {
             // something is digging right under your feet... and stops when you do

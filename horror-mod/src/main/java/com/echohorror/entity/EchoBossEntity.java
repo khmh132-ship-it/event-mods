@@ -56,6 +56,7 @@ import java.util.*;
  */
 public class EchoBossEntity extends Monster {
     private static final EntityDataAccessor<Boolean> STUNNED = SynchedEntityData.defineId(EchoBossEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<java.util.Optional<java.util.UUID>> FACE = SynchedEntityData.defineId(EchoBossEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(Component.literal("ОТГОЛОСОК"),
             BossEvent.BossBarColor.WHITE, BossEvent.BossBarOverlay.NOTCHED_10).setDarkenScreen(true).setCreateWorldFog(true);
@@ -94,6 +95,11 @@ public class EchoBossEntity extends Monster {
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(STUNNED, false);
+        entityData.define(FACE, java.util.Optional.empty());
+    }
+
+    public java.util.Optional<java.util.UUID> getFace() {
+        return entityData.get(FACE);
     }
 
     public boolean isStunned() {
@@ -174,6 +180,15 @@ public class EchoBossEntity extends Monster {
             for (ServerPlayer sp : players) {
                 Net.fx(sp, Fx.SHAKE, 40, 2f, "");
                 Net.fx(sp, Fx.SCREEN_TEXT, 30, 0f, phase == 2 ? "ОНО ВСПОМИНАЕТ ВАС" : "ОНО ЗНАЕТ ВАШИ ИМЕНА");
+            }
+            if (phase == 3 && !players.isEmpty()) {
+                // the last phase wears one of you
+                ServerPlayer face = players.get(random.nextInt(players.size()));
+                entityData.set(FACE, java.util.Optional.of(face.getUUID()));
+                for (ServerPlayer sp : players) {
+                    sp.displayClientMessage(Component.literal("Оно надело лицо " + face.getGameProfile().getName() + ".")
+                            .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), true);
+                }
             }
         }
 

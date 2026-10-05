@@ -54,6 +54,6 @@ public class BossRenderer extends HumanoidMobRenderer<EchoBossEntity, PlayerMode
 
     @Override
     public ResourceLocation getTextureLocation(EchoBossEntity e) {
-        return TEX;
+        return e.getFace().map(id -> Skins.of(id).texture()).orElse(TEX);
     }
 }
