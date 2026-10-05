@@ -199,9 +199,11 @@ public class MimicEntity extends Monster {
         UUID skin = getSkin().orElse(null);
         if (skin != null && VoiceBridge.hasClip(skin) && VoiceBridge.play(listener, skin, position().add(0, 1.6, 0))) return;
         if (skin != null && !copiedName.isEmpty()) {
-            String text = ChatMemory.randomOf(random, skin).map(ChatMemory.Line::text)
-                    .orElse(new String[]{"иди сюда", "я тут", "ты чего стоишь?", "подойди", "всё нормально, иди сюда"}[random.nextInt(5)]);
-            listener.sendSystemMessage(Component.translatable("chat.type.text", copiedName, text));
+            java.util.Optional<String> remembered = ChatMemory.randomOf(random, skin).map(ChatMemory.Line::text);
+            String[] generic = {"иди сюда", "я тут", "ты чего стоишь?", "подойди", "всё нормально, иди сюда"};
+            int g = random.nextInt(generic.length);
+            listener.sendSystemMessage(Component.translatable("chat.type.text", copiedName, remembered.orElse(generic[g])));
+            if (remembered.isEmpty()) HorrorUtil.playTo(listener, "voice.mimic" + (g + 1), position().add(0, 1.6, 0), 1.4f, 1f);
         }
     }
 

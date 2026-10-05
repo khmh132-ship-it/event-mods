@@ -41,6 +41,14 @@ def main():
         else:
             y = v
         g.save(f'voice/kuzmich{i + 1}', g.reverb(y, 1.2, 0.2, 4000), 0.8)
+    # a mimic without a recording of you: almost a person
+    lines = ['иди сюда', 'я тут', 'ты чего стоишь?', 'подойди', 'всё нормально, иди сюда']
+    for i, t in enumerate(lines):
+        vc = [n.DENIS, n.IRINA, n.DMITRI, n.RUSLAN, n.IRINA][i]
+        v = n.say(t, vc, 1.05, 0.9, 1.1)
+        r = g.resample(v, 0.97 + 0.02 * i)
+        wrong = r * (1 + 0.15 * np.sin(2 * np.pi * 7 * np.arange(len(r)) / g.SR))  # a tremor that isn't quite human
+        g.save(f'voice/mimic{i + 1}', g.reverb(g.lp(wrong, 4500), 1.6, 0.3, 3000), 0.8)
     lis = n.say('Сюда! Я в церкви! Быстрее, пока оно не вернулось!', n.DENIS, 0.9, 0.8, 1.0)
     g.save('voice/lis_call', g.reverb(g.lp(lis, 5000), 2.2, 0.35, 3000), 0.8)
     why = n.say('Почему ты не идёшь ко мне? Почему ты не идёшь ко мне. Почему.', n.DENIS, 1.15, 0.9, 1.0)

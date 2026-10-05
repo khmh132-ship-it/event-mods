@@ -720,5 +720,35 @@
     "stream": true
    }
   ]
+ },
+ "voice.mimic1": {
+  "subtitle": "subtitles.echohorror.voice.mimic1",
+  "sounds": [
+   "echohorror:voice/mimic1"
+  ]
+ },
+ "voice.mimic2": {
+  "subtitle": "subtitles.echohorror.voice.mimic2",
+  "sounds": [
+   "echohorror:voice/mimic2"
+  ]
+ },
+ "voice.mimic3": {
+  "subtitle": "subtitles.echohorror.voice.mimic3",
+  "sounds": [
+   "echohorror:voice/mimic3"
+  ]
+ },
+ "voice.mimic4": {
+  "subtitle": "subtitles.echohorror.voice.mimic4",
+  "sounds": [
+   "echohorror:voice/mimic4"
+  ]
+ },
+ "voice.mimic5": {
+  "subtitle": "subtitles.echohorror.voice.mimic5",
+  "sounds": [
+   "echohorror:voice/mimic5"
+  ]
  }
 }
