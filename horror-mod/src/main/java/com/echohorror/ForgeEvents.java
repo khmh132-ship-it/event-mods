@@ -112,6 +112,7 @@ public final class ForgeEvents {
         ChatMemory.record(p.getUUID(), p.getGameProfile().getName(), e.getRawText());
         // the echo: sometimes your own words come back to you a few seconds later
         String text = e.getRawText();
+        if (text != null && com.echohorror.horror.ChatReplies.maybeReply(p, text)) return;
         if (text != null && !text.startsWith("/") && StoryData.get(p.server).chapter >= StoryManager.CH_RELAY
                 && StoryData.get(p.server).chapter < StoryManager.CH_SILENCE && Config.FAKE_CHAT.get() && p.getRandom().nextFloat() < 0.1f) {
             String echo = text.toLowerCase(java.util.Locale.ROOT).replaceAll("[!?.]+$", "") + "...";
