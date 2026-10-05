@@ -238,6 +238,27 @@ public final class Scares {
             Sanity.add(c.p, -4);
             return true;
         }).orElse(false));
+        add("replay", 1, 90, 4, 600, c -> (c.night || c.underground) && PathMemory.of(c.p.getUUID()).size() > 1500, c -> {
+            // a minute or two later, "you" walk the exact same way you did — and it notices you watching
+            List<PathMemory.Sample> trail = PathMemory.of(c.p.getUUID());
+            Vec3 now = c.p.position();
+            for (int tries = 0; tries < 30; tries++) {
+                int start = trail.size() - 600 - c.r.nextInt(Math.max(1, trail.size() - 900));
+                if (start < 0) continue;
+                PathMemory.Sample s = trail.get(start);
+                double d0 = s.pos().distanceTo(now);
+                if (d0 < 12 || d0 > 32) continue;
+                // the segment must actually move and stay a little away from where the player stands now
+                List<PathMemory.Sample> seg = trail.subList(start, Math.min(trail.size() - 100, start + 500));
+                if (seg.size() < 120 || seg.get(0).pos().distanceTo(seg.get(seg.size() - 1).pos()) < 8) continue;
+                if (HorrorUtil.isLookingAt(c.p, s.pos().add(0, 1, 0), 0.9)) continue; // don't pop into view
+                PhantomEntity.spawn(c.p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_REPLAY, s.pos(), seg.size() * 2 + 60)
+                        .skin(c.p.getUUID(), c.p.getGameProfile().getName()).replay(new ArrayList<>(seg));
+                Scheduler.schedule(60, () -> HorrorUtil.playTo(c.p, SoundEvents.ARMOR_EQUIP_LEATHER, s.pos(), 0.5f, 0.9f));
+                return true;
+            }
+            return false;
+        });
         add("hand_on_shoulder", 2, 70, 3, 900, c -> true, c -> {
             HorrorUtil.playTo(c.p, SoundEvents.WOOL_STEP, HorrorUtil.behind(c.p, 0.6), 0.6f, 0.7f);
             Scheduler.schedule(15, () -> {

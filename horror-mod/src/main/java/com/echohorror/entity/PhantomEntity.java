@@ -32,7 +32,7 @@ import java.util.UUID;
  */
 public class PhantomEntity extends PathfinderMob {
     public static final int KIND_WATCHER = 0, KIND_SHADE = 1, KIND_FAKE_PLAYER = 2, KIND_SILENT = 3, KIND_MIMIC = 4;
-    public static final int MODE_STARE = 0, MODE_BEHIND = 1, MODE_WALK_AWAY = 2, MODE_CREEP = 3, MODE_STILL = 4, MODE_CIRCLE = 5, MODE_PROCESSION = 6;
+    public static final int MODE_STARE = 0, MODE_BEHIND = 1, MODE_WALK_AWAY = 2, MODE_CREEP = 3, MODE_STILL = 4, MODE_CIRCLE = 5, MODE_PROCESSION = 6, MODE_REPLAY = 7;
 
     private static final EntityDataAccessor<Integer> KIND = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Optional<UUID>> SKIN = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.OPTIONAL_UUID);
@@ -49,6 +49,17 @@ public class PhantomEntity extends PathfinderMob {
     private Vec3 anchor;      // circle centre / procession destination
     private boolean leader;   // the one that screams
     private int turnTicks = -1;
+    private java.util.List<com.echohorror.horror.PathMemory.Sample> path; // MODE_REPLAY: the target's own trail
+    private int pathIdx;
+
+    /** Walks exactly where the target walked, looking where they looked. */
+    public PhantomEntity replay(java.util.List<com.echohorror.horror.PathMemory.Sample> trail) {
+        this.path = trail;
+        this.pathIdx = 0;
+        this.noPhysics = true;
+        setNoGravity(true);
+        return this;
+    }
 
     public PhantomEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -202,6 +213,28 @@ public class PhantomEntity extends PathfinderMob {
                     vanish(t, false);
                 } else if (getNavigation().isDone()) {
                     getNavigation().moveTo(anchor.x, anchor.y, anchor.z, 0.55);
+                }
+            }
+            case MODE_REPLAY -> {
+                getNavigation().stop();
+                if (turnTicks >= 0) { // it noticed you
+                    setDeltaMovement(Vec3.ZERO);
+                    faceTarget(t);
+                    if (++turnTicks > 24) vanish(t, true);
+                } else if (path == null || pathIdx >= path.size()) {
+                    vanish(t, false);
+                } else {
+                    if (tickCount % 2 == 0) {
+                        var s = path.get(pathIdx++);
+                        setPos(s.x(), s.y(), s.z());
+                        setYRot(s.yaw());
+                        yBodyRot = s.yaw();
+                        yHeadRot = s.yaw();
+                        setXRot(s.pitch());
+                        setShiftKeyDown(s.crouch());
+                    }
+                    if (watched) watchedTicks++;
+                    if (dist < 5 || watchedTicks > 160 && dist < 16) turnTicks = 0;
                 }
             }
             default -> faceTarget(t);

@@ -42,7 +42,10 @@ public final class ForgeEvents {
         MinecraftServer server = e.getServer();
         ticks++;
         Scheduler.tick();
-        if (ticks % 2 == 0) FlashlightManager.tick(server, ticks);
+        if (ticks % 2 == 0) {
+            FlashlightManager.tick(server, ticks);
+            PathMemory.tick(server);
+        }
         if (ticks % 20 == 0) {
             try {
                 StoryManager.tick(server);
@@ -74,6 +77,7 @@ public final class ForgeEvents {
         if (e.getEntity() instanceof ServerPlayer sp) {
             FlashlightManager.remove(sp.server, sp.getUUID());
             HorrorDirector.forget(sp.getUUID());
+            PathMemory.forget(sp.getUUID());
         }
     }
 
@@ -238,5 +242,6 @@ public final class ForgeEvents {
         StoryManager.onServerStopping();
         Scheduler.clear();
         ChatMemory.clear();
+        PathMemory.clear();
     }
 }
