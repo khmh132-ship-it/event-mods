@@ -613,7 +613,7 @@ public final class Structures {
         b.candles(-1, 1, 36);
         b.candles(1, 1, 36);
         b.set(0, 1, 36, Blocks.SKELETON_SKULL);
-        b.chest(0, 0, 37, Direction.NORTH, note("priest1"), it(ModItems.PILLS.get(), 2), it(Items.CANDLE, 4));
+        b.chest(0, 0, 37, Direction.NORTH, note("priest1"), it(ModItems.PILLS.get(), 2), it(Items.CANDLE, 4), it(ModItems.HANDBELL.get(), 1));
         b.fill(-1, 0, 34, 1, 0, 35, Blocks.RED_CARPET);
         b.sign(-2, 3, 37, Direction.NORTH, "ЗВОНИТЕ");
         b.sign(2, 3, 37, Direction.NORTH, "В ПОЛНОЧЬ");
@@ -827,7 +827,7 @@ public final class Structures {
         b.bed(-10, 0, 43, Direction.EAST, Blocks.WHITE_BED);
         b.bed(-10, 0, 46, Direction.EAST, Blocks.RED_BED);
         b.barrel(-4, 0, 47, note("protocol"), it(ModItems.BATTERY.get(), 3), it(Items.BREAD, 4));
-        b.barrel(-4, 0, 41, it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1));
+        b.barrel(-4, 0, 41, it(ModItems.BATTERY.get(), 2), it(ModItems.PILLS.get(), 1), it(ModItems.HANDBELL.get(), 1));
         b.set(-6, 0, 47, Blocks.RED_CARPET);
         b.set(-7, 0, 47, Blocks.REDSTONE_WIRE);
 

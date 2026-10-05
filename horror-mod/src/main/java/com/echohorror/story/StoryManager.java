@@ -276,6 +276,7 @@ public final class StoryManager {
             // one-time location titles
             if (d.in("village", pos) && d.setFlag("title_village")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Тихий Лог. Ни одного огня. Ни одной собаки.");
+                lisitsynLure(server, d);
             }
             if (d.in("depths", pos) && d.setFlag("title_depths")) {
                 Net.fx(p, Fx.SUBTITLE, 100, 0, "Стены тёплые. Где-то внизу кто-то повторяет ваши шаги.");
@@ -294,6 +295,32 @@ public final class StoryManager {
                         .withStyle(ChatFormatting.DARK_RED));
             }
         }
+    }
+
+    /** "It's me, Lisitsyn! In the church, quick!" It is not Lisitsyn. */
+    private static void lisitsynLure(MinecraftServer server, StoryData d) {
+        BlockPos bell = d.get("bell");
+        if (bell == null) return;
+        BlockPos door = new BlockPos(bell.getX(), bell.getY() - 13, bell.getZ() - 3); // in front of the church door
+        Scheduler.schedule(160, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                if (!d.in("village", p.position())) continue;
+                p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын", "Сюда! Я в церкви! Быстрее, пока оно не вернулось!"));
+                HorrorUtil.playTo(p, "voice.here", Vec3.atCenterOf(door), 2f, 1f);
+                PhantomEntity.spawn(p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(door), 1200)
+                        .skin(java.util.UUID.nameUUIDFromBytes("Lisitsyn".getBytes()), "Лисицын").vanishDistance(6).watchLimit(400);
+            }
+        });
+        Scheduler.schedule(900, () -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                if (!d.in("village", p.position())) continue;
+                p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын", "почему ты не идёшь ко мне"));
+                Scheduler.schedule(60, () -> {
+                    if (!p.hasDisconnected()) p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын",
+                            Component.literal("почему ты не идёшь ко мне почему ты не идёшь ко мне почему").withStyle(ChatFormatting.DARK_RED)));
+                });
+            }
+        });
     }
 
     public static boolean echoNight(StoryData d, Level level) {

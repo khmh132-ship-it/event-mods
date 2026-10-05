@@ -26,6 +26,12 @@ public class SilentEntity extends Monster {
     private int musicCooldown = 200;
     private float frozenYaw;
     private boolean observed;
+    private int frozen;
+
+    /** A handbell rang: she cannot move for a while, watched or not. */
+    public void freeze(int ticks) {
+        frozen = Math.max(frozen, ticks);
+    }
 
     public SilentEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -50,7 +56,8 @@ public class SilentEntity extends Monster {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
-        observed = false;
+        observed = frozen > 0;
+        if (frozen > 0) frozen--;
         for (Player p : level().players()) {
             if (p.isSpectator() || p.distanceToSqr(this) > 64 * 64) continue;
             if (HorrorUtil.isWatching(p, this, 0.5)) {

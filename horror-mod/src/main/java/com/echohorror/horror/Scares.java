@@ -178,6 +178,42 @@ public final class Scares {
             return ok;
         });
         add("fake_mob", 1, 100, 5, 150, c -> true, Scares::fakeMob);
+        add("circle", 3, 90, 3, 1200, c -> c.night && !c.underground, c -> HorrorUtil.spotAround(c.p, 34, 48, 0, 50, false).map(center -> {
+            // a ring of familiar faces in a clearing, humming, facing each other
+            int n = 6;
+            List<ServerPlayer> faces = new ArrayList<>(c.p.server.getPlayerList().getPlayers());
+            boolean any = false;
+            for (int i = 0; i < n; i++) {
+                double a2 = i * Math.PI * 2 / n;
+                int x = Mth.floor(center.x + Math.cos(a2) * 3), z = Mth.floor(center.z + Math.sin(a2) * 3);
+                Optional<BlockPos> g = HorrorUtil.ground(c.level, x, z, Mth.floor(center.y) + 1, 3, 4);
+                if (g.isEmpty()) continue;
+                ServerPlayer f = faces.get(c.r.nextInt(faces.size()));
+                PhantomEntity.spawn(c.p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_CIRCLE, Vec3.atBottomCenterOf(g.get()), 1600)
+                        .skin(f.getUUID(), null).anchor(center, !any);
+                any = true;
+            }
+            if (any) HorrorUtil.playTo(c.p, "scare.hum", center.add(0, 1.5, 0), 2.5f, 0.85f);
+            return any;
+        }).orElse(false));
+        add("procession", 3, 100, 3, 1200, c -> c.night && !c.underground, c -> {
+            // figures walking in single file across your path, far away
+            Vec3 look = HorrorUtil.horizontalLook(c.p);
+            Vec3 side = HorrorUtil.rotate(look, 90);
+            Vec3 mid = c.p.position().add(look.scale(34));
+            Vec3 from = mid.add(side.scale(-22)), to = mid.add(side.scale(22));
+            int made = 0;
+            for (int i = 0; i < 5; i++) {
+                Vec3 p0 = from.add(side.scale(-i * 2.2));
+                Optional<BlockPos> g = HorrorUtil.ground(c.level, Mth.floor(p0.x), Mth.floor(p0.z), c.p.getBlockY() + 2, 8, 10);
+                if (g.isEmpty()) continue;
+                PhantomEntity.spawn(c.p, i == 2 ? PhantomEntity.KIND_SILENT : PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_PROCESSION,
+                        Vec3.atBottomCenterOf(g.get()), 1400).anchor(to, false);
+                made++;
+            }
+            if (made > 0) HorrorUtil.playAt(c.p, "story.bell_far", 0.8f, 0.7f);
+            return made > 0;
+        });
         add("window_face", 2, 100, 6, 300, c -> !c.p.level().canSeeSky(c.p.blockPosition()), Scares::windowFace);
         add("dig_below", 2, 90, 3, 400, c -> true, c -> {
             // something is digging right under your feet... and stops when you do

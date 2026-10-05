@@ -32,7 +32,7 @@ import java.util.UUID;
  */
 public class PhantomEntity extends PathfinderMob {
     public static final int KIND_WATCHER = 0, KIND_SHADE = 1, KIND_FAKE_PLAYER = 2, KIND_SILENT = 3, KIND_MIMIC = 4;
-    public static final int MODE_STARE = 0, MODE_BEHIND = 1, MODE_WALK_AWAY = 2, MODE_CREEP = 3, MODE_STILL = 4;
+    public static final int MODE_STARE = 0, MODE_BEHIND = 1, MODE_WALK_AWAY = 2, MODE_CREEP = 3, MODE_STILL = 4, MODE_CIRCLE = 5, MODE_PROCESSION = 6;
 
     private static final EntityDataAccessor<Integer> KIND = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Optional<UUID>> SKIN = SynchedEntityData.defineId(PhantomEntity.class, EntityDataSerializers.OPTIONAL_UUID);
@@ -46,6 +46,9 @@ public class PhantomEntity extends PathfinderMob {
     private boolean gone;
     private double vanishDistance = 11;
     private int watchLimit = -1;
+    private Vec3 anchor;      // circle centre / procession destination
+    private boolean leader;   // the one that screams
+    private int turnTicks = -1;
 
     public PhantomEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -90,6 +93,12 @@ public class PhantomEntity extends PathfinderMob {
     /** Ticks of being looked at before it dissolves. */
     public PhantomEntity watchLimit(int ticks) {
         this.watchLimit = ticks;
+        return this;
+    }
+
+    public PhantomEntity anchor(Vec3 a, boolean leader) {
+        this.anchor = a;
+        this.leader = leader;
         return this;
     }
 
@@ -177,8 +186,43 @@ public class PhantomEntity extends PathfinderMob {
                     vanish(t, true);
                 }
             }
+            case MODE_CIRCLE -> {
+                // they stand in a ring facing each other... until you come close
+                getNavigation().stop();
+                if (turnTicks < 0) {
+                    if (anchor != null) faceTarget(anchor);
+                    if (dist < 20) turnTicks = 0;
+                } else {
+                    faceTarget(t);
+                    if (++turnTicks > 30) vanish(t, leader);
+                }
+            }
+            case MODE_PROCESSION -> {
+                if (anchor == null || position().distanceToSqr(anchor) < 4 || dist < 10) {
+                    vanish(t, false);
+                } else if (getNavigation().isDone()) {
+                    getNavigation().moveTo(anchor.x, anchor.y, anchor.z, 0.55);
+                }
+            }
             default -> faceTarget(t);
         }
+    }
+
+    /** Silent dismissal (a handbell rang nearby). */
+    public void dissolve() {
+        if (gone || level().isClientSide) return;
+        gone = true;
+        ServerPlayer t = target == null ? null : (ServerPlayer) level().getPlayerByUUID(target);
+        if (t != null) t.serverLevel().sendParticles(t, ParticleTypes.SCULK_SOUL, true, getX(), getY() + 1, getZ(), 12, 0.3, 0.6, 0.3, 0.02);
+        discard();
+    }
+
+    private void faceTarget(Vec3 v) {
+        double dx = v.x - getX(), dz = v.z - getZ();
+        float yaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90F;
+        setYRot(yaw);
+        yBodyRot = yaw;
+        yHeadRot = yaw;
     }
 
     private void faceTarget(Entity t) {

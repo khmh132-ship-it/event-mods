@@ -23,6 +23,7 @@ public final class ModTabs {
                 out.accept(ModItems.FLASHLIGHT.get());
                 out.accept(ModItems.BATTERY.get());
                 out.accept(ModItems.PILLS.get());
+                out.accept(ModItems.HANDBELL.get());
                 out.accept(ModItems.BELL_CLAPPER.get());
                 out.accept(ModItems.ECHO_SHARD.get());
                 out.accept(ModItems.SILENCE.get());
