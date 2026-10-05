@@ -115,10 +115,18 @@ public class JournalScreen extends Screen {
             g.drawString(font, name, x, y, 0x2A2420, false);
             return;
         }
-        double px = Integer.parseInt(f[1]) + 0.5, pz = Integer.parseInt(f[3]) + 0.5;
+        double px, pz;
+        int py;
+        try {
+            px = Integer.parseInt(f[1]) + 0.5;
+            py = Integer.parseInt(f[2]);
+            pz = Integer.parseInt(f[3]) + 0.5;
+        } catch (NumberFormatException ex) {
+            return;
+        }
         double dx = px - minecraft.player.getX(), dz = pz - minecraft.player.getZ();
         int dist = (int) Math.sqrt(dx * dx + dz * dz);
-        int dy = Integer.parseInt(f[2]) - minecraft.player.getBlockY();
+        int dy = py - minecraft.player.getBlockY();
         float rel = net.minecraft.util.Mth.wrapDegrees((float) (Math.atan2(dz, dx) * (180 / Math.PI)) - 90f - minecraft.player.getYRot());
         String text = dist < 10 ? "вы здесь" : ARROWS[Math.floorMod(Math.round(rel / 45f), 8)] + " " + dist + " м"
                 + (Math.abs(dy) > 8 ? (dy < 0 ? ", ниже на " : ", выше на ") + Math.abs(dy) : "");
