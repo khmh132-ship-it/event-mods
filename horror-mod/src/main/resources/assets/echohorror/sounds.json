@@ -594,5 +594,131 @@
     "stream": true
    }
   ]
+ },
+ "dream.d1": {
+  "subtitle": "subtitles.echohorror.dream.d1",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d1",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d2": {
+  "subtitle": "subtitles.echohorror.dream.d2",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d2",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d3": {
+  "subtitle": "subtitles.echohorror.dream.d3",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d3",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d4": {
+  "subtitle": "subtitles.echohorror.dream.d4",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d4",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d5": {
+  "subtitle": "subtitles.echohorror.dream.d5",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d5",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d6": {
+  "subtitle": "subtitles.echohorror.dream.d6",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d6",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d7": {
+  "subtitle": "subtitles.echohorror.dream.d7",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d7",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d8": {
+  "subtitle": "subtitles.echohorror.dream.d8",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d8",
+    "stream": true
+   }
+  ]
+ },
+ "dream.d9": {
+  "subtitle": "subtitles.echohorror.dream.d9",
+  "sounds": [
+   {
+    "name": "echohorror:dream/d9",
+    "stream": true
+   }
+  ]
+ },
+ "voice.kuzmich1": {
+  "subtitle": "subtitles.echohorror.voice.kuzmich1",
+  "sounds": [
+   {
+    "name": "echohorror:voice/kuzmich1",
+    "stream": true
+   }
+  ]
+ },
+ "voice.kuzmich2": {
+  "subtitle": "subtitles.echohorror.voice.kuzmich2",
+  "sounds": [
+   {
+    "name": "echohorror:voice/kuzmich2",
+    "stream": true
+   }
+  ]
+ },
+ "voice.kuzmich3": {
+  "subtitle": "subtitles.echohorror.voice.kuzmich3",
+  "sounds": [
+   {
+    "name": "echohorror:voice/kuzmich3",
+    "stream": true
+   }
+  ]
+ },
+ "voice.lis_call": {
+  "subtitle": "subtitles.echohorror.voice.lis_call",
+  "sounds": [
+   {
+    "name": "echohorror:voice/lis_call",
+    "stream": true
+   }
+  ]
+ },
+ "voice.lis_why": {
+  "subtitle": "subtitles.echohorror.voice.lis_why",
+  "sounds": [
+   {
+    "name": "echohorror:voice/lis_why",
+    "stream": true
+   }
+  ]
  }
 }

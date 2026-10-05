@@ -90,6 +90,7 @@ public final class ModSounds {
             "voice.call",
             "story.camp_horn", "voice.camp_lineup", "voice.camp_children", "item.music_box_play",
             "story.siren", "voice.bunker_alarm",
+            "dream.d1", "dream.d2", "dream.d3", "dream.d4", "dream.d5", "dream.d6", "dream.d7", "dream.d8", "dream.d9", "voice.kuzmich1", "voice.kuzmich2", "voice.kuzmich3", "voice.lis_call", "voice.lis_why",
             "voice.child",
             "voice.help",
             "voice.laugh",

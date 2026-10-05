@@ -31,17 +31,23 @@ public final class Dreams {
         int next = tag.getInt("dream");
         int ch = StoryManager.effectiveChapter(d);
         String text;
+        int voice;
         if (d.flag("ending_echo")) {
             if (p.getRandom().nextFloat() > 0.3f) return false;
             text = "Тебе больше ничего не снится.\nТебе только слышится.";
+            voice = 9;
         } else {
             while (next < DREAMS.length && DREAMS[next].minChapter() < ch - 1) next++; // that part of the story is long gone
             if (next >= DREAMS.length || DREAMS[next].minChapter() > ch) return false;
             text = DREAMS[next].text();
+            voice = next + 1;
             tag.putInt("dream", next + 1);
         }
         Net.fx(p, Fx.DREAM, 260, 0, text);
         HorrorUtil.playAt(p, "scare.hum", 0.35f, 0.6f);
+        Scheduler.schedule(30, () -> {
+            if (!p.hasDisconnected()) HorrorUtil.playAt(p, "dream.d" + voice, 1f, 1f);
+        });
         Scheduler.schedule(250, () -> {
             if (p.hasDisconnected()) return;
             Net.fx(p, Fx.SUBTITLE, 60, 0, "Ты проснулся. Наверное.");

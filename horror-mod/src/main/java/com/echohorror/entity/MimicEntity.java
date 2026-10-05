@@ -48,6 +48,7 @@ public class MimicEntity extends Monster {
     private boolean daylightImmune;
     private boolean npc;       // pretends to be a survivor and talks until it gives itself away
     private int talks;
+    private int lastTalk = -1000;
 
     private static final String[] NPC_LINES = {
             "Живой? Живой... Я — Пётр Кузьмич. Я тут один остался. Не ходите в церковь ночью: там колокол звонит сам.",
@@ -66,9 +67,11 @@ public class MimicEntity extends Monster {
     @Override
     protected net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
         if (!npc || isRevealed() || hand != net.minecraft.world.InteractionHand.MAIN_HAND) return super.mobInteract(player, hand);
-        if (!level().isClientSide) {
+        if (!level().isClientSide && tickCount - lastTalk > 100) { // let him finish the sentence
+            lastTalk = tickCount;
             String line = NPC_LINES[Math.min(talks, NPC_LINES.length - 1)];
             player.sendSystemMessage(Component.translatable("chat.type.text", copiedName, line));
+            level().playSound(null, this, ModSounds.get("voice.kuzmich" + Math.min(talks + 1, NPC_LINES.length)), SoundSource.NEUTRAL, 1.3f, 1f);
             talks++;
             if (talks >= NPC_LINES.length) {
                 net.minecraft.server.level.ServerLevel sl = (net.minecraft.server.level.ServerLevel) level();

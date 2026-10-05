@@ -625,7 +625,7 @@ public final class StoryManager {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                 if (!d.in("village", p.position())) continue;
                 p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын", "Сюда! Я в церкви! Быстрее, пока оно не вернулось!"));
-                HorrorUtil.playTo(p, "voice.call", Vec3.atCenterOf(door), 2f, 1f);
+                HorrorUtil.playTo(p, "voice.lis_call", Vec3.atCenterOf(door), 2f, 1f);
                 PhantomEntity.spawn(p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_STARE, Vec3.atBottomCenterOf(door), 1200)
                         .skin(java.util.UUID.nameUUIDFromBytes("Lisitsyn".getBytes()), "Лисицын").vanishDistance(6).watchLimit(400);
             }
@@ -634,6 +634,7 @@ public final class StoryManager {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                 if (!d.in("village", p.position())) continue;
                 p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын", "почему ты не идёшь ко мне"));
+                HorrorUtil.playTo(p, "voice.lis_why", Vec3.atCenterOf(door), 2f, 1f);
                 Scheduler.schedule(60, () -> {
                     if (!p.hasDisconnected()) p.sendSystemMessage(Component.translatable("chat.type.text", "Лисицын",
                             Component.literal("почему ты не идёшь ко мне почему ты не идёшь ко мне почему").withStyle(ChatFormatting.DARK_RED)));
