@@ -366,6 +366,16 @@ public final class Scares {
             Sanity.add(c.p, -3);
             return true;
         });
+        add("hand_moves", 2, 55, 2, 900, c -> true, c -> {
+            // your hand chooses something else
+            int cur = c.p.getInventory().selected;
+            int next = (cur + 1 + c.r.nextInt(8)) % 9;
+            c.p.getInventory().selected = next;
+            c.p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket(next));
+            c.p.displayClientMessage(Component.literal("Рука сама взяла другое.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC), true);
+            Sanity.add(c.p, -2);
+            return true;
+        });
         add("fake_restart", 3, 60, 1, 2400, c -> Config.FAKE_CHAT.get(), c -> {
             c.p.sendSystemMessage(Component.literal("[Сервер] Внимание! Экстренная перезагрузка через 10 секунд.").withStyle(ChatFormatting.LIGHT_PURPLE));
             for (int i = 5; i >= 1; i--) {

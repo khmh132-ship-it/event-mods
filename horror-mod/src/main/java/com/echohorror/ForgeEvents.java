@@ -141,6 +141,21 @@ public final class ForgeEvents {
                 e.setCancellationResult(InteractionResult.SUCCESS);
             }
         }
+        // sometimes, at night, a door you just opened is pushed shut from the other side
+        net.minecraft.world.level.block.state.BlockState st = e.getLevel().getBlockState(e.getPos());
+        if (st.getBlock() instanceof net.minecraft.world.level.block.DoorBlock door && !st.getValue(net.minecraft.world.level.block.DoorBlock.OPEN)
+                && !st.is(net.minecraft.world.level.block.Blocks.IRON_DOOR) && Config.WORLD_TAMPERING.get()
+                && HorrorUtil.isNight(sp.serverLevel()) && StoryManager.effectiveChapter(StoryData.get(sp.server)) >= StoryManager.CH_VILLAGE
+                && StoryManager.effectiveChapter(StoryData.get(sp.server)) != StoryManager.CH_SILENCE && sp.getRandom().nextFloat() < 0.05f) {
+            net.minecraft.core.BlockPos pos = e.getPos().immutable();
+            Scheduler.schedule(12, () -> {
+                net.minecraft.world.level.block.state.BlockState now = sp.serverLevel().getBlockState(pos);
+                if (!(now.getBlock() instanceof net.minecraft.world.level.block.DoorBlock) || !now.getValue(net.minecraft.world.level.block.DoorBlock.OPEN)) return;
+                door.setOpen(null, sp.serverLevel(), now, pos, false);
+                sp.serverLevel().playSound(null, pos, net.minecraft.sounds.SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, net.minecraft.sounds.SoundSource.BLOCKS, 0.9f, 1.2f);
+                Sanity.add(sp, -3);
+            });
+        }
     }
 
     @SubscribeEvent
