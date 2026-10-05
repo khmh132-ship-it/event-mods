@@ -1660,20 +1660,20 @@
 "ms": 6075
 },
 "riddle3.a1": {
-"key": "e9531bbd9bd7b39c58d4463651fad3e5688e98f3",
-"ms": 3836
+"key": "9b6d88fd65252517683af41e76def359d7c0a831",
+"ms": 3405
 },
 "riddle3.a2": {
-"key": "ea846f243f03ea6ab98b1019d2aac7fbbfe61a33",
-"ms": 4875
-},
-"riddle3.a3": {
 "key": "e62aceab9f5d23734ab25c13a47f0fb80d8ed86a",
 "ms": 4775
 },
+"riddle3.a3": {
+"key": "810e6e989fe68b9b6fa65119d09ada27d71d3430",
+"ms": 4575
+},
 "riddle3.a4": {
-"key": "10ad2fce328401e1857b4548da12d86bea37dfcc",
-"ms": 3937
+"key": "ff0180d952f48c0f9b7a725450bec12dcd27d717",
+"ms": 4375
 },
 "riddle3.a5": {
 "key": "4adce5ef98a6dbfda5b4974f4e652acbe415713c",
@@ -1684,40 +1684,40 @@
 "ms": 8075
 },
 "riddle3.hint.1": {
-"key": "66a7e9d3413c4415545c9c6aa1d0a26aa016ee9f",
-"ms": 3614
+"key": "fbc40ad69dc7f6e7c39a5890758956fab5f98456",
+"ms": 7275
 },
 "riddle3.hint.2": {
-"key": "384209b97f5ff5d2be7ccc221498daea424766b6",
-"ms": 4875
+"key": "604ef58a8fc77526186bd3b2a2c0aa86bf95b329",
+"ms": 5575
 },
 "riddle3.hint.3": {
-"key": "51b07fec2bb07c8596f7d20f123dad4385a052b9",
-"ms": 3554
+"key": "b31718cc3bd0b5abf741a559e6409dff49d6347b",
+"ms": 5575
 },
 "riddle3.intro": {
-"key": "5c1c411edec0963a0a99b519f2cdd6f5adb4ce70",
-"ms": 4375
+"key": "ab7af9be3af41c778350bbc95d2b36b6aa9a77d5",
+"ms": 7875
 },
 "riddle3.q1": {
-"key": "1dedfb1983ef195fc83abee5d8237d26a29f7dd6",
-"ms": 5275
+"key": "ff470d54dc24dc331ee6c97549e5dc374369bb1a",
+"ms": 7675
 },
 "riddle3.q2": {
-"key": "d13e112c9ab5b5a0af501473ff1422eca191bb28",
-"ms": 4975
+"key": "ad5219853daab3cbbc39838245982cf67c61b5dc",
+"ms": 10175
 },
 "riddle3.q3": {
-"key": "0212a88586e0d2b44cd4bfcb01887d5ec9f585d8",
-"ms": 6175
+"key": "298ad8a3ad68fc48cce1b6e7ce119fe910a8fe1d",
+"ms": 8175
 },
 "riddle3.q4": {
-"key": "cef93870ade5745f83878fa533928304d749fb8d",
-"ms": 6075
+"key": "caef37a4a6467f7639471f9abd053589d0f3cdcf",
+"ms": 7275
 },
 "riddle3.q5": {
-"key": "358cfeb0da407393bff1dc261ed712bdc2def64c",
-"ms": 5175
+"key": "76fde3e65fb813f3e654b2c640ffc39e3b01a3fe",
+"ms": 10075
 },
 "skip.1": {
 "key": "14332f77ebca25c89e15b0ba1161098e53a78f7c",
