@@ -214,6 +214,41 @@ public final class Scares {
             if (made > 0) HorrorUtil.playAt(c.p, "story.bell_far", 0.8f, 0.7f);
             return made > 0;
         });
+        add("underwater_face", 1, 100, 8, 240, c -> c.level.getFluidState(BlockPos.containing(c.p.getEyePosition())).is(net.minecraft.tags.FluidTags.WATER), c -> {
+            // something looking up at you from the dark water — below if it is deep, otherwise ahead in the murk
+            Vec3 look = HorrorUtil.horizontalLook(c.p);
+            BlockPos eye = BlockPos.containing(c.p.getEyePosition());
+            int[][] tries = {{0, -5, 2}, {0, -4, 3}, {0, -3, 2}, {0, -2, 4}, {0, -1, 5}, {0, 0, 6}, {0, -1, 7}, {0, 1, 5}, {0, 0, 4}, {0, 1, 3}};
+            for (int[] t : tries) {
+                BlockPos bp = BlockPos.containing(c.p.getEyePosition().add(look.scale(t[2])).add(0, t[1] - 1, 0));
+                    if (!c.level.getFluidState(bp).isEmpty() && !c.level.getFluidState(bp.above()).isEmpty()
+                        && HorrorUtil.canSee(c.p, Vec3.atCenterOf(bp.above()))) {
+                    PhantomEntity e = PhantomEntity.spawn(c.p, PhantomEntity.KIND_WATCHER, PhantomEntity.MODE_STARE,
+                            Vec3.atBottomCenterOf(bp), 300).floating().vanishDistance(2).watchLimit(10);
+                    if (c.sanity < 50) e.withJumpscare();
+                    return true;
+                }
+            }
+            return false;
+        });
+        add("self_double", 2, 90, 3, 900, c -> true, c -> HorrorUtil.spotAround(c.p, 15, 24, 0, 40, false).map(s -> {
+            // you, walking away from yourself
+            PhantomEntity.spawn(c.p, PhantomEntity.KIND_FAKE_PLAYER, PhantomEntity.MODE_WALK_AWAY, s, 500)
+                    .skin(c.p.getUUID(), c.p.getGameProfile().getName());
+            Sanity.add(c.p, -4);
+            return true;
+        }).orElse(false));
+        add("hand_on_shoulder", 2, 70, 3, 900, c -> true, c -> {
+            HorrorUtil.playTo(c.p, SoundEvents.WOOL_STEP, HorrorUtil.behind(c.p, 0.6), 0.6f, 0.7f);
+            Scheduler.schedule(15, () -> {
+                if (c.p.hasDisconnected()) return;
+                Net.fx(c.p, Fx.SHAKE, 8, 0.6f, "");
+                c.p.displayClientMessage(Component.literal("Кто-то положил руку тебе на плечо.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC), true);
+                HorrorUtil.playTo(c.p, "scare.breath", HorrorUtil.behind(c.p, 0.5), 0.9f, 1f);
+            });
+            Sanity.add(c.p, -5);
+            return true;
+        });
         add("window_face", 2, 100, 6, 300, c -> !c.p.level().canSeeSky(c.p.blockPosition()), Scares::windowFace);
         add("dig_below", 2, 90, 3, 400, c -> true, c -> {
             // something is digging right under your feet... and stops when you do
