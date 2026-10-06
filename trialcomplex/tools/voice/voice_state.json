@@ -987,46 +987,6 @@
 "key": "b4591c86d47649cac10408d40746c6f0edd4a677",
 "ms": 10475
 },
-"laser3.done": {
-"key": "b9b991f3c2bfe5c085fa6bb26cbed93d013c516c",
-"ms": 4975
-},
-"laser3.hint.1": {
-"key": "e240de3f521e929c15e729c2f9d063325a104414",
-"ms": 5075
-},
-"laser3.hint.2": {
-"key": "27dfda5bf252c4801011f7cacf04c2daec28fbdf",
-"ms": 5675
-},
-"laser3.hint.3": {
-"key": "d8a08ee74e073d241be31251365554415300a532",
-"ms": 5675
-},
-"laser3.intro": {
-"key": "5b377501210b7e976812035330e72fa549caf99a",
-"ms": 5975
-},
-"laser4.done": {
-"key": "2e5cbbeddadcf5f9af025b46a2b8a66ee9dcfb2d",
-"ms": 7075
-},
-"laser4.hint.1": {
-"key": "812ef2607c1f2d2970640d94a810e1dbda1a87d8",
-"ms": 5475
-},
-"laser4.hint.2": {
-"key": "83dc33fc086a970e94aa3d99c4bd1895f1eeafdf",
-"ms": 7275
-},
-"laser4.hint.3": {
-"key": "af4b3d690b787a53f7f9d0e9f829bf65e711115c",
-"ms": 4775
-},
-"laser4.intro": {
-"key": "c140cf7de977cb86711186261a7aef3c6dea3b9d",
-"ms": 6475
-},
 "laser5.done": {
 "key": "def60a5f52954afcec0f1c2a1b772f35398eb119",
 "ms": 8375
@@ -1044,8 +1004,8 @@
 "ms": 4575
 },
 "laser5.intro": {
-"key": "a9ba2c501fcf26465f0206f22673363ec15450ba",
-"ms": 13275
+"key": "c54fc0ca8671295da0f85ec8f7b14f843fa7962b",
+"ms": 13375
 },
 "laser6.done": {
 "key": "416086e0129d4b4be8fcbd798f0791c1f0e35d0e",
@@ -1766,5 +1726,73 @@
 "slide2.intro": {
 "key": "2a962b1f23c4f7f1241c7644e1d81cd833166747",
 "ms": 11175
+},
+"store.heavy.1": {
+"key": "86d65fd60ef51a51ec94886c80597b3401e46c45",
+"ms": 7275
+},
+"store.heavy.2": {
+"key": "9862cbc2c6d634e3160197148c5ce661361a8eeb",
+"ms": 5175
+},
+"store.heavy.itachi.1": {
+"key": "9e163e8c52353931227506b9a5ef6a56df227e3a",
+"ms": 4475
+},
+"store.heavy.khmh.1": {
+"key": "7c1d3c277a45932a93df65d423d448e10ed9af7d",
+"ms": 4775
+},
+"store.line.1": {
+"key": "8a95eb41f1618175b8eaaee1c2f8fe31121846f9",
+"ms": 7375
+},
+"store.reset.1": {
+"key": "b8119c5ee06b1b6ea278280c42c1785486ba87af",
+"ms": 4775
+},
+"store.reset.2": {
+"key": "45e4b7186b0a1db5668bce442f675bd81cfe14da",
+"ms": 3806
+},
+"store1.done": {
+"key": "bbd263c4f8b52f34f34422e18f8b52543a512622",
+"ms": 6575
+},
+"store1.hint.1": {
+"key": "e683add27c11a3cf1f7b45117c2703f87689fd01",
+"ms": 6775
+},
+"store1.hint.2": {
+"key": "af09a6818f07c5ca78a65168de3aa76557d1b0f9",
+"ms": 5975
+},
+"store1.hint.3": {
+"key": "82f131be325430a8fe676b44b6e27d012fdd6942",
+"ms": 6775
+},
+"store1.intro": {
+"key": "9a09a0bcbce24369f6743d274a75a8ef3db432b0",
+"ms": 15675
+},
+"store2.done": {
+"key": "57bea6ddb769417cbdd0a8ba362886d8a93e799e",
+"ms": 5375
+},
+"store2.hint.1": {
+"key": "ab03ad7c89f9f2043c447d7a03af917d41c384e2",
+"ms": 7475
+},
+"store2.hint.2": {
+"key": "45b294ee99c0450111eef2ff42c9d96900d494d3",
+"ms": 4775
+},
+"store2.hint.3": {
+"key": "21da97e6e1a28e1efb988a9e94d52542deacb21c",
+"ms": 6175
+},
+"store2.intro": {
+"key": "76e3f6c9cadce4411ec312b3965412ae059e7f29",
+"ms": 14675
 }
 }

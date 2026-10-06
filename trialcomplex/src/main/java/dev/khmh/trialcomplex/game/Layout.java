@@ -41,7 +41,7 @@ public final class Layout {
                 new RLights("lights2", 2),
                 new RCipher("cipher1", 1),
                 new RMelody("melody2", 2),
-                new RLaser("laser3", 3),
+                new dev.khmh.trialcomplex.rooms.RStore("store1", 1),
                 new RMaze("maze2", 2),
                 new RRiddle("riddle2", 2),
                 new RCows("cows2", 2),
@@ -51,7 +51,7 @@ public final class Layout {
                 new RKnights("knights2", 2),
                 new RMines("mines3", 3),
                 new RCommand("cmd3", 3),
-                new RLaser("laser4", 4),
+                new dev.khmh.trialcomplex.rooms.RStore("store2", 2),
                 new RPersp("persp2", 2),
                 new RLights("lights3", 3),
                 new RCipher("cipher2", 2),
@@ -65,11 +65,11 @@ public final class Layout {
                 new RKnights("knights3", 3),
                 new RCows("cows3", 3),
                 new RMines("mines4", 4),
-                new RLaser("laser5", 5),
+                new RLaser("laser5", 5, 3),
                 new RDoors("doors4", 4),
                 new RCommand("cmd4", 4),
                 new RBridge("bridge4", 4),
-                new RLaser("laser6", 6),
+                new RLaser("laser6", 6, 4),
                 new RCore()
         );
     }

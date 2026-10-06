@@ -1394,96 +1394,6 @@
   ],
   "subtitle": "trialcomplex.voice"
  },
- "voice.laser3.intro": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser3_intro",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser3.done": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser3_done",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser3.hint.1": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser3_hint_1",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser3.hint.2": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser3_hint_2",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser3.hint.3": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser3_hint_3",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser4.intro": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser4_intro",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser4.done": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser4_done",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser4.hint.1": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser4_hint_1",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser4.hint.2": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser4_hint_2",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.laser4.hint.3": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/laser4_hint_3",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
  "voice.laser5.intro": {
   "sounds": [
    {
@@ -3972,6 +3882,159 @@
   "sounds": [
    {
     "name": "trialcomplex:voice/cmd4_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.heavy.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_heavy_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.heavy.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_heavy_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.heavy.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_heavy_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.heavy.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_heavy_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.line.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_line_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.reset.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_reset_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.reset.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_reset_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store1.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store1_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store1.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store1_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store1.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store1_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store1.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store1_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store1.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store1_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store2.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store2_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store2.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store2_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store2.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store2_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store2.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store2_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store2.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store2_hint_3",
     "stream": true
    }
   ],

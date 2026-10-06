@@ -47,7 +47,12 @@ public class RLaser extends Room {
     private final boolean[] hit;
 
     public RLaser(String id, int level) {
-        super(id, "Лазер " + roman(level), LEVELS[level - 1].grid.length + 10, 8, LEVELS[level - 1].grid.length + 10);
+        this(id, level, level);
+    }
+
+    /** shown — номер в названии (уровни 3 и 4 заменены складом, поэтому 5 и 6 показываются как III и IV). */
+    public RLaser(String id, int level, int shown) {
+        super(id, "Лазер " + roman(shown), LEVELS[level - 1].grid.length + 10, 8, LEVELS[level - 1].grid.length + 10);
         this.lv = LEVELS[level - 1];
         this.n = lv.grid.length;
         this.hit = new boolean[lv.emitters.length];
