@@ -146,6 +146,20 @@ public class RCore extends Room {
 
     @Override
     protected void onTick(long t) {
+        // ядро живое: кольца частиц и гул (на последнем этапе — быстрее и выше)
+        if (phase <= 2) {
+            Vec3 core = Vec3.atCenterOf(at(C, 4, C));
+            if (t % 2 == 0) {
+                double a = t * (phase == 2 ? 0.3 : 0.12);
+                for (int i = 0; i < 3; i++) {
+                    // пока стоит щит (до y=6), частицы над ним: сквозь цветное стекло они не рисуются
+                    double lo = phase == 0 ? 3 : -3, hi = 8;
+                    double ang = a + i * 2.0944, h = lo + ((t + i * 20) % 60) / 60.0 * (hi - lo);
+                    level().sendParticles(ParticleTypes.END_ROD, core.x + Math.cos(ang) * 2.2, core.y + h, core.z + Math.sin(ang) * 2.2, 2, 0.05, 0.05, 0.05, 0);
+                }
+            }
+            if (t % (phase == 2 ? 30 : 80) == 0) cx.sound(at(C, 4, C), SoundEvents.BEACON_AMBIENT, 2f, phase == 2 ? 1.5f : 0.6f);
+        }
         if (phase != 2) return;
         int need = Math.min(2, players().size()), on = 0;
         for (int k = 0; k < 2; k++)
@@ -191,6 +205,15 @@ public class RCore extends Room {
                 p.sendSystemMessage(Component.literal("§eПодсказок: §f" + d.sum(d.hints) + "§e, пропусков: §f" + d.sum(d.skips) + "§e, ошибок: §f" + d.sum(d.fails)));
                 p.sendSystemMessage(Component.literal("§eПадений: §fКхмх — " + d.falls.getInt("khmh") + ", Итачи — " + d.falls.getInt("itachi")));
                 p.sendSystemMessage(Component.literal("§7Спасибо за игру. Голос вас (не) любит."));
+            }
+            // салют
+            for (int i = 0; i < 8; i++) {
+                final int k = i;
+                later(i * 12, () -> {
+                    Vec3 at = Vec3.atCenterOf(at(3 + (k * 7) % (sx - 6), sy - 4, 3 + (k * 11) % (sz - 6)));
+                    level().sendParticles(ParticleTypes.FIREWORK, at.x, at.y, at.z, 60, 0.2, 0.2, 0.2, 0.25);
+                    cx.sound(BlockPos.containing(at), k % 2 == 0 ? SoundEvents.FIREWORK_ROCKET_LARGE_BLAST : SoundEvents.FIREWORK_ROCKET_TWINKLE, 2f, 1f);
+                });
             }
             later(200, () -> voice().interrupt("core.reboot", () -> { phase = 4; solve(); }));
         });
