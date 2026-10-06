@@ -33,19 +33,18 @@ public class RStore extends Room {
                     "#........",
             },
             {
-                    "#...#....",
-                    "#.b..H...",
-                    "#..#.....",
-                    ">...x..#.",
-                    "#.H..x...",
-                    "#..x..b..",
-                    "#.....x..",
+                    "#.x..#..#",
+                    "#....b.b#",
+                    "#..H..H..",
+                    "##.##...x",
+                    "#....x#..",
+                    ">.x.....#",
             },
     };
     /** Решения (для проверки ботами): толчки x,z,dx,dz. */
     private static final String[] SOLUTIONS = {
             "4,4,-1,0;6,2,0,1;6,3,-1,0;5,3,-1,0;5,1,-1,0;4,1,0,1;3,4,-1,0;2,4,-1,0;1,4,0,-1;1,3,0,-1;1,2,-1,0;0,2,0,-1;4,3,-1,0;3,3,-1,0;2,3,-1,0;1,3,0,-1;4,2,0,1;4,3,-1,0;3,3,-1,0;2,3,0,-1",
-            "",
+            "2,2,-1,0;1,2,0,1;5,2,-1,0;6,1,0,1;4,1,-1,0;3,1,-1,0;1,3,0,1;4,2,1,0;2,1,-1,0;1,1,0,-1;1,4,0,1;5,2,0,1;5,3,-1,0;6,2,0,1;6,3,1,0;4,3,0,1",
     };
     private static final int GX = 5, GZ = 3;
     private static final BlockState FLOOR = Blocks.POLISHED_ANDESITE.defaultBlockState();
@@ -220,13 +219,17 @@ public class RStore extends Room {
         if (l.getY() < 1 || l.getY() > 2 || !crates.containsKey(key(x, z))) return false;
         int[] pc = playerCell(p);
         int dx = x - pc[0], dz = z - pc[1];
-        if (Math.abs(dx) + Math.abs(dz) != 1) return true; // толкать можно только вплотную и не по диагонали
+        char type = crates.get(key(x, z));
+        // толкать можно только по прямой: вплотную, а у железного второй может стоять через клетку
+        boolean straight = dx == 0 || dz == 0;
+        int dist = Math.abs(dx) + Math.abs(dz);
+        if (!straight || dist < 1 || dist > (type == 'H' ? 2 : 1)) return true;
+        dx = Integer.signum(dx); dz = Integer.signum(dz);
         int nx = x + dx, nz = z + dz;
         if (isWall(nx, nz) || crates.containsKey(key(nx, nz)) || playerIn(nx, nz)) {
             cx.sound(pos, SoundEvents.CHEST_LOCKED, 0.7f, 0.8f);
             return true;
         }
-        char type = crates.get(key(x, z));
         if (type == 'H') {
             long t = now();
             boolean partner = heavyBy != null && !heavyBy.equals(p.getUUID()) && t - heavyAt <= 30
