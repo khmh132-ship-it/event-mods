@@ -137,6 +137,17 @@ public class Builder {
     public void sign(Block signBlock, int x, int y, int z, Direction d, DyeColor color, String... lines) {
         BlockPos p = pos(x, y, z);
         level.setBlock(p, signBlock.defaultBlockState().setValue(WallSignBlock.FACING, d), FLAGS);
+        writeSign(p, color, lines);
+    }
+
+    /** Табличка на полу; rotation 0 — текстом на юг, 4 — на запад, 8 — на север, 12 — на восток. */
+    public void standingSign(int x, int y, int z, int rotation, DyeColor color, String... lines) {
+        BlockPos p = pos(x, y, z);
+        level.setBlock(p, Blocks.DARK_OAK_SIGN.defaultBlockState().setValue(net.minecraft.world.level.block.StandingSignBlock.ROTATION, rotation), FLAGS);
+        writeSign(p, color, lines);
+    }
+
+    private void writeSign(BlockPos p, DyeColor color, String... lines) {
         if (level.getBlockEntity(p) instanceof SignBlockEntity sb) {
             SignText t = new SignText().setColor(color).setHasGlowingText(true);
             for (int i = 0; i < Math.min(4, lines.length); i++) t = t.setMessage(i, Component.literal(lines[i]));

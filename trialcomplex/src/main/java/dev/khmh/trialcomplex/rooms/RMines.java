@@ -37,7 +37,12 @@ public class RMines extends Room {
     private final Map<UUID, Boolean> sawField = new HashMap<>();
 
     public RMines(String id, int level) {
-        super(id, "Сапёр " + RLaser.roman(level), new int[]{0, 10, 14, 12, 16}[level] + 10, 9, new int[]{0, 7, 9, 8, 9}[level] + 2);
+        this(id, level, level);
+    }
+
+    /** shown — номер в названии (второе поле заменено «Рисунком»). */
+    public RMines(String id, int level, int shown) {
+        super(id, "Сапёр " + RLaser.roman(shown), new int[]{0, 10, 14, 12, 16}[level] + 10, 9, new int[]{0, 7, 9, 8, 9}[level] + 2);
         this.level = level;
         this.L = new int[]{0, 10, 14, 12, 16}[level];
         this.W = new int[]{0, 7, 9, 8, 9}[level];

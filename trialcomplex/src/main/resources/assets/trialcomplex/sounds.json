@@ -1529,51 +1529,6 @@
   ],
   "subtitle": "trialcomplex.voice"
  },
- "voice.mines2.intro": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/mines2_intro",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.mines2.done": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/mines2_done",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.mines2.hint.1": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/mines2_hint_1",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.mines2.hint.2": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/mines2_hint_2",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.mines2.hint.3": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/mines2_hint_3",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
  "voice.mines3.intro": {
   "sounds": [
    {
@@ -3842,51 +3797,6 @@
   ],
   "subtitle": "trialcomplex.voice"
  },
- "voice.cmd4.intro": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/cmd4_intro",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.cmd4.done": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/cmd4_done",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.cmd4.hint.1": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/cmd4_hint_1",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.cmd4.hint.2": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/cmd4_hint_2",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
- "voice.cmd4.hint.3": {
-  "sounds": [
-   {
-    "name": "trialcomplex:voice/cmd4_hint_3",
-    "stream": true
-   }
-  ],
-  "subtitle": "trialcomplex.voice"
- },
  "voice.store.heavy.1": {
   "sounds": [
    {
@@ -4071,6 +3981,114 @@
   "sounds": [
    {
     "name": "trialcomplex:voice/store_stuck_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture.reset.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture_reset_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture.reset.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture_reset_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture1.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture1_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture1.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture1_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture1.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture1_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture1.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture1_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture1.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture1_hint_3",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture2.intro": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture2_intro",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture2.done": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture2_done",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture2.hint.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture2_hint_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture2.hint.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture2_hint_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.picture2.hint.3": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/picture2_hint_3",
     "stream": true
    }
   ],
