@@ -4039,5 +4039,41 @@
    }
   ],
   "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.stuck.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_stuck_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.stuck.2": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_stuck_2",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.stuck.khmh.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_stuck_khmh_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
+ },
+ "voice.store.stuck.itachi.1": {
+  "sounds": [
+   {
+    "name": "trialcomplex:voice/store_stuck_itachi_1",
+    "stream": true
+   }
+  ],
+  "subtitle": "trialcomplex.voice"
  }
 }

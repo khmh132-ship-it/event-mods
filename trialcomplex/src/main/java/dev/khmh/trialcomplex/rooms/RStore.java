@@ -262,6 +262,10 @@ public class RStore extends Room {
         if (isTarget(nx, nz)) cx.sound(at(GX + nx, 2, GZ + nz), SoundEvents.AMETHYST_BLOCK_CHIME, 1f, 1.3f);
         progress();
         checkWin();
+        if (!done && !isTarget(nx, nz) && (isWall(nx - 1, nz) || isWall(nx + 1, nz)) && (isWall(nx, nz - 1) || isWall(nx, nz + 1))) {
+            fail();
+            later(15, () -> sayNow("store.stuck", p));
+        }
         return true;
     }
 
