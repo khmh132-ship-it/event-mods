@@ -129,6 +129,7 @@ public final class PuzzleCommand {
                 "§6В комплексе: §f" + mins + " мин",
                 "§6Подсказок: §f" + d.sum(d.hints) + "§6, пропусков: §f" + d.sum(d.skips) + "§6, ошибок: §f" + d.sum(d.fails),
                 "§6Падений: §fКхмх — " + d.falls.getInt("khmh") + ", Итачи — " + d.falls.getInt("itachi"),
+                "§6Дольше всего: §f" + (cx.slowestRoom() == null ? "—" : cx.slowestRoom()),
         };
         for (String l : lines) c.getSource().sendSuccess(() -> Component.literal(l).withStyle(ChatFormatting.RESET), false);
         return 1;

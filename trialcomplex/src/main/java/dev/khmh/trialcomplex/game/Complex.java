@@ -256,6 +256,18 @@ public final class Complex {
         r.onActivate(first);
     }
 
+    /** «Где дольше всего тупили»: название и минуты самого долгого испытания, или null. */
+    public String slowestRoom() {
+        String best = null;
+        long bt = 0;
+        for (String k : data.roomTime.getAllKeys()) {
+            Room r = room(k);
+            long t = data.roomTime.getLong(k);
+            if (r != null && r.countsAsTrial() && !data.skips.contains(k) && t > bt) { bt = t; best = r.title; }
+        }
+        return best == null ? null : best + " — " + Math.max(1, bt / 20 / 60) + " мин";
+    }
+
     void solved(Room r) {
         if (r.solved) return;
         r.solved = true;

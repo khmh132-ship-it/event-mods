@@ -204,6 +204,8 @@ public class RCore extends Room {
                 p.sendSystemMessage(Component.literal("§eВремя: §f" + mins + " мин"));
                 p.sendSystemMessage(Component.literal("§eПодсказок: §f" + d.sum(d.hints) + "§e, пропусков: §f" + d.sum(d.skips) + "§e, ошибок: §f" + d.sum(d.fails)));
                 p.sendSystemMessage(Component.literal("§eПадений: §fКхмх — " + d.falls.getInt("khmh") + ", Итачи — " + d.falls.getInt("itachi")));
+                String slow = cx.slowestRoom();
+                if (slow != null) p.sendSystemMessage(Component.literal("§eДольше всего тупили: §f" + slow));
                 p.sendSystemMessage(Component.literal("§7Спасибо за игру. Голос вас (не) любит."));
             }
             // салют
