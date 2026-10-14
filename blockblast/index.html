@@ -41,11 +41,11 @@ button{font:inherit;font-weight:700;padding:12px 28px;border:0;border-radius:24p
 </div>
 <div id="board"></div>
 <div id="tray"></div>
-<div class="info">За одно действие — до 500 000 очков. Линии + комбо + идеальная очистка!</div>
+<div class="info">Каждая фигура = 500 000 очков. Линии, комбо и идеальная очистка дают бонус сверху!</div>
 <div id="over"><h2 style="font-size:32px;margin:0">Игра окончена</h2><div>Очки: <b id="final">0</b></div><button id="again">Играть снова</button></div>
 
 <script>
-const N=8, MAX_ACTION=500000;
+const N=8, PIECE_SCORE=500000;
 const COLORS=['#ff5a5f','#ffa62b','#ffd23f','#3ddc84','#35c2ff','#a06cff','#ff6fb5'];
 const SHAPES=[
  [[1]],[[1,1]],[[1],[1]],[[1,1,1]],[[1],[1],[1]],[[1,1,1,1]],[[1],[1],[1],[1]],[[1,1,1,1,1]],[[1],[1],[1],[1],[1]],
@@ -149,13 +149,13 @@ function endDrag(e){
 
 /* scoring: one action can give up to 500 000 */
 function actionScore(placed,lines,comboLevel,perfect){
-  let s=placed*100;                      // за каждую клетку
+  let s=PIECE_SCORE;                     // за каждую фигуру — 500 000
   if(lines){
     s+=5000*lines*lines;                 // 1:5k 2:20k 3:45k 4:80k 5:125k ...
     s*=1+comboLevel*0.75;                // множитель комбо
   }
   if(perfect)s+=150000;                  // идеальная очистка поля
-  return Math.min(MAX_ACTION,Math.round(s));
+  return Math.round(s);
 }
 function place(p,idx,r,c,px,py){
   let placed=0;
